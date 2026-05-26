@@ -1,0 +1,45 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement class="spawn-inspector-root">
+        
+        <!-- 1. HEADER -->
+        <ui:VisualElement class="spawn-header-row">
+            <ui:VisualElement>
+                <ui:Label text="SPAWN POINT HUB" class="spawn-header-title" />
+                <ui:Label text="Precision Registry Module" class="spawn-header-stats" />
+            </ui:VisualElement>
+            <ui:Label text="V1.1" class="spawn-header-stats" />
+        </ui:VisualElement>
+
+        <!-- 2. IDENTITY SECTION -->
+        <ui:VisualElement class="spawn-section">
+            <ui:Label text="IDENTITY CONFIGURATION" class="spawn-section-header" />
+            <uie:PropertyField binding-path="_hubID" label="Hub ID" 
+                tooltip="Unique string identifier. Used for scripted spawning (e.g., finding the 'Start' point)." />
+            <uie:PropertyField binding-path="_teamIndex" label="Team Index" 
+                tooltip="Associates this point with a specific team. 0: Neutral/Player, 1+: Enemies." />
+        </ui:VisualElement>
+
+        <!-- 3. LOGIC SECTION -->
+        <ui:VisualElement class="spawn-section">
+            <ui:Label text="DEPLOYMENT LOGIC" class="spawn-section-header" />
+            <uie:PropertyField binding-path="_priority" label="Priority" 
+                tooltip="Weight of this point (0-1000). System picks the highest priority point available first." />
+            <uie:PropertyField binding-path="_isBlocked" label="Is Blocked" name="uve_BlockedField" 
+                tooltip="Temporarily disables this point. Useful if the area is occupied or hazardous." />
+        </ui:VisualElement>
+
+        <!-- 4. ANALYTICS BOX -->
+        <ui:VisualElement class="spawn-analytics-box">
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between;">
+                <ui:Label text="Registered Hubs:" class="spawn-analytics-label" />
+                <ui:Label name="uve_HubCount" text="0" class="spawn-analytics-value" />
+            </ui:VisualElement>
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-top: 4px;">
+                <ui:Label text="Runtime State:" class="spawn-analytics-label" />
+                <ui:Label name="uve_RuntimeState" text="IDLE" class="spawn-analytics-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:Label text="© GEMINI INDUSTRIAL SYSTEMS" class="spawn-footer-info" />
+    </ui:VisualElement>
+</ui:UXML>

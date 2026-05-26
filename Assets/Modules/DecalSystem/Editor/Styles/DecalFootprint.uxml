@@ -1,0 +1,43 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="DecalSystemEditor.uss" />
+    <ui:VisualElement class="decal-inspector-root">
+        <!-- 1. 头部 (统一 Portal 风格) -->
+        <ui:VisualElement class="decal-header-row">
+            <ui:Label text="Decal Footprint" class="decal-header-title" />
+            <ui:Label text="Character FX" class="decal-header-stats" />
+        </ui:VisualElement>
+
+        <!-- 2. 对象池与物理卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="核心配置" class="decal-header" />
+            <uie:PropertyField binding-path="decalPrefab" label="贴花预制体" />
+            <uie:PropertyField binding-path="triggerMode" label="触发模式" />
+            <uie:PropertyField binding-path="minStepDistance" label="最小步距" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="物理采样" class="decal-header" />
+            <uie:PropertyField binding-path="footprintModule.stepSideOffset" label="双脚间距" />
+            <uie:PropertyField binding-path="footprintModule.raycastDistance" label="采样高度" />
+            <uie:PropertyField binding-path="footprintModule.groundLayer" label="地面层级" />
+        </ui:VisualElement>
+
+        <!-- 3. 插槽选择 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="脚印贴图插槽" class="decal-header" />
+            <ui:VisualElement name="uve_SlotContainer" class="decal-slot-row" />
+        </ui:VisualElement>
+
+        <!-- 4. 视觉表现 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="视觉表现" class="decal-header" />
+            <uie:PropertyField binding-path="footprintModule.footprintSize" label="缩放大小" />
+            <uie:PropertyField binding-path="footprintModule.lifeTime" label="存留时间" />
+            <uie:PropertyField binding-path="footprintModule.tintColor" label="颜色叠加" />
+            <uie:PropertyField binding-path="footprintModule.softFade" label="边缘柔化 (Soft Fade)" />
+        </ui:VisualElement>
+
+        <!-- 5. 动态图库占位符 -->
+        <ui:VisualElement name="uve_GridContainer" />
+    </ui:VisualElement>
+</ui:UXML>

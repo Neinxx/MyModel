@@ -1,0 +1,47 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="UnityEngine.UIElements ../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement class="decal-inspector-root decal-container">
+        <!-- Header Section -->
+        <ui:VisualElement class="decal-header-row">
+            <ui:VisualElement>
+                <ui:Label text="Static Baker Pro" class="decal-header-title" />
+                <ui:VisualElement class="decal-header-underline" />
+            </ui:VisualElement>
+            <ui:Label text="v2.0 Performance Edition" class="decal-header-stats" />
+        </ui:VisualElement>
+
+        <!-- Dashboard / Analytics -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="Scene Analytics" class="decal-header" />
+            <ui:VisualElement style="flex-direction: row; justify-content: space-around; padding: 10px;">
+                <ui:VisualElement style="align-items: center;">
+                    <ui:Label name="TotalCountLabel" text="0" style="font-size: 24px; -unity-font-style: bold; color: #7C8CFF;" />
+                    <ui:Label text="Total Decals" style="font-size: 10px; opacity: 0.6;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="align-items: center;">
+                    <ui:Label name="ActiveCountLabel" text="0" style="font-size: 24px; -unity-font-style: bold; color: #3FB950;" />
+                    <ui:Label text="Active" style="font-size: 10px; opacity: 0.6;" />
+                </ui:VisualElement>
+                <ui:VisualElement style="align-items: center;">
+                    <ui:Label name="IssueCountLabel" text="0" style="font-size: 24px; -unity-font-style: bold; color: #F85149;" />
+                    <ui:Label text="Invalid" style="font-size: 10px; opacity: 0.6;" />
+                    <ui:Button name="SelectInvalidBtn" text="Select" class="decal-mini-btn" style="height: 16px; font-size: 9px; margin-top: 4px; display: none;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Button name="ScanBtn" text="Scan Current Scene" class="decal-secondary-action-button" style="width: 100%; height: 28px; margin-top: 10px;" />
+        </ui:VisualElement>
+
+        <!-- Configuration -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="Bake Configuration" class="decal-header" />
+            <ui:TextField label="Export Root" name="PathField" value="Assets/Modules/DecalSystem/LevelData" />
+            <uie:EnumField label="Post-Bake Action" name="ActionField" />
+            <ui:Toggle label="Silent Mode" name="SilentToggle" value="false" />
+        </ui:VisualElement>
+
+        <!-- Actions -->
+        <ui:VisualElement style="margin-top: 20px;">
+            <ui:Button name="BakeBtn" text="Bake to Static Data Asset" class="decal-action-button" style="width: 100%; height: 36px; -unity-font-style: bold; font-size: 13px; margin-top: 0;" />
+            <ui:Label text="Note: Baking will convert GameObjects to pure data for 0-overhead runtime." class="decal-footer-info" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

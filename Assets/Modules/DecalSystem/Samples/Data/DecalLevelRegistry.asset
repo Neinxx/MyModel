@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa1f0956c85783641a88181a30b49a61, type: 3}
+  m_Name: DecalLevelRegistry
+  m_EditorClassIdentifier: 
+  scenesRootFolder: {fileID: 102900000, guid: d623d85fa0bbe00438ec0536dbed0787, type: 3}
+  decalDataRootFolder: {fileID: 102900000, guid: a467d328e9a82cc4dbec3259c3865f6c,
+    type: 3}
+  persistentWorldAsset: {fileID: 102900000, guid: 5be66913ecd1699448a71e42b813919c,
+    type: 3}
+  launcherSceneAsset: {fileID: 102900000, guid: b6ee946a5f33c574eb667858ed5938c1,
+    type: 3}
+  playerPrefab: {fileID: 4706108296981383100, guid: 5bde8290565847b4b869950435efa2ee,
+    type: 3}
+  cameraPrefab: {fileID: 6844827832873968229, guid: 8cb73e8ee6d8c2f4da95c0c05ed2408e,
+    type: 3}
+  uiCameraPrefab: {fileID: 7066583102957403285, guid: ea71ed7fed5551b4a912bc7c4e44c614,
+    type: 3}
+  testingHudPrefab: {fileID: 2078240875974433231, guid: 61604f2be72fb694db99ac8d4f2c82e5,
+    type: 3}
+  levels:
+  - levelName: DecalScene
+    sceneAsset: {fileID: 102900000, guid: 0c5f82f8687cf5042aa8051f40c40161, type: 3}
+    decalData: {fileID: 11400000, guid: ac7681b9685299c4e97f06b1007e9719, type: 2}
+  - levelName: DecalScene2
+    sceneAsset: {fileID: 102900000, guid: fd8935d3e8130fb45a4159a52bc5e415, type: 3}
+    decalData: {fileID: 11400000, guid: b594863d527246b44bd8ff929f3e8f6f, type: 2}
+  - levelName: TheWorld
+    sceneAsset: {fileID: 102900000, guid: 5be66913ecd1699448a71e42b813919c, type: 3}
+    decalData: {fileID: 0}

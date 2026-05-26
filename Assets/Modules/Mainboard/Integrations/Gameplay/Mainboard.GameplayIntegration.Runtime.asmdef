@@ -1,0 +1,26 @@
+{
+    "name": "Mainboard.GameplayIntegration.Runtime",
+    "rootNamespace": "Mainboard.Runtime.Integrations",
+    "references": [
+        "Mainboard.Runtime",
+        "UniRx",
+        "UniTask",
+        "WorldScene.Runtime",
+        "ResourceManager.Runtime",
+        "PlayerState.Runtime",
+        "SpawnPoint.Runtime",
+        "CharacterController.Runtime",
+        "CameraSystem.Runtime",
+        "UISystem.Runtime",
+        "DecalSystem.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

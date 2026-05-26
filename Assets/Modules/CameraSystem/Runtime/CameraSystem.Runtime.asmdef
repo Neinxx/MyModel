@@ -1,0 +1,25 @@
+{
+    "name": "CameraSystem.Runtime",
+    "rootNamespace": "CameraSystem.Runtime",
+    "references": [
+        "CharacterController.Runtime",
+        "Cinemachine",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Universal.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.cinemachine",
+            "expression": "2.0.0",
+            "define": "USE_CINEMACHINE"
+        }
+    ],
+    "noEngineReferences": false
+}

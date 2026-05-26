@@ -1,0 +1,234 @@
+/* 
+    DECAL SYSTEM NATIVE+ SKIN (USS) 
+    风格：原生增强 (Native & Champagne Gold)
+    理念：含蓄、内敛、深度集成
+*/
+
+.decal-root {
+    padding: 4px;
+    background-color: transparent; /* 融入原生背景 */
+}
+
+/* 页眉：低调的标识 - 统一 Portal 风格 */
+.decal-header {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-left-width: 3px;
+    border-left-color: #7C8CFF; /* Portal Blue */
+    padding: 6px 8px;
+    margin-bottom: 12px;
+    border-radius: 0;
+    flex-direction: row;
+    align-items: center;
+}
+
+  /* --- Aura Channel Strip --- */
+.aura-channel-strip {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    margin-bottom: 6px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+.aura-channel-header {
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    padding: 0 8px;
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.aura-channel-tag {
+    width: 20px;
+    height: 18px;
+    border-radius: 3px;
+    justify-content: center;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.aura-channel-tag-label {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: white;
+}
+
+.aura-channel-color-preview {
+    flex-grow: 1;
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0 10px;
+}
+
+.aura-channel-content {
+    flex-direction: row;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.aura-control-group {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.aura-compact-field {
+    flex-grow: 1;
+    margin-right: 8px;
+}
+
+.aura-compact-field .unity-label {
+    min-width: 32px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.decal-header-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+.decal-header-title {
+    -unity-font-style: bold;
+    font-size: 12px;
+    color: #B4B4B4;
+    letter-spacing: 0.5px;
+}
+
+/* 卡片容器：标准 HelpBox 增强版 - 统一 Portal 风格 */
+.decal-card {
+    background-color: transparent;
+    border-width: 0;
+    padding-top: 0;
+    padding-bottom: 8px;
+    padding-left: 0;
+    padding-right: 0;
+    margin-bottom: 15px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+}
+
+.decal-card-title {
+    -unity-font-style: bold;
+    font-size: 10px;
+    margin-top: 5px;
+    margin-bottom: 8px;
+    color: #7C8CFF; /* Portal Blue */
+    opacity: 0.8;
+}
+
+/* 图库网格：原生资产视图感 */
+.decal-gallery-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 4px;
+    background-color: #2D2D2D; /* 原生输入框色 */
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: #1A1A1A;
+}
+
+/* 贴花按钮：标准资产槽质感 */
+.decal-item-btn {
+    width: 62px;
+    height: 62px;
+    margin: 4px;
+    padding: 0;
+    border-width: 1px;
+    border-color: #333333;
+    border-radius: 3px;
+    background-color: #383838;
+    transition-duration: 0.1s;
+}
+
+.decal-item-btn:hover {
+    border-color: #7C8CFF;
+    background-color: #444444;
+}
+
+.decal-item-btn--selected {
+    border-color: #7C8CFF; /* 选中的 Portal Blue */
+    border-width: 1.5px;
+    background-color: #4A4A4A;
+}
+
+/* 序列帧角标：原生高亮色 */
+.decal-anim-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background-color: rgba(124, 140, 255, 0.9); /* Portal Blue 背景 */
+    color: #111111;
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+/* 层级行 */
+.layer-row {
+    flex-direction: row;
+    padding: 4px 6px;
+    margin-bottom: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-left-width: 2px;
+    border-left-color: transparent;
+}
+
+.layer-row:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* 帮助文本 */
+.decal-help-text {
+    font-size: 9px;
+    color: #666666;
+    margin-top: 4px;
+}
+
+/* ========================================================================
+   紧凑多列行 (Decal Compact Row Layout)
+   完美解决 Unity 多个 PropertyField 横向放置时标签重叠或挤扁输入框的排版 Bug。
+   采用高级立式微型标签设计 (Label on Top, Input on Bottom)
+   ======================================================================== */
+.decal-compact-row {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.decal-compact-row > PropertyField,
+.decal-compact-row > .unity-base-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+/* 强制重置子级元素为垂直立式布局 */
+.decal-compact-row .unity-base-field {
+    flex-direction: column !important;
+    align-items: stretch !important;
+}
+
+.decal-compact-row .unity-base-field__label {
+    min-width: auto !important;
+    max-width: none !important;
+    flex-basis: auto !important;
+    width: 100% !important;
+    margin-bottom: 3px !important;
+    padding-left: 0 !important;
+    -unity-font-style: bold;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4); /* Portal UI Muted Accent */
+    letter-spacing: 0.5px;
+}
+
+.decal-compact-row .unity-base-field__input {
+    width: 100% !important;
+    margin-left: 0 !important;
+}

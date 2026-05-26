@@ -1,0 +1,19 @@
+{
+    "name": "WorldScene.Editor",
+    "rootNamespace": "WorldScene.Editor",
+    "references": [
+        "WorldScene.Runtime",
+        "UniTask"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

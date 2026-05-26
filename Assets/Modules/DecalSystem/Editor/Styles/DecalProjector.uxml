@@ -1,0 +1,59 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="DecalSystemEditor.uss" />
+    <ui:VisualElement class="decal-inspector-root">
+        
+        <!-- 1. 头部标题 (统一 Portal 风格) -->
+        <ui:VisualElement class="decal-header-row">
+            <ui:Label text="Decal Projector" class="decal-header-title" />
+            <ui:Label text="Mini GPU System" class="decal-header-stats" />
+        </ui:VisualElement>
+
+        <!-- 2. 基本属性卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="基本属性" class="decal-header" />
+            <uie:PropertyField binding-path="decalTexture" label="贴图原图" name="uve_TextureField" />
+            <uie:PropertyField binding-path="color" label="颜色与强度 (HDR)" />
+            <uie:PropertyField binding-path="sortingOrder" label="渲染排序层级" />
+        </ui:VisualElement>
+
+        <!-- 3. 动画设置卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="动画设置 (Animation)" class="decal-header" />
+            <uie:PropertyField binding-path="rotationSpeed" label="旋转速度" />
+            
+            <ui:VisualElement class="decal-row">
+                <uie:PropertyField binding-path="pulseEffect" label="脉冲呼吸" style="flex-grow: 1;" />
+            </ui:VisualElement>
+            
+            <!-- 呼吸细节控制：使用垂直排列 + 缩进，确保对齐与层级感 -->
+            <ui:VisualElement name="uve_PulseSettings" style="margin-left: 15px; margin-top: 4px; padding-left: 5px; border-left-width: 1px; border-left-color: rgba(255, 255, 255, 0.1);">
+                <uie:PropertyField binding-path="pulseSpeed" label="呼吸频率 (Speed)" />
+                <uie:PropertyField binding-path="pulseRange" label="呼吸幅度 (Range)" />
+            </ui:VisualElement>
+
+            <uie:PropertyField binding-path="flipbookSpeed" label="序列帧 FPS" />
+        </ui:VisualElement>
+
+        <!-- 4. 形状设置卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="形状设置 (Shape)" class="decal-header" />
+            <uie:PropertyField binding-path="useRadialMask" label="圆形裁剪 (Mask)" />
+            <ui:VisualElement name="uve_ShapeSettings" style="margin-left: 15px; margin-top: 4px; padding-left: 5px; border-left-width: 1px; border-left-color: rgba(255, 255, 255, 0.1);">
+                <uie:PropertyField binding-path="radialSoftness" label="边缘虚化 (Softness)" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 5. 投影与混合卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="投影与混合 (Projection)" class="decal-header" />
+            <uie:PropertyField binding-path="uvScaleOffset" label="UV 缩放偏移 (ST)" />
+            <uie:PropertyField binding-path="angleFadeStart" label="角度淡出阈值" />
+            <uie:PropertyField binding-path="distanceFade" label="最大渲染距离" />
+            <uie:PropertyField binding-path="softFade" label="盒子边缘柔化" />
+        </ui:VisualElement>
+
+        <!-- 6. 动态库容器 -->
+        <ui:VisualElement name="uve_GridContainer" class="decal-gallery-container" />
+
+    </ui:VisualElement>
+</ui:UXML>

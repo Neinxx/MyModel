@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Decal_Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Decal_Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 76a962c4b281c4846ac0f5bacb46b159
+  m_SerializeEntries:
+  - m_GUID: a61fc51fdbe3bf042b72a7e9724304a7
+    m_Address: CharacterNPRArray
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shader
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e282220dadc1c2b4c9109daca1aeaf64
+    m_Address: DecalStencilWriteMini
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shader
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb700a1506809634ca4196defc9dacab
+    m_Address: DecalShaderMini
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shader
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 43c7c11caad5fdc45a53a8cd1b8a0fec, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 59118ec3cd81c054d96a02f34f2df95e, type: 2}
+    - {fileID: 11400000, guid: ec3f0c80a60f13b4a8ef0eabc35d468d, type: 2}

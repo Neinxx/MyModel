@@ -1,0 +1,17 @@
+{
+    "name": "ResourceManager.Runtime",
+    "rootNamespace": "ResourceManagerModule.Runtime",
+    "references": [
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

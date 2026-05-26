@@ -1,0 +1,24 @@
+{
+    "name": "ModularDemo.Editor",
+    "rootNamespace": "ModularDemo.Editor",
+    "references": [
+        "ModularDemo.Runtime",
+        "DecalSystem.Runtime",
+        "DecalSystem.Editor",
+        "WorldScene.Runtime",
+        "PlayerState.Runtime",
+        "UISystem.Runtime",
+        "CameraSystem.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

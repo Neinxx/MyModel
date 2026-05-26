@@ -1,0 +1,198 @@
+#pragma kernel Predict
+#pragma kernel SolveConstraints
+#pragma kernel Update
+
+struct Particle
+{
+    float3 position;
+    float3 velocity;
+    float3 predicted;
+    float density;
+    float lambda;
+    float3 normal;
+};
+
+RWStructuredBuffer<Particle> _Particles;
+
+// 仿真参数
+float _DeltaTime;
+float _ParticleRadius;
+float _RestDensity;
+float3 _Gravity;
+float _Viscosity;
+float _Stiffness;
+
+// 形状约束力场
+int _TargetShape; // 0: None, 1: Sphere, 2: Box
+float3 _ShapeCenter;
+float3 _ShapeSize;
+float _ShapeForce;
+
+// 核心参数
+int _UseCore;
+float _CoreRadius;
+float _CoreForce;
+
+// 邻域搜索参数 (Spatial Hash)
+uint _ParticleCount;
+float _GridSize;
+uint _GridCount;
+
+// SDF 函数库
+float sdSphere(float3 p, float s)
+{
+    return length(p) - s;
+}
+
+float sdBox(float3 p, float3 b)
+{
+    float3 q = abs(p) - b;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+
+// 缓冲区
+StructuredBuffer<uint> _GridOffsets; // 每个网格的起始索引 (由 C# 提供)
+
+// 辅助：获取网格 Key
+uint GetGridKey(float3 pos)
+{
+    int3 gridPos = floor(pos / _GridSize);
+    return (uint)((gridPos.x * 73856093) ^ (gridPos.y * 19349663) ^ (gridPos.z * 83492791)) % _GridCount;
+}
+
+[numthreads(64, 1, 1)]
+void Predict(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ParticleCount) return;
+
+    _Particles[id.x].velocity += _Gravity * _DeltaTime;
+    _Particles[id.x].predicted = _Particles[id.x].position + _Particles[id.x].velocity * _DeltaTime;
+}
+
+[numthreads(64, 1, 1)]
+void SolveConstraints(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ParticleCount) return;
+
+    float3 pos_i = _Particles[id.x].predicted;
+    float density_i = 0;
+    float3 normal_i = float3(0, 0, 0);
+    float h = _ParticleRadius * 2.5; 
+
+    // 搜索邻域网格
+    for (int ox = -1; ox <= 1; ox++)
+    {
+        for (int oy = -1; oy <= 1; oy++)
+        {
+            for (int oz = -1; oz <= 1; oz++)
+            {
+                uint neighborKey = GetGridKey(pos_i + float3(ox, oy, oz) * _GridSize);
+                uint startIdx = _GridOffsets[neighborKey];
+                
+                for (uint j = startIdx; j < _ParticleCount; j++)
+                {
+                    if (GetGridKey(_Particles[j].position) != neighborKey) break;
+                    if (id.x == j) continue;
+
+                    float3 r_vec = pos_i - _Particles[j].predicted;
+                    float r = length(r_vec);
+                    
+                    if (r < h && r > 0.001)
+                    {
+                        float weight = 1.0 - (r / h);
+                        density_i += weight * weight * weight;
+                        
+                        // 计算密度梯度 (法线)
+                        normal_i += normalize(r_vec) * weight * weight;
+                    }
+                }
+            }
+        }
+    }
+
+    _Particles[id.x].density = density_i;
+    _Particles[id.x].normal = normal_i;
+    
+    // 密度校正：让史莱姆倾向于保持 _RestDensity
+    float C = (density_i / _RestDensity) - 1.0;
+    _Particles[id.x].lambda = -C * _Stiffness;
+}
+
+[numthreads(64, 1, 1)]
+void Update(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _ParticleCount) return;
+
+    // 1. 获取基础数据
+    float3 pos_i = _Particles[id.x].predicted;
+    float3 vel_i = _Particles[id.x].velocity;
+    float3 deltaP = float3(0, 0, 0);
+    float3 viscosityForce = float3(0, 0, 0);
+    float h = _ParticleRadius * 2.5; 
+    float lambda_i = _Particles[id.x].lambda;
+
+    // 2. 邻域交互：压力修正 (PBF) + 黏滞力 + 表面张力
+    for (int ox = -1; ox <= 1; ox++)
+    {
+        for (int oy = -1; oy <= 1; oy++)
+        {
+            for (int oz = -1; oz <= 1; oz++)
+            {
+                uint neighborKey = GetGridKey(pos_i + float3(ox, oy, oz) * _GridSize);
+                uint startIdx = _GridOffsets[neighborKey];
+                
+                for (uint j = startIdx; j < _ParticleCount; j++)
+                {
+                    if (GetGridKey(_Particles[j].position) != neighborKey) break;
+                    if (id.x == j) continue;
+
+                    float3 r_vec = pos_i - _Particles[j].predicted;
+                    float r = length(r_vec);
+                    
+                    if (r < h && r > 0.001)
+                    {
+                        float weight = 1.0 - (r / h);
+                        float3 dir = normalize(r_vec);
+
+                        // 1. PBF 互相感知：改进人工压力防止聚束
+                        float scorr = -0.15 * pow(weight, 4); 
+                        deltaP += (lambda_i + _Particles[j].lambda + scorr) * dir * weight;
+                        
+                        // 2. 黏滞力
+                        viscosityForce += (_Particles[j].velocity - vel_i) * weight * 0.05;
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. 表面张力：本能寻找并平滑外轮廓
+    float3 normal_i = _Particles[id.x].normal;
+    float normalLen = length(normal_i);
+    if (normalLen > 0.1)
+    {
+        // 沿着梯度反方向拉，使表面向内收缩，形成光滑轮廓
+        deltaP -= normalize(normal_i) * _Stiffness * 0.02;
+    }
+
+    // 4. 全局凝聚力与形状维持
+    float3 toCenter = _ShapeCenter - pos_i;
+    float3 cohesion = normalize(toCenter) * length(toCenter) * _ShapeForce * 0.05;
+
+    // 5. 应用所有修正与阻尼
+    _Particles[id.x].predicted += deltaP + cohesion;
+    
+    float damping = 0.98; 
+    _Particles[id.x].velocity = ((_Particles[id.x].predicted - _Particles[id.x].position) / _DeltaTime + viscosityForce) * damping;
+    
+    // 6. 地面碰撞
+    if (_Particles[id.x].predicted.y < 0.05)
+    {
+        _Particles[id.x].predicted.y = 0.05;
+        _Particles[id.x].velocity.y *= -0.1;
+        _Particles[id.x].velocity.x *= 0.8;
+        _Particles[id.x].velocity.z *= 0.8;
+    }
+
+    _Particles[id.x].position = _Particles[id.x].predicted;
+}

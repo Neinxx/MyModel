@@ -1,0 +1,211 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b95c8b0f76c60c441bc22ad2954d1a1c, type: 3}
+  m_Name: NewDecalAtlasMini
+  m_EditorClassIdentifier: 
+  maxStaticDecals: 65536
+  spatialGridSize: 10
+  defaultSize: {x: 2, y: 2, z: 2}
+  defaultLayer:
+    serializedVersion: 2
+    m_Bits: 2
+  creationRaycastLayer:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  textureSize: 128
+  compressionFormat: 2
+  showDebugGrid: 1
+  sourcePath: Assets/Modules/DecalSystem/Samples/Textures
+  exportPath: Assets/Modules/DecalSystem/Samples/Data
+  slices:
+  - name: T_flare8_vfx
+    albedoMap: {fileID: 2800000, guid: 015f5186e5361fb478383abc9152f735, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_Wf4
+    albedoMap: {fileID: 2800000, guid: 118240a75268e474089a7a5ce0f19118, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_CloudNoise_Tiled
+    albedoMap: {fileID: 2800000, guid: f4985b00dbbad4a4aa8a0794dd7d93cd, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_fire_flipbook4_sm
+    albedoMap: {fileID: 2800000, guid: b9f8a5fa45fc41945b720b7cbdcdfe13, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_HU85k
+    albedoMap: {fileID: 2800000, guid: 880d09a4bfb747b4db9c9a0d84a182b2, type: 3}
+    normalMap: {fileID: 0}
+  - name: zGuanghuan
+    albedoMap: {fileID: 2800000, guid: 98e216f60ea451d41b41e9193b78f7f9, type: 3}
+    normalMap: {fileID: 0}
+  - name: New_Graph_output
+    albedoMap: {fileID: 2800000, guid: 1ef5b9cb39daf824f9db64e139bb4e63, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_AuraC12
+    albedoMap: {fileID: 2800000, guid: 3f07dd48bc69e8849a486b6841fd496e, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Aurax44
+    albedoMap: {fileID: 2800000, guid: 63a6302b334415149b5943898c2f1f8d, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_BlastUi6
+    albedoMap: {fileID: 2800000, guid: 284f948953bf3b74e82b63a3cc0b03c8, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Cracks336
+    albedoMap: {fileID: 2800000, guid: e328938897668de4487dd69f30be73f7, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_FirePanningCyl45
+    albedoMap: {fileID: 2800000, guid: bf8cc4b05357a8242ba74c5e5a981dad, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Gradient_circle22
+    albedoMap: {fileID: 2800000, guid: c5386d8092ed8b54d8fbde20211645f6, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_LiquidVertical_Wave
+    albedoMap: {fileID: 2800000, guid: 80b7f8993e4bbba458bd8987e5bdf5e2, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_MarbleNoise_tiled
+    albedoMap: {fileID: 2800000, guid: 526fdd67c9f27f84b81403f339f1d48e, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_NKQ443
+    albedoMap: {fileID: 2800000, guid: 9b85ed796aad37242884af83ae3275df, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise1_tiled
+    albedoMap: {fileID: 2800000, guid: 4835b5b477e297047bf3696243c656e8, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise56ko
+    albedoMap: {fileID: 2800000, guid: 933c0ee53a84cc54ba06187047798a5b, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise78a
+    albedoMap: {fileID: 2800000, guid: 4144dbc673956b1449f6921a00757ec8, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_6Yu1
+    albedoMap: {fileID: 2800000, guid: 10a771b59506abd4884e5eb8268f39e6, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_W5i
+    albedoMap: {fileID: 2800000, guid: a35752f298a60ff45a70345f5e0aae5c, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_Wf0
+    albedoMap: {fileID: 2800000, guid: ab4ac932cf74d9f46af2392c5cbdee21, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_Wfk14
+    albedoMap: {fileID: 2800000, guid: 4908d9ad391a0dc43ac549f65a283c13, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Noise_Wo14
+    albedoMap: {fileID: 2800000, guid: 63e810498e78768498f9c2d9d136bf7d, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_PerlinNoise_Tiled
+    albedoMap: {fileID: 2800000, guid: 44e05528380cd0e46b98340d75e19a10, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Smo_G1
+    albedoMap: {fileID: 2800000, guid: dac5f57b5119eea4b80542fb32a27319, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_smoke41_flipbook
+    albedoMap: {fileID: 2800000, guid: 72d2ba1814a41084b836e0697ef663a4, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_smoke_b7
+    albedoMap: {fileID: 2800000, guid: e3ef08eb77c253a42b986b636c6bb653, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Smoke_flipbook_N7
+    albedoMap: {fileID: 2800000, guid: 8b28c76507dddb543ba8ab60bc9ec131, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_texr41
+    albedoMap: {fileID: 2800000, guid: ba9bbd75733248641939943b91deb48b, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_trail12
+    albedoMap: {fileID: 2800000, guid: e7eb01d99d216434b8de100df91cccde, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_CircleFit1
+    albedoMap: {fileID: 2800000, guid: 06e650a18fd8a22469cdd7c484af7a40, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Ex1d
+    albedoMap: {fileID: 2800000, guid: e0dffe664de5ae945bfbfb90199707ba, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_exp_dissapear
+    albedoMap: {fileID: 2800000, guid: 93df838b3207eeb4ea6551a94c93f5d9, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Flare_616
+    albedoMap: {fileID: 2800000, guid: 59d28ef40d7011144b0a549fcea80fa7, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Flare_666
+    albedoMap: {fileID: 2800000, guid: 7ac236b935be13048a3506efee9a026b, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Glo31
+    albedoMap: {fileID: 2800000, guid: a6a73b8daef18984a8b48d9767bfb5ef, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_hit22
+    albedoMap: {fileID: 2800000, guid: 53616ba276d0a804b86d7c8760f45823, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Noise41
+    albedoMap: {fileID: 2800000, guid: da258429f4754da48b7b05641ee86146, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Noise_44xainv
+    albedoMap: {fileID: 2800000, guid: a5602f1e6b474054984ce23e67b395e4, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_NoiseF1
+    albedoMap: {fileID: 2800000, guid: 0ae86da9c10d650458aeb043e7e971ab, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_RoundSmoke71
+    albedoMap: {fileID: 2800000, guid: 1c991bc1b65e23946a971d5a4a551486, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_simplex_1
+    albedoMap: {fileID: 2800000, guid: 3a06d59e1e619e24e9840d93faa7d54b, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_spark44
+    albedoMap: {fileID: 2800000, guid: 45a3c4de02abee9439a35527de07713e, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_SparklesF21
+    albedoMap: {fileID: 2800000, guid: d32797c92e4bc704caf1de6da206dacb, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_Spiral07
+    albedoMap: {fileID: 2800000, guid: 4e1071cceb8523343840bafd7a24eadf, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_VFX_WindNoise1
+    albedoMap: {fileID: 2800000, guid: 1c82ddbc78e707c4e856fb363005e057, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Wave43
+    albedoMap: {fileID: 2800000, guid: 84bfe654a31107a4c858fb4d8e06c451, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Wave66
+    albedoMap: {fileID: 2800000, guid: 3dd07c427fea82c4c984504834b10cf9, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_wavesKI96
+    albedoMap: {fileID: 2800000, guid: 4d704cde053ec4b46998513e63d28d65, type: 3}
+    normalMap: {fileID: 0}
+  - name: T_Windstreak3
+    albedoMap: {fileID: 2800000, guid: 18bd5ae44500ab04495e1015834cbecf, type: 3}
+    normalMap: {fileID: 0}
+  - name: New_Graph_output_2
+    albedoMap: {fileID: 2800000, guid: f2876424313bba449a26eccaafcd90d7, type: 3}
+    normalMap: {fileID: 2800000, guid: 34cd38ef0eb3c1f4cae43ac8015fe1ef, type: 3}
+  - name: New_Graph_star_f_1
+    albedoMap: {fileID: 2800000, guid: 59277e94d92841b4ab704d34115e0934, type: 3}
+    normalMap: {fileID: 2800000, guid: 5dd80ba9898a2814580851a3b124f3f5, type: 3}
+  - name: New_Graph_star_f_2
+    albedoMap: {fileID: 2800000, guid: 4fa9d41ee55660046b8196218f7ef278, type: 3}
+    normalMap: {fileID: 2800000, guid: 8e47c02d1b5b9bf46b497cf2edf874d3, type: 3}
+  - name: New_Graph_star_f_3
+    albedoMap: {fileID: 2800000, guid: 0c12346c5c031744bac0f1a0048d7d55, type: 3}
+    normalMap: {fileID: 2800000, guid: 6077342686a9b6140a17844ba1913f14, type: 3}
+  - name: New_Graph_box_1
+    albedoMap: {fileID: 2800000, guid: 4e37fdca0695b1c47977dc1a0dd4ca73, type: 3}
+    normalMap: {fileID: 2800000, guid: f1e72bb8a0c451e46ba844e537638361, type: 3}
+  - name: New_Graph_g_1
+    albedoMap: {fileID: 2800000, guid: 68eec84c9b271134aab0fd1c34cf14ff, type: 3}
+    normalMap: {fileID: 0}
+  - name: New_Graph_g_1_n
+    albedoMap: {fileID: 2800000, guid: d0b54beb0b10f984f9f407e6329a453f, type: 3}
+    normalMap: {fileID: 0}
+  - name: New_Graph_basecolor
+    albedoMap: {fileID: 2800000, guid: 4c70c58dc398c1c419864a90255ec767, type: 3}
+    normalMap: {fileID: 2800000, guid: 27ef04fd361fbcc4fbb21e8216dedb91, type: 3}
+  - name: New_Graph_basecolor
+    albedoMap: {fileID: 2800000, guid: e7bcc0c1ca6560b41b3e08e5b9f75fa7, type: 3}
+    normalMap: {fileID: 2800000, guid: 9c9e3f11ad6e6da479b1c650a90541a4, type: 3}
+  bakedArray: {fileID: 18700000, guid: c15209fe0b3b55f49bb72ada3de1a5bd, type: 2}
+  bakedNormalArray: {fileID: 18700000, guid: 513189a11312c6648a1e72376d1c422d, type: 2}

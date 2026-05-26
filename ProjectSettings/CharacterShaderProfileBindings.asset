@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d793ee5ff9f962478423bed8834592f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bindings:
+  - materialGuid: 9b7e8b1ac76b89d4793742bb70b4bad2
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: 4247875108e29ca4aba30b4af56b4bff
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: de00137bf9347a8459c76358a0933bc2
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: 4a4203d4c40932e42b949c607d52ab85
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: d1af6c0f5f006de4295386e4b608b4d1
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: 476e3c518edf1a04b803e73f5ab53c5a
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: 0183ea20e6653c947ab5bb324d20fe47
+    profileGuid: a423584859133eb48843a6a114d3b094
+  - materialGuid: 38e47eed13c6b8349992debc97f9c85d
+    profileGuid: a423584859133eb48843a6a114d3b094

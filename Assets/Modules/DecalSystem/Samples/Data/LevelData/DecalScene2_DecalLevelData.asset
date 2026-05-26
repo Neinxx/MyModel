@@ -1,0 +1,141 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b73b274d531334fa884d17fbeef986, type: 3}
+  m_Name: DecalScene2_DecalLevelData
+  m_EditorClassIdentifier: 
+  sceneName: DecalScene2
+  entries:
+  - position: {x: -21.211166, y: -1.5315111, z: 16.77867}
+    boundingRadius: 5.028516
+    layerMask: 2
+    sortingOrder: 0
+    data:
+      wtd0: {x: 0.31294355, y: 0.10306145, z: 0.000000026275547, w: 6.7957373}
+      wtd1: {x: -0.0000000017037833, y: -0.000000041912976, z: 0.32947734, w: -5.528192}
+      wtd2: {x: 0.10306145, y: -0.3129435, z: -0.000000032698562, w: 1.2067779}
+      wtd3: {x: 0, y: 0, z: 0, w: 1}
+      dtw0: {x: 2.8828022, y: -0.00000013567998, z: 0.9493912, w: -20.736471}
+      dtw1: {x: 0.9493912, y: -0.00000036181328, z: -2.8828027, w: -2.9729123}
+      dtw2: {x: 0.00000013567998, y: 3.03511, z: -0.0000003618133, w: 16.77867}
+      dtw3: {x: 0, y: 0, z: 0, w: 1}
+      color: {x: 1, y: 1, z: 1, w: 1}
+      uvScaleOffset: {x: 1, y: 1, z: 0, w: 0}
+      fadeParams: {x: 0.5, y: 50, z: 14, w: 0}
+      animParams: {x: 0, y: 0, z: 0.2, w: 0}
+      animParams2: {x: 1, y: 15, z: 0, w: 0}
+      auraColor2: {x: 0, y: 0, z: 0, w: 0}
+      auraColor3: {x: 0, y: 0, z: 0, w: 0}
+      auraColor4: {x: 0, y: 0, z: 0, w: 0}
+      auraRotSpeeds: {x: 0, y: 0, z: 0, w: 0}
+      auraPulseParams: {x: 0, y: 0, z: 0, w: 0}
+      auraScaleParams: {x: 0, y: 0, z: 0, w: 0}
+      auraMiscParams: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: -15.52419, y: -0.78405, z: 29.370512}
+    boundingRadius: 5.028516
+    layerMask: 2
+    sortingOrder: 0
+    data:
+      wtd0: {x: 0.32947734, y: 0, z: 0, w: 5.1148686}
+      wtd1: {x: 0, y: -0.000000039276756, z: 0.32947734, w: -9.676918}
+      wtd2: {x: -0, y: -0.32947734, z: -0.000000039276756, w: -0.7583255}
+      wtd3: {x: 0, y: 0, z: 0, w: 1}
+      dtw0: {x: 3.03511, y: 0, z: 0, w: -15.52419}
+      dtw1: {x: 0, y: -0.00000036181328, z: -3.03511, w: -2.301605}
+      dtw2: {x: 0, y: 3.03511, z: -0.00000036181328, w: 29.370512}
+      dtw3: {x: 0, y: 0, z: 0, w: 1}
+      color: {x: 1, y: 1, z: 1, w: 1}
+      uvScaleOffset: {x: 1, y: 1, z: 0, w: 0}
+      fadeParams: {x: 0.5, y: 50, z: 14, w: 0.455}
+      animParams: {x: 0, y: 0, z: 0.2, w: 0}
+      animParams2: {x: 1, y: 15, z: 0, w: 0}
+      auraColor2: {x: 0, y: 0, z: 0, w: 0}
+      auraColor3: {x: 0, y: 0, z: 0, w: 0}
+      auraColor4: {x: 0, y: 0, z: 0, w: 0}
+      auraRotSpeeds: {x: 0, y: 0, z: 0, w: 0}
+      auraPulseParams: {x: 0, y: 0, z: 0, w: 0}
+      auraScaleParams: {x: 0, y: 0, z: 0, w: 0}
+      auraMiscParams: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: -26.307, y: -0.661, z: 17.466}
+    boundingRadius: 1.732
+    layerMask: 2
+    sortingOrder: 0
+    data:
+      wtd0: {x: 0.5, y: 0, z: 0, w: 13.1535}
+      wtd1: {x: 0, y: -0.00000005960463, z: 0.49999994, w: -8.732999}
+      wtd2: {x: -0, y: -0.49999994, z: -0.00000005960463, w: -0.83049893}
+      wtd3: {x: 0, y: 0, z: 0, w: 1}
+      dtw0: {x: 2, y: 0, z: 0, w: -26.307}
+      dtw1: {x: 0, y: -0.00000023841858, z: -2.0000002, w: -1.6610001}
+      dtw2: {x: 0, y: 2.0000002, z: -0.00000023841858, w: 17.466}
+      dtw3: {x: 0, y: 0, z: 0, w: 1}
+      color: {x: 1, y: 1, z: 1, w: 1}
+      uvScaleOffset: {x: 1, y: 1, z: 0, w: 0}
+      fadeParams: {x: 0, y: 33.6, z: 14, w: 0}
+      animParams: {x: 0, y: 2, z: 0.2, w: 0.1}
+      animParams2: {x: 1, y: 15, z: 0, w: 0}
+      auraColor2: {x: 0, y: 0, z: 0, w: 0}
+      auraColor3: {x: 0, y: 0, z: 0, w: 0}
+      auraColor4: {x: 0, y: 0, z: 0, w: 0}
+      auraRotSpeeds: {x: 0, y: 0, z: 0, w: 0}
+      auraPulseParams: {x: 0, y: 0, z: 0, w: 0}
+      auraScaleParams: {x: 0, y: 0, z: 0, w: 0}
+      auraMiscParams: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: -16.203701, y: -0.44952208, z: 6.6539707}
+    boundingRadius: 5.028516
+    layerMask: 2
+    sortingOrder: 0
+    data:
+      wtd0: {x: 0.31294355, y: 0.10306145, z: 0.000000026275547, w: 5.1171722}
+      wtd1: {x: -0.0000000017037833, y: -0.000000041912976, z: 0.32947734, w: -2.1923327}
+      wtd2: {x: 0.10306145, y: -0.3129435, z: -0.000000032698562, w: 1.0293022}
+      wtd3: {x: 0, y: 0, z: 0, w: 1}
+      dtw0: {x: 2.8828022, y: -0.00000013567998, z: 0.9493912, w: -15.729006}
+      dtw1: {x: 0.9493912, y: -0.00000036181328, z: -2.8828027, w: -1.8909235}
+      dtw2: {x: 0.00000013567998, y: 3.03511, z: -0.0000003618133, w: 6.6539707}
+      dtw3: {x: 0, y: 0, z: 0, w: 1}
+      color: {x: 1, y: 1, z: 1, w: 1}
+      uvScaleOffset: {x: 1, y: 1, z: 0, w: 0}
+      fadeParams: {x: 0, y: 34.6, z: 14, w: 0}
+      animParams: {x: 0, y: 0, z: 0.2, w: 0}
+      animParams2: {x: 1, y: 15, z: 0, w: 0}
+      auraColor2: {x: 0, y: 0, z: 0, w: 0}
+      auraColor3: {x: 0, y: 0, z: 0, w: 0}
+      auraColor4: {x: 0, y: 0, z: 0, w: 0}
+      auraRotSpeeds: {x: 0, y: 0, z: 0, w: 0}
+      auraPulseParams: {x: 0, y: 0, z: 0, w: 0}
+      auraScaleParams: {x: 0, y: 0, z: 0, w: 0}
+      auraMiscParams: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: 0, y: 0, z: 0}
+    boundingRadius: 5.0285163
+    layerMask: 2
+    sortingOrder: 0
+    data:
+      wtd0: {x: 0.25448024, y: 0.20927282, z: 0.000000020557346, w: 0}
+      wtd1: {x: -0.000000045005002, y: 0.0000000392678, z: 0.32947734, w: 0}
+      wtd2: {x: 0.20927285, y: -0.25448027, z: 0.00000006775731, w: -0.5}
+      wtd3: {x: 0, y: 0, z: 0, w: 1}
+      dtw0: {x: 2.344245, y: -0.00000054271993, z: 1.9277987, w: 0.9638994}
+      dtw1: {x: 1.927799, y: 0.00000036181328, z: -2.344245, w: -1.1721225}
+      dtw2: {x: 0.000000090453334, y: 3.03511, z: 0.00000054271993, w: 0.00000027135997}
+      dtw3: {x: 0, y: 0, z: 0, w: 1}
+      color: {x: 1, y: 1, z: 1, w: 1}
+      uvScaleOffset: {x: 1, y: 1, z: 0, w: 0}
+      fadeParams: {x: 0, y: 34.6, z: 14, w: 0}
+      animParams: {x: 0, y: 0, z: 0.2, w: 0}
+      animParams2: {x: 1, y: 15, z: 0, w: 0}
+      auraColor2: {x: 0, y: 0, z: 0, w: 0}
+      auraColor3: {x: 0, y: 0, z: 0, w: 0}
+      auraColor4: {x: 0, y: 0, z: 0, w: 0}
+      auraRotSpeeds: {x: 0, y: 0, z: 0, w: 0}
+      auraPulseParams: {x: 0, y: 0, z: 0, w: 0}
+      auraScaleParams: {x: 0, y: 0, z: 0, w: 0}
+      auraMiscParams: {x: 0, y: 0, z: 0, w: 0}

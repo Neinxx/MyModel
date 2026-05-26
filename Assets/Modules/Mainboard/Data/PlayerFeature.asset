@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49adbb2f79cd019458d7a91be9e86e10, type: 3}
+  m_Name: PlayerFeature
+  m_EditorClassIdentifier: 
+  priority: 20
+  playerState: {fileID: 11400000, guid: 9635d204eec2f9b4bbe9c94b72403b35, type: 2}
+  playerPrefabKey: Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab
+  visualPrefabKey: Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab
+  defaultSpawnPointID: Start
+  ensureCharacterMotor: 1
+  warnIfCharacterBrainMissing: 1

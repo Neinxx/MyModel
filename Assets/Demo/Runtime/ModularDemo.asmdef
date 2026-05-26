@@ -1,0 +1,29 @@
+{
+    "name": "ModularDemo.Runtime",
+    "rootNamespace": "ModularDemo.Runtime",
+    "references": [
+        "DecalSystem.Runtime",
+        "SpawnPoint.Runtime",
+        "PortalSystem.Runtime",
+        "Mainboard.Runtime",
+        "PlayerState.Runtime",
+        "UISystem.Runtime",
+        "CharacterController.Runtime",
+        "CameraSystem.Runtime",
+        "InteractionSystem.Runtime",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "Cinemachine",
+        "ResourceManager.Runtime",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

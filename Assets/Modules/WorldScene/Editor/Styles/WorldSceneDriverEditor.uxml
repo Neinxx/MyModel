@@ -1,0 +1,26 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement class="registry-root">
+        <!-- Header Section -->
+        <ui:VisualElement class="registry-header">
+            <ui:Label text="WORLD ORCHESTRATOR" style="-unity-font-style: bold; font-size: 14px;" />
+            <ui:Label text="World Scene v1.0" style="opacity: 0.5; font-size: 10px;" />
+        </ui:VisualElement>
+
+        <!-- Configuration Section -->
+        <ui:Label text="ASSETS &amp; CONFIGURATION" style="font-size: 10px; -unity-font-style: bold; color: #3FB950; margin-bottom: 5px;" />
+        <uie:PropertyField binding-path="registry" label="Level Registry" />
+
+        <!-- Runtime Monitor Section -->
+        <ui:VisualElement style="margin-top: 15px;">
+            <ui:Label text="RUNTIME STATUS MONITOR" style="font-size: 10px; -unity-font-style: bold; color: #3FB950; margin-bottom: 5px;" />
+            <ui:VisualElement class="monitor-container" style="background-color: rgba(0, 0, 0, 0.15); padding: 8px; border-radius: 4px;">
+                <uie:PropertyField name="state-field" binding-path="state" label="Current State" />
+                <uie:PropertyField name="step-field" binding-path="currentStep" label="Current Step" />
+                
+                <!-- Dynamic progress bar area -->
+                <ui:ProgressBar name="loading-bar" title="Loading Progress" style="margin-top: 6px; display: none;" />
+                <uie:PropertyField name="loading-field" binding-path="loadingProgress" label="Progress Value" style="margin-top: 4px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

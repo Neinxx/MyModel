@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03bf7b1900100e342afde2a732e727c3, type: 3}
+  m_Name: Auto1KeyBuildSettings
+  m_EditorClassIdentifier: 
+  activeProfileIndex: 0
+  profiles:
+  - profileName: Windows Release
+    buildTarget: 19
+    outputDirectory: E:\Demo001
+    developmentBuild: 1
+    cleanOutputBeforeBuild: 1
+    runPreflightBeforeBuild: 1
+    writeBuildReport: 1
+  sceneFolderPaths:
+  - Assets/Demo/Art/Scenes
+  shaderFolderPaths:
+  - Assets/Modules/DecalSystem/Shaders
+  - Assets/Modules/CharacterShader
+  decalGroupName: Decal_Group
+  decalConfigSearchQuery: t:DecalAtlasConfig
+  autoPromoteRedundancies: 1
+  sharedGroupName: Shared_AutoGroup
+  enableContentUpdateSupport: 1
+  useHashBundleNamesForContentUpdates: 1
+  autoMoveChangedStaticContent: 1
+  contentUpdateGroupName: Content_Update
+  localContentUpdateTestMode: 1
+  localContentUpdateServerDataPath: ServerData/[BuildTarget]
+  protectedLocalAddressableKeys:
+  - Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab
+  - Assets/Demo/Data/WorldSceneDriver.prefab
+  - Assets/Demo/Data/NewShaderVariants.shadervariants
+  - Assets/Demo/Art/Prefabs/UIRoot.prefab
+  - Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab
+  - Assets/Demo/Art/Prefabs/CameraView.prefab
+  previousContentStatePath: 
+  contentUpdateRestrictionMode: 2

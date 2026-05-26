@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b3e3c60b3a7f9448888bfff0083c257, type: 3}
+  m_Name: LevelRegistry
+  m_EditorClassIdentifier: 
+  scenesRootFolder: {fileID: 102900000, guid: 78a9033e2e2e88c4ba5586784966dee5, type: 3}
+  persistentWorldAsset: {fileID: 102900000, guid: 53dce1a2f5e77b14ebda553f9548119d,
+    type: 3}
+  launcherSceneAsset: {fileID: 102900000, guid: 5d0ad171f5e102040bcffa54b7749a00,
+    type: 3}
+  defaultSubLevel: Level1
+  playerPrefab: {fileID: 4706108296981383100, guid: 5bde8290565847b4b869950435efa2ee,
+    type: 3}
+  cameraPrefab: {fileID: 3417542047468628606, guid: 611dd7cbef4bba842b6c8eb91aa61280,
+    type: 3}
+  uiCameraPrefab: {fileID: 0}
+  levels:
+  - levelName: Level1
+    sceneAsset: {fileID: 102900000, guid: 86bff0a44ce95de4599674cc9c331716, type: 3}
+    moduleData: {fileID: 11400000, guid: 1f4b76b6e80a22e448c99ce82e734578, type: 2}
+    cachedScenePath: Assets/Demo/Art/Scenes/Scenes/SubScenes/Level1/Level1.unity
+  - levelName: Level2
+    sceneAsset: {fileID: 102900000, guid: 63f1b4224a8e78d4a80c7f02d6c86602, type: 3}
+    moduleData: {fileID: 11400000, guid: 5aca645e4e14f5e42b9f2fe1abbbd4f7, type: 2}
+    cachedScenePath: Assets/Demo/Art/Scenes/Scenes/SubScenes/Level2/Level2.unity
+  - levelName: TheWorld
+    sceneAsset: {fileID: 102900000, guid: 53dce1a2f5e77b14ebda553f9548119d, type: 3}
+    moduleData: {fileID: 11400000, guid: cc5ee0c5d46f6d145a92fd632b3ee0a7, type: 2}
+    cachedScenePath: Assets/Demo/Art/Scenes/Scenes/TheWorld.unity
+  cachedPersistentWorldPath: Assets/Demo/Art/Scenes/Scenes/TheWorld.unity

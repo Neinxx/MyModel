@@ -1,0 +1,46 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement class="portal-inspector-root">
+        
+        <!-- 1. Header with Stats -->
+        <ui:VisualElement class="portal-header-row">
+            <ui:VisualElement>
+                <ui:Label text="PORTAL HUB" class="portal-header-title" />
+                <ui:Label text="Spatial Transition Component" style="font-size: 10px; opacity: 0.5;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="align-items: flex-end;">
+                <ui:Label text="STATE" class="portal-header-stats" />
+                <ui:Label text="READY" name="uve_RuntimeState" style="font-size: 11px; -unity-font-style: bold; color: #3FB950;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 2. Destination Settings -->
+        <ui:VisualElement class="portal-section">
+            <ui:Label text="DESTINATION CONFIGURATION" class="portal-section-header" />
+            
+            <!-- We will replace these string fields with Dropdowns in the C# Inspector -->
+            <ui:VisualElement name="uve_LevelDropdownContainer" />
+            <ui:VisualElement name="uve_SpawnDropdownContainer" />
+            
+            <!-- Hidden fields for binding -->
+            <uie:PropertyField binding-path="targetLevelName" name="uve_LevelRaw" style="display: none;" />
+            <uie:PropertyField binding-path="targetSpawnPointID" name="uve_SpawnRaw" style="display: none;" />
+        </ui:VisualElement>
+
+        <!-- 3. Aesthetics -->
+        <ui:VisualElement class="portal-section">
+            <ui:Label text="AESTHETICS" class="portal-section-header" />
+            <uie:PropertyField binding-path="portalColor" label="Gizmo Color" 
+                tooltip="The color of the portal box in the Scene view." />
+        </ui:VisualElement>
+
+        <!-- 4. Runtime Actions -->
+        <ui:VisualElement class="portal-section">
+            <ui:Label text="RUNTIME DIAGNOSTICS" class="portal-section-header" />
+            <ui:Button name="uve_TestButton" text="TEST TELEPORT" class="portal-action-button" />
+            <ui:Label text="Only available in Play Mode" name="uve_PlayModeInfo" 
+                style="font-size: 9px; opacity: 0.3; -unity-text-align: middle-center; margin-top: 4px;" />
+        </ui:VisualElement>
+
+        <ui:Label text="PORTAL SYSTEM MODULE V1.2" class="portal-footer-info" />
+    </ui:VisualElement>
+</ui:UXML>

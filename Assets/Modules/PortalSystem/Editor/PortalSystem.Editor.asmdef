@@ -1,0 +1,18 @@
+{
+    "name": "PortalSystem.Editor",
+    "rootNamespace": "PortalSystem.Editor",
+    "references": [
+        "PortalSystem.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

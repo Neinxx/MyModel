@@ -1,0 +1,75 @@
+/* Unity Native Inspector Aesthetic */
+
+.root {
+    padding: 4px 0px;
+    /* Removed custom background so it blends with the native Inspector */
+}
+
+.header {
+    padding: 8px 4px;
+    margin-bottom: 8px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.5);
+}
+
+.title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: var(--unity-colors-label-text);
+    margin-bottom: 2px;
+}
+
+.subtitle {
+    font-size: 11px;
+    color: var(--unity-colors-label-text-idle);
+}
+
+.card {
+    background-color: rgba(0, 0, 0, 0.1); /* Subtle dark box like native arrays */
+    border-radius: 3px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    border-width: 1px;
+    border-color: rgba(35, 35, 35, 0.8); /* Native border color */
+}
+
+.card-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(0, 0, 0, 0.2);
+}
+
+.card-title {
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: var(--unity-colors-label-text);
+}
+
+.config-field {
+    margin-bottom: 2px;
+}
+
+.config-field > Label {
+    /* Unity standard field label width */
+    min-width: 140px; 
+    font-size: 12px;
+}
+
+.btn-preset {
+    height: 20px;
+    font-size: 11px;
+    padding-left: 6px;
+    padding-right: 6px;
+    /* Rely on Unity's default button styling */
+}
+
+.btn-reset {
+    height: 24px;
+    font-size: 12px;
+    margin-top: 10px;
+    /* Rely on Unity's default button styling */
+}

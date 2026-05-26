@@ -1,0 +1,20 @@
+{
+    "name": "Tests",
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "references": [
+        "WorldScene.Runtime",
+        "UISystem.Runtime",
+        "SpawnPoint.Runtime",
+        "PortalSystem.Runtime",
+        "PlayerState.Runtime",
+        "InteractionSystem.Runtime",
+        "DecalSystem.Runtime",
+        "CharacterController.Runtime",
+        "CameraSystem.Runtime",
+        "Unity.InputSystem",
+        "Cinemachine",
+        "ResourceManager.Runtime"
+    ]
+}

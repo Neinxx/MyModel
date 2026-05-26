@@ -1,0 +1,59 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement class="mainboard-inspector-root">
+        
+        <!-- 1. Header with Stats -->
+        <ui:VisualElement class="mainboard-header-row">
+            <ui:VisualElement>
+                <ui:Label text="GAME MAINBOARD" class="mainboard-header-title" />
+                <ui:Label text="Core Orchestration Engine" style="font-size: 10px; opacity: 0.5;" />
+            </ui:VisualElement>
+            <ui:VisualElement style="align-items: flex-end;">
+                <ui:Label text="STATE" class="mainboard-header-stats" />
+                <ui:Label text="OFFLINE" name="uve_RuntimeState" style="font-size: 11px; -unity-font-style: bold; color: #8A8A8A;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 2. Configuration -->
+        <ui:VisualElement class="mainboard-section">
+            <ui:Label text="SYSTEM PROFILE" class="mainboard-section-header" />
+            <uie:PropertyField binding-path="profile" label="Boot Profile" 
+                tooltip="The mainboard profile containing the list of features to boot." />
+        </ui:VisualElement>
+
+        <!-- 3. Runtime State Information -->
+        <ui:VisualElement class="mainboard-section">
+            <ui:Label text="RUNTIME TELEMETRY" class="mainboard-section-header" />
+            
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-bottom: 4px;">
+                <ui:Label text="Phase:" style="opacity: 0.7;" />
+                <ui:Label text="-" name="uve_Phase" style="-unity-font-style: bold;" />
+            </ui:VisualElement>
+            
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between; margin-bottom: 4px;">
+                <ui:Label text="Step:" style="opacity: 0.7;" />
+                <ui:Label text="-" name="uve_Step" style="-unity-font-style: italic;" />
+            </ui:VisualElement>
+
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <ui:Label text="Progress:" style="opacity: 0.7;" />
+                <ui:ProgressBar name="uve_ProgressBar" value="0" high-value="1" style="flex-grow: 1; margin-left: 10px;" />
+            </ui:VisualElement>
+
+            <!-- Hide the default serialized properties to make it clean -->
+            <uie:PropertyField binding-path="phase" style="display: none;" />
+            <uie:PropertyField binding-path="bootProgress" style="display: none;" />
+            <uie:PropertyField binding-path="currentStep" style="display: none;" />
+        </ui:VisualElement>
+
+        <!-- 4. Runtime Actions -->
+        <ui:VisualElement class="mainboard-section">
+            <ui:Label text="MANUAL OVERRIDE" class="mainboard-section-header" />
+            <ui:Button name="uve_BootButton" text="FORCE BOOT" class="mainboard-action-button" />
+            <ui:Button name="uve_ShutdownButton" text="FORCE SHUTDOWN" class="mainboard-action-button-danger" />
+            <ui:Label text="Only available in Play Mode" name="uve_PlayModeInfo" 
+                style="font-size: 9px; opacity: 0.3; -unity-text-align: middle-center; margin-top: 4px;" />
+        </ui:VisualElement>
+
+        <ui:Label text="MAINBOARD ORCHESTRATOR V2.0" class="mainboard-footer-info" />
+    </ui:VisualElement>
+</ui:UXML>

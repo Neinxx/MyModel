@@ -1,0 +1,21 @@
+.monitor-container {
+    border-left-width: 4px;
+    border-left-color: #F5CE42;
+    background-color: rgba(245, 206, 66, 0.05);
+    transition-property: background-color, border-left-color;
+    transition-duration: 0.3s;
+}
+
+.monitor-container.active {
+    border-left-color: #3FB950;
+    background-color: rgba(63, 185, 80, 0.05);
+}
+
+.unity-progress-bar__progress {
+    background-color: #3FB950;
+}
+
+.unity-progress-bar__background {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}

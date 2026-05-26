@@ -1,0 +1,82 @@
+/* ============================================================ */
+/* SPAWN POINT PREMIUM NATIVE THEME                             */
+/* ============================================================ */
+
+.spawn-inspector-root {
+    padding: 10px;
+    background-color: transparent; /* Let Unity handle the base color */
+}
+
+/* Header Section - More like Unity's own but with custom icon support */
+.spawn-header-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 6px 8px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-left-width: 3px;
+    border-left-color: #8AB4F8;
+}
+
+.spawn-header-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: #DDDDDD;
+}
+
+.spawn-header-stats {
+    font-size: 10px;
+    opacity: 0.4;
+}
+
+/* Section (Replacement for Cards) */
+.spawn-section {
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.spawn-section-header {
+    font-size: 10px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+    color: #C58AF9; /* Soft Purple accent */
+    opacity: 0.8;
+}
+
+/* Enhancing standard PropertyFields */
+.unity-property-field {
+    margin-bottom: 4px;
+    transition: background-color 0.2s;
+}
+
+.unity-property-field:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Analytics area - distinct but integrated */
+.spawn-analytics-box {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 10px;
+}
+
+.spawn-analytics-label {
+    font-size: 11px;
+    color: #8AB4F8;
+}
+
+.spawn-analytics-value {
+    -unity-font-style: bold;
+}
+
+/* Footer Section */
+.spawn-footer-info {
+    font-size: 9px;
+    opacity: 0.3;
+    -unity-text-align: middle-right;
+    margin-top: 8px;
+}

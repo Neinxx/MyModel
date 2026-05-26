@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d77cf3575a2fdd84a86ffa69a92fe3e1, type: 3}
+  m_Name: AuraFeature2
+  m_EditorClassIdentifier: 
+  featureName: "\u5149\u73AF2"
+  slot: 4
+  icon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  hpModifier: 0
+  attackPower: 0
+  auraModule:
+    auraTexture: {fileID: 2800000, guid: 1ef5b9cb39daf824f9db64e139bb4e63, type: 3}
+    softFade: 0.1
+    pulseIntensity: 0.5
+    layerR:
+      name: Core (R)
+      active: 1
+      color: {r: 1, g: 0, b: 0, a: 1}
+      scale: 1
+      rotationSpeed: 0
+      pulseSpeed: 0
+    layerG:
+      name: Inner (G)
+      active: 1
+      color: {r: 0, g: 1, b: 0, a: 1}
+      scale: 1
+      rotationSpeed: 0
+      pulseSpeed: 0
+    layerB:
+      name: Outer (B)
+      active: 1
+      color: {r: 0, g: 0, b: 1, a: 1}
+      scale: 1
+      rotationSpeed: 0
+      pulseSpeed: 0
+    layerA:
+      name: Detail (A)
+      active: 1
+      color: {r: 1, g: 1, b: 1, a: 1}
+      scale: 1
+      rotationSpeed: 0
+      pulseSpeed: 0
+  radius: 4.49
+  projectionDepth: 1

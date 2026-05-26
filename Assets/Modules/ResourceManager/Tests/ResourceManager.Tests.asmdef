@@ -1,0 +1,23 @@
+{
+    "name": "ResourceManager.Tests",
+    "rootNamespace": "ResourceManagerModule.Tests",
+    "references": [
+        "ResourceManager.Runtime",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,50 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="DecalSystemEditor.uss" />
+    <ui:VisualElement name="uve_Root" class="decal-container">
+        
+        <!-- 1. 现代感头部 (统一 Portal 风格) -->
+        <ui:VisualElement class="decal-header-row">
+            <ui:Label text="Decal Atlas Config" class="decal-header-title" />
+            <ui:Label name="uve_Stats" text="0 Slices | 1024px" class="decal-header-stats" />
+        </ui:VisualElement>
+
+        <!-- 2. 目录配置卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="目录配置" class="decal-header" />
+            <uie:ObjectField name="uve_SourcePath" label="资源搜寻根目录" />
+            <uie:ObjectField name="uve_ExportPath" label="导出图集目录" />
+        </ui:VisualElement>
+
+        <!-- 3. 烘焙参数卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="烘焙参数" class="decal-header" />
+            <uie:PropertyField name="uve_TextureSize" binding-path="textureSize" label="图集分辨率" />
+            <uie:PropertyField binding-path="compressionFormat" label="压缩格式 (Mobile)" />
+            <uie:PropertyField binding-path="showDebugGrid" label="调试模式 (Debug Grid)" />
+            <uie:PropertyField name="uve_BakedArray" binding-path="bakedArray" label="颜色图集数组 (Albedo)" />
+            <uie:PropertyField name="uve_BakedNormalArray" binding-path="bakedNormalArray" label="法线图集数组 (Normal)" />
+        </ui:VisualElement>
+
+        <!-- 新增：创建预设卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="默认创建预设" class="decal-header" />
+            <uie:PropertyField binding-path="defaultSize" label="初始大小" />
+            <uie:PropertyField binding-path="defaultLayer" label="默认层级 (Layer)" />
+            <uie:PropertyField binding-path="creationRaycastLayer" label="创建检测层级" />
+        </ui:VisualElement>
+
+        <!-- 4. 资源列表卡片 -->
+        <ui:VisualElement class="decal-card">
+            <ui:Label text="贴图资源清单 (支持颜色+法线)" class="decal-header" />
+            <uie:PropertyField name="uve_Slices" binding-path="slices" label="" />
+        </ui:VisualElement>
+
+        <!-- 5. 操作区 (统一 Portal 风格) -->
+        <ui:VisualElement style="flex-direction: row; margin-top: 10px;">
+            <ui:Button name="uve_AutoBakeBtn" text="一键采集并烘焙" class="decal-action-button" style="flex-grow: 1; height: 28px; margin-right: 4px; margin-top: 0;" />
+            <ui:Button name="uve_SlimBakeBtn" text="清理无效项并烘焙" class="decal-secondary-action-button" style="flex-grow: 1; height: 28px; margin-left: 4px; margin-top: 0;" />
+        </ui:VisualElement>
+
+        <ui:Label text="© Decal System Mini v2.0" class="decal-footer-info" />
+    </ui:VisualElement>
+</ui:UXML>

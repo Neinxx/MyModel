@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: cb07710ad337efc47a325aadf39d8dbd
+  m_SerializeEntries:
+  - m_GUID: 616e0352d9f9cbb4a8885b5150a2d424
+    m_Address: Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6093847dfd4623c44bd004cb645fa6ac
+    m_Address: Assets/Demo/Data/WorldSceneDriver.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9439546392628344d88ab374d063b4a1
+    m_Address: Assets/Demo/Data/NewShaderVariants.shadervariants
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 615c39d330eb1514d932188bbda1140a
+    m_Address: Assets/Demo/Art/Prefabs/UIRoot.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5bde8290565847b4b869950435efa2ee
+    m_Address: Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 611dd7cbef4bba842b6c8eb91aa61280
+    m_Address: Assets/Demo/Art/Prefabs/CameraView.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 43c7c11caad5fdc45a53a8cd1b8a0fec, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 359ac78191dc27a43bc766c1320b51d0, type: 2}
+    - {fileID: 11400000, guid: 0aa25b0a12222fe4c95ab1b08210d3ba, type: 2}

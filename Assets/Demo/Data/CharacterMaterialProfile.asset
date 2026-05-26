@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cd52c70e9b07d74c9d1acb7e3693b76, type: 3}
+  m_Name: CharacterMaterialProfile
+  m_EditorClassIdentifier: 
+  slots:
+  - name: Skin
+    kind: 0
+    rampSlice: 0
+    matCapSlice: 0
+    matCapStrength: 0.45
+    rimStrength: 0.25
+    shadowHardness: 1
+    rampBiasScale: 1
+    metalShadowLift: 0.15
+    aoStrength: 1
+  - name: Hair
+    kind: 1
+    rampSlice: 1
+    matCapSlice: 1
+    matCapStrength: 0.55
+    rimStrength: 0.2
+    shadowHardness: 1
+    rampBiasScale: 1
+    metalShadowLift: 0.12
+    aoStrength: 1
+  - name: Fabric
+    kind: 2
+    rampSlice: 2
+    matCapSlice: 2
+    matCapStrength: 0.8
+    rimStrength: 0.15
+    shadowHardness: 1.25
+    rampBiasScale: 0.8
+    metalShadowLift: 0.35
+    aoStrength: 0.9
+  - name: Metal
+    kind: 3
+    rampSlice: 3
+    matCapSlice: 3
+    matCapStrength: 1
+    rimStrength: 0.1
+    shadowHardness: 1.45
+    rampBiasScale: 0.65
+    metalShadowLift: 0.55
+    aoStrength: 0.75
+  - name: Leather
+    kind: 4
+    rampSlice: 4
+    matCapSlice: 4
+    matCapStrength: 0.35
+    rimStrength: 0.35
+    shadowHardness: 0.8
+    rampBiasScale: 1.2
+    metalShadowLift: 0.08
+    aoStrength: 1
+  - name: Plastic
+    kind: 5
+    rampSlice: 5
+    matCapSlice: 5
+    matCapStrength: 0.65
+    rimStrength: 0.2
+    shadowHardness: 1
+    rampBiasScale: 1
+    metalShadowLift: 0.18
+    aoStrength: 1
+  - name: Glass
+    kind: 6
+    rampSlice: 6
+    matCapSlice: 6
+    matCapStrength: 0.5
+    rimStrength: 0.2
+    shadowHardness: 1
+    rampBiasScale: 1
+    metalShadowLift: 0.2
+    aoStrength: 1
+  - name: Effect
+    kind: 7
+    rampSlice: 7
+    matCapSlice: 7
+    matCapStrength: 0.5
+    rimStrength: 0.2
+    shadowHardness: 1
+    rampBiasScale: 1
+    metalShadowLift: 0.2
+    aoStrength: 1

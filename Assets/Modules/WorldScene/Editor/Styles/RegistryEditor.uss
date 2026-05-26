@@ -1,0 +1,33 @@
+.registry-root {
+    padding: 10px;
+}
+
+.registry-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(63, 185, 80, 0.1);
+    padding: 8px;
+    border-left-width: 4px;
+    border-left-color: #3FB950;
+    margin-bottom: 15px;
+}
+
+.sync-button {
+    height: 30px;
+    background-color: #238636;
+    color: white;
+    -unity-font-style: bold;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.sync-button:hover {
+    background-color: #2EA043;
+}
+
+.level-item {
+    padding: 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}

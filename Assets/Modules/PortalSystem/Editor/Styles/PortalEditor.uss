@@ -1,0 +1,79 @@
+/* ============================================================ */
+/* PORTAL SYSTEM PREMIUM NATIVE THEME (SpawnPoint Style)        */
+/* ============================================================ */
+
+.portal-inspector-root {
+    padding: 10px;
+    background-color: transparent;
+}
+
+/* Header Section */
+.portal-header-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 6px 8px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-left-width: 3px;
+    border-left-color: #7C8CFF; /* Portal Blue */
+}
+
+.portal-header-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: #DDDDDD;
+}
+
+.portal-header-stats {
+    font-size: 10px;
+    opacity: 0.4;
+}
+
+/* Section Styling */
+.portal-section {
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.portal-section-header {
+    font-size: 10px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+    color: #7C8CFF;
+    opacity: 0.8;
+}
+
+/* Property Styling */
+.unity-property-field {
+    margin-bottom: 4px;
+    transition: background-color 0.2s;
+}
+
+.unity-property-field:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Diagnostics Button */
+.portal-action-button {
+    margin-top: 10px;
+    height: 24px;
+    background-color: #2D5A88;
+    border-radius: 3px;
+    -unity-font-style: bold;
+    color: white;
+}
+
+.portal-action-button:hover {
+    background-color: #3D7AB8;
+}
+
+/* Footer Section */
+.portal-footer-info {
+    font-size: 9px;
+    opacity: 0.3;
+    -unity-text-align: middle-right;
+    margin-top: 8px;
+}

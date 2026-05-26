@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b0a59d43f43c144ca96bc4f47c1b49e, type: 3}
+  m_Name: WorldRuntimeConfig
+  m_EditorClassIdentifier: 
+  sceneDriverOverride: {fileID: 562793635166415411, guid: 6093847dfd4623c44bd004cb645fa6ac,
+    type: 3}
+  registry: {fileID: 11400000, guid: eab1e20d5b0198e449a6167583f04831, type: 2}
+  createSceneDriverIfMissing: 1
+  initializePersistentWorld: 1
+  bootMode: 0
+  defaultBootLevel: Level1
+  explicitBootLevel: 
+  startUIViewID: LevelSelection

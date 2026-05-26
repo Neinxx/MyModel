@@ -1,0 +1,403 @@
+/* Auto1KeyBuild Hub - compact Unity Editor industrial style */
+
+.root {
+    padding: 0;
+    margin: 0;
+    background-color: rgb(48, 48, 48);
+}
+
+.header {
+    flex-direction: row;
+    align-items: center;
+    height: 34px;
+    margin: 12px 16px 10px;
+    padding: 0 12px;
+    background-color: rgb(50, 64, 50);
+}
+
+.header-accent {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: rgb(57, 202, 88);
+}
+
+.title {
+    flex-grow: 1;
+    font-size: 14px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    color: rgb(220, 220, 220);
+    margin-left: 2px;
+}
+
+.subtitle {
+    font-size: 10px;
+    -unity-text-align: middle-right;
+    color: rgb(122, 132, 122);
+}
+
+.scroll-container {
+    flex-grow: 1;
+}
+
+.scroll-container > .unity-scroll-view__content-viewport > .unity-scroll-view__content-container {
+    padding: 0 16px 16px;
+}
+
+.section {
+    margin-bottom: 12px;
+}
+
+.section-header {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(57, 202, 88);
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.divider {
+    height: 1px;
+    background-color: rgba(77, 77, 77, 0.5);
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+.card {
+    background-color: rgb(48, 48, 48);
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 8px;
+    border-width: 0;
+}
+
+.card-label-azure {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(57, 202, 88);
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+
+.dashboard-box {
+    background-color: rgb(35, 35, 35);
+    border-radius: 3px;
+    padding: 9px 10px;
+    border-width: 1px;
+    border-color: rgb(65, 65, 65);
+}
+
+.dashboard-text {
+    font-size: 11px;
+    color: rgb(205, 205, 205);
+    white-space: normal;
+}
+
+.path-list {
+    margin-bottom: 4px;
+}
+
+.path-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 24px;
+    margin-bottom: 4px;
+}
+
+.path-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    margin-right: 6px;
+}
+
+.path-field > .unity-text-field__input {
+    min-height: 22px;
+    background-color: rgb(39, 39, 39);
+    border-color: rgb(68, 68, 68);
+    border-radius: 3px;
+    color: rgb(205, 205, 205);
+    font-size: 11px;
+    padding: 2px 7px;
+}
+
+.btn-remove {
+    width: 24px;
+    height: 22px;
+    min-width: 24px;
+    max-width: 24px;
+    flex-shrink: 0;
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: rgb(92, 49, 49);
+    color: rgb(224, 150, 150);
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgb(111, 58, 58);
+    margin: 0;
+    padding: 0;
+}
+
+.btn-remove:hover {
+    background-color: rgb(122, 58, 58);
+    color: rgb(255, 190, 190);
+}
+
+.btn-add-path {
+    height: 26px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    background-color: rgb(39, 39, 39);
+    color: rgb(57, 202, 88);
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgb(43, 132, 61);
+    margin-top: 4px;
+}
+
+.btn-add-path:hover {
+    background-color: rgb(45, 63, 48);
+}
+
+.config-field {
+    min-height: 26px;
+    margin-bottom: 4px;
+}
+
+.config-field > Label {
+    min-width: 150px;
+    color: rgb(190, 190, 190);
+    font-size: 12px;
+}
+
+.config-field > .unity-text-field__input,
+.config-field > .unity-base-field__input {
+    min-height: 22px;
+    background-color: rgb(39, 39, 39);
+    border-color: rgb(68, 68, 68);
+    border-radius: 3px;
+    color: rgb(205, 205, 205);
+    font-size: 11px;
+}
+
+.cta-row {
+    flex-direction: row;
+    margin-top: 6px;
+    margin-bottom: 2px;
+}
+
+.btn-build,
+.btn-build-run {
+    flex-grow: 1;
+    height: 34px;
+    font-size: 12px;
+    -unity-font-style: bold;
+    color: rgb(245, 245, 245);
+    border-radius: 3px;
+    border-width: 1px;
+    margin: 0;
+}
+
+.btn-build {
+    background-color: rgb(31, 145, 55);
+    border-color: rgb(38, 164, 63);
+}
+
+.btn-build:hover {
+    background-color: rgb(37, 164, 63);
+}
+
+.btn-build:active {
+    background-color: rgb(28, 117, 45);
+}
+
+.btn-build-run {
+    background-color: rgb(47, 95, 56);
+    border-color: rgb(55, 131, 70);
+}
+
+.btn-build-run:hover {
+    background-color: rgb(55, 115, 66);
+}
+
+.btn-build-run:active {
+    background-color: rgb(37, 77, 45);
+}
+
+.aux-row {
+    flex-direction: row;
+    margin-bottom: 6px;
+}
+
+.btn-aux {
+    flex-grow: 1;
+    height: 30px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    background-color: rgb(55, 55, 55);
+    color: rgb(210, 210, 210);
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgb(70, 70, 70);
+    margin: 0;
+}
+
+.btn-fix {
+    flex-grow: 1;
+    height: 30px;
+    font-size: 11px;
+    -unity-font-style: bold;
+    background-color: rgb(31, 116, 54);
+    color: rgb(232, 255, 236);
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: rgb(57, 202, 88);
+    margin: 0;
+}
+
+.btn-left {
+    margin-right: 6px;
+}
+
+.btn-mid {
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.btn-right {
+    margin-left: 6px;
+}
+
+.btn-aux:hover {
+    background-color: rgb(63, 63, 63);
+    border-color: rgb(43, 132, 61);
+}
+
+.btn-fix:hover {
+    background-color: rgb(38, 142, 64);
+    border-color: rgb(87, 231, 112);
+}
+
+.btn-fix:active {
+    background-color: rgb(28, 92, 45);
+}
+
+.banner {
+    border-radius: 3px;
+    padding: 9px 10px 8px;
+    margin: 5px 0;
+    border-width: 1px;
+}
+
+.banner-pass {
+    background-color: rgb(46, 99, 56);
+    border-color: rgb(55, 128, 70);
+}
+
+.banner-fail {
+    background-color: rgb(135, 53, 53);
+    border-color: rgb(150, 72, 72);
+}
+
+.banner-title-pass,
+.banner-title-fail {
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin-bottom: 4px;
+}
+
+.banner-title-pass {
+    color: rgb(153, 255, 170);
+}
+
+.banner-title-fail {
+    color: rgb(255, 170, 170);
+}
+
+.banner-body {
+    font-size: 11px;
+    color: rgb(225, 225, 225);
+    white-space: normal;
+}
+
+.log-box {
+    background-color: rgb(35, 35, 35);
+    border-radius: 3px;
+    padding: 10px;
+    border-width: 1px;
+    border-color: rgb(65, 65, 65);
+    margin-top: 8px;
+    max-height: 160px;
+}
+
+.log-header {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: rgb(170, 170, 170);
+    margin-bottom: 6px;
+}
+
+.log-body {
+    font-size: 10px;
+    color: rgb(205, 205, 205);
+    white-space: normal;
+}
+
+.preflight-list {
+    margin-top: 8px;
+}
+
+.preflight-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    border-radius: 3px;
+    border-width: 1px;
+}
+
+.preflight-pass {
+    background-color: rgb(41, 61, 44);
+    border-color: rgb(55, 128, 70);
+}
+
+.preflight-warning {
+    background-color: rgb(70, 61, 39);
+    border-color: rgb(130, 104, 48);
+}
+
+.preflight-error {
+    background-color: rgb(75, 43, 43);
+    border-color: rgb(150, 72, 72);
+}
+
+.preflight-title {
+    width: 140px;
+    min-width: 140px;
+    -unity-font-style: bold;
+    color: rgb(220, 220, 220);
+    font-size: 11px;
+}
+
+.preflight-message {
+    flex-grow: 1;
+    color: rgb(205, 205, 205);
+    font-size: 11px;
+    white-space: normal;
+}
+
+.settings-foldout > .unity-foldout__toggle > .unity-toggle__input > .unity-label {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: rgb(220, 220, 220);
+}
+
+.settings-foldout > .unity-foldout__content {
+    margin-left: 0;
+    margin-top: 6px;
+}
