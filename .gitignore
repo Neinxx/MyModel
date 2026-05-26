@@ -104,3 +104,63 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# =====================================================================
+# Code-only Repo: Exclude Art Assets
+# =====================================================================
+# Folder-based excludes (prefer folders to avoid ignoring ScriptableObject configs)
+/Assets/Demo/Art/
+/Assets/Demo/Art.meta
+
+/Assets/**/Art/
+/Assets/**/Artwork/
+/Assets/**/Textures/
+/Assets/**/Texture/
+/Assets/**/Models/
+/Assets/**/Model/
+/Assets/**/Meshes/
+/Assets/**/Materials/
+/Assets/**/Animations/
+/Assets/**/Animation/
+/Assets/**/Audio/
+/Assets/**/Sounds/
+/Assets/**/Sprites/
+/Assets/**/VFX/
+/Assets/**/FX/
+
+# File-type excludes (scoped under Assets/)
+/Assets/**/*.fbx
+/Assets/**/*.obj
+/Assets/**/*.blend
+/Assets/**/*.dae
+/Assets/**/*.3ds
+/Assets/**/*.max
+/Assets/**/*.ma
+/Assets/**/*.mb
+
+/Assets/**/*.png
+/Assets/**/*.jpg
+/Assets/**/*.jpeg
+/Assets/**/*.tga
+/Assets/**/*.psd
+/Assets/**/*.hdr
+/Assets/**/*.exr
+/Assets/**/*.tif
+/Assets/**/*.tiff
+/Assets/**/*.bmp
+/Assets/**/*.gif
+
+/Assets/**/*.wav
+/Assets/**/*.mp3
+/Assets/**/*.ogg
+/Assets/**/*.flac
+/Assets/**/*.aif
+/Assets/**/*.aiff
+
+/Assets/**/*.mp4
+/Assets/**/*.mov
+/Assets/**/*.avi
+/Assets/**/*.webm
+
+/Assets/**/*.ttf
+/Assets/**/*.otf
