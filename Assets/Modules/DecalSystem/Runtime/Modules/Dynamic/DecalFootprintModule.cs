@@ -159,7 +159,12 @@ namespace DecalMini
                     float horizontalOffset = (wheelCount > 1) ? (i / (float)(wheelCount - 1) - 0.5f) * wheelSpacing : 0f;
                     Vector3 pos = t.position + t.right * horizontalOffset;
                     Quaternion gizmoRot = t.rotation * Quaternion.Euler(90, 0, 0); 
-                    Matrix4x4 matrix = Matrix4x4.TRS(pos, gizmoRot, Vector3.one);
+                    Vector3 size = new(
+                        Mathf.Max(0.01f, trackWidth),
+                        Mathf.Max(0.01f, trackLength),
+                        0.5f
+                    );
+                    Matrix4x4 matrix = Matrix4x4.TRS(pos, gizmoRot, size);
                     
                     DecalGizmoUtility.DrawModernGizmo(matrix, pos, "Icon_DecalMini_1");
                 }
@@ -170,7 +175,12 @@ namespace DecalMini
         {
             Vector3 origin = t.position + t.right * offset + Vector3.up * 0.5f;
             Quaternion gizmoRot = t.rotation * Quaternion.Euler(90, 0, 0);
-            Matrix4x4 matrix = Matrix4x4.TRS(origin + Vector3.down * 0.5f, gizmoRot, Vector3.one);
+            float size = Mathf.Max(0.01f, footprintSize);
+            Matrix4x4 matrix = Matrix4x4.TRS(
+                origin + Vector3.down * 0.5f,
+                gizmoRot,
+                new Vector3(size, size, 0.5f)
+            );
             
             // 使用现代简约接口
             DecalGizmoUtility.DrawModernGizmo(matrix, origin, "Icon_DecalMini_1");

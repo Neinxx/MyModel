@@ -16,7 +16,137 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: e0aa6c3ffcbe33345b3f45f4857e58ad
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 79517e2174d8bb44d992dd382a71fe52
+    m_Address: Shared/Avatar_Female_Size01_Clara_UI_79517e21
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 26559449686ba80429228f76dac2af14
+    m_Address: Shared/MAT_Clara_Weapon_UI_26559449
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8d70d19a603eb94e800976b3092fd29
+    m_Address: Shared/ground_a8d70d19
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ec6c76f0295b6540ae3330d4f9b738e
+    m_Address: Shared/jump_1ec6c76f
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c902e757bc094f44c9dd8042421302c2
+    m_Address: Shared/MAT_HairShadow_c902e757
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b63d63bcece2de54aade23441656099e
+    m_Address: Shared/Clara_Map1_D_b63d63bc
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75f48886240afeb4a8b10fe30441f100
+    m_Address: Shared/Clara_Weapon_D_75f48886
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c182d01b3a5b8a346b09c2b2ae67e180
+    m_Address: Shared/Clara_Map2_D_c182d01b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90726279a3024894dab401c4ca47d2a6
+    m_Address: Shared/Ground_90726279
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79e2f1b48ede4da4fbc2f5bc1b77fc82
+    m_Address: Shared/bollRing_79e2f1b4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47eb5abbe091a4e4694dadeffa5a7f65
+    m_Address: Shared/MAT_Clara_Map2_UI_47eb5abb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dbb4645b90472eb448779b4f0f0d6b45
+    m_Address: Shared/icon_Spawn_1_dbb4645b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35079bc6f13c7a147bebd8183570c8c4
+    m_Address: Shared/MAT_Clara_Map1_UI_35079bc6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbcb3ec2ae3a63844a64f4702bbaf20e
+    m_Address: Shared/NavMesh-NavMesh_Surface_cbcb3ec2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3f762d92d403704abb22a797f9b8b40
+    m_Address: Shared/Run_c3f762d9
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5cfe8c9a4a3bd714d83d619045794844
+    m_Address: Shared/Dance_5cfe8c9a
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23f6c231c8e9c434787bcecc971a235f
+    m_Address: Shared/Tpose_23f6c231
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 060983251495bc5409a7f4c6019568cf
+    m_Address: Shared/MAT_Clara_Eye_UI_06098325
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 034003cd19bf3b44bac78196c0554ebd
+    m_Address: Shared/NavMesh-NavMesh_Surface_034003cd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b1db973c6191de40aa7fd0962ae340f
+    m_Address: Shared/MAT_Clara_Face_UI_0b1db973
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 512646cfba2cb0540b49cfc289b08378
+    m_Address: Shared/icon_gzm_loot_1_512646cf
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3822cd4269dc9a429342556e19b998b
+    m_Address: Shared/New_Animator_Controller_a3822cd4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0d098fa1405966429d7f8f0d77212a3
+    m_Address: Shared/Clara_Face_D_f0d098fa
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b5d240ffca1e99845a20f9da1288085e
+    m_Address: Shared/Idel_b5d240ff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84efe13d859387140abd96c1d7614cb0
+    m_Address: Shared/MAT_Clara_Map2_T_UI_84efe13d
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70310011577d23c46a6132896bd5644b
+    m_Address: Shared/Icon_DecalMini_1_70310011
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 43c7c11caad5fdc45a53a8cd1b8a0fec, type: 2}
   m_SchemaSet:

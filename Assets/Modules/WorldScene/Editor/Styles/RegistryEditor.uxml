@@ -14,8 +14,6 @@
             <ui:Label text="INFRASTRUCTURE" style="font-size: 10px; -unity-font-style: bold; color: #3FB950; margin-bottom: 5px;" />
             <uie:PropertyField binding-path="persistentWorldAsset" />
             <uie:PropertyField binding-path="launcherSceneAsset" />
-            <uie:PropertyField binding-path="playerPrefab" />
-            <uie:PropertyField binding-path="cameraPrefab" />
         </ui:VisualElement>
 
         <ui:VisualElement style="margin-top: 15px;">

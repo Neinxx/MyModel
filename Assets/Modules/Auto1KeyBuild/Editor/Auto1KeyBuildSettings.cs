@@ -50,7 +50,7 @@ namespace Auto1KeyBuildModule.Editor
         public string decalGroupName = "Decal_Group";
 
         [Tooltip("Search query to locate decal configuration assets.")]
-        public string decalConfigSearchQuery = "t:DecalAtlasConfig";
+        public string decalConfigSearchQuery = "t:DecalAtlasConfigMini";
 
         [Header("Dependency Protection Options")]
         [Tooltip("Automatically promote duplicate implicit dependencies to a shared group.")]
@@ -81,11 +81,10 @@ namespace Auto1KeyBuildModule.Editor
         [Tooltip("Addressable keys that must stay in the local shipped catalog/group. These are boot-critical and must not be auto-moved into content update groups.")]
         public List<string> protectedLocalAddressableKeys = new List<string>()
         {
-            "Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab",
+            "Assets/Demo/Art/Prefabs/Anbu_art.prefab",
             "Assets/Demo/Data/WorldSceneDriver.prefab",
-            "Assets/Demo/Data/NewShaderVariants.shadervariants",
-            "Assets/Demo/Art/Prefabs/UIRoot.prefab",
-            "Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab",
+            "Assets/Demo/Shader/NewShaderVariants.shadervariants",
+            "Assets/Demo/Art/Prefabs/Character_logic.prefab",
             "Assets/Demo/Art/Prefabs/CameraView.prefab"
         };
 

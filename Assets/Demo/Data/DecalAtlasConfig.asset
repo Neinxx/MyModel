@@ -24,38 +24,23 @@ MonoBehaviour:
   textureSize: 512
   compressionFormat: 5
   showDebugGrid: 1
-  sourcePath: Assets/Demo/Art/Textures/Editor
+  sourcePath: Assets/Gizmos
   exportPath: Assets/Demo/Art/Textures
   slices:
-  - name: 777
-    albedoMap: {fileID: 2800000, guid: 4c70c58dc398c1c419864a90255ec767, type: 3}
-    normalMap: {fileID: 2800000, guid: 27ef04fd361fbcc4fbb21e8216dedb91, type: 3}
-  - name: GridTexture
-    albedoMap: {fileID: 2800000, guid: 3580654d9ea6828429f75cc446bfe532, type: 3}
+  - name: GridTex
+    albedoMap: {fileID: 2800000, guid: 128269df1f8b4754eabf743ccc4aee05, type: 3}
     normalMap: {fileID: 0}
-  - name: New_Graph_basecolor
-    albedoMap: {fileID: 2800000, guid: e7bcc0c1ca6560b41b3e08e5b9f75fa7, type: 3}
-    normalMap: {fileID: 2800000, guid: 9c9e3f11ad6e6da479b1c650a90541a4, type: 3}
-  - name: New_Graph_box_1
-    albedoMap: {fileID: 2800000, guid: 4e37fdca0695b1c47977dc1a0dd4ca73, type: 3}
-    normalMap: {fileID: 2800000, guid: f1e72bb8a0c451e46ba844e537638361, type: 3}
-  - name: New_Graph_g_1
-    albedoMap: {fileID: 2800000, guid: 68eec84c9b271134aab0fd1c34cf14ff, type: 3}
+  - name: Icon_DecalMini_1
+    albedoMap: {fileID: 2800000, guid: 70310011577d23c46a6132896bd5644b, type: 3}
     normalMap: {fileID: 0}
-  - name: New_Graph_output
-    albedoMap: {fileID: 2800000, guid: 1ef5b9cb39daf824f9db64e139bb4e63, type: 3}
+  - name: icon_gzm_loot_1
+    albedoMap: {fileID: 2800000, guid: 512646cfba2cb0540b49cfc289b08378, type: 3}
     normalMap: {fileID: 0}
-  - name: New_Graph_output_2
-    albedoMap: {fileID: 2800000, guid: f2876424313bba449a26eccaafcd90d7, type: 3}
-    normalMap: {fileID: 2800000, guid: 34cd38ef0eb3c1f4cae43ac8015fe1ef, type: 3}
-  - name: New_Graph_star_f_1
-    albedoMap: {fileID: 2800000, guid: 59277e94d92841b4ab704d34115e0934, type: 3}
-    normalMap: {fileID: 2800000, guid: 5dd80ba9898a2814580851a3b124f3f5, type: 3}
-  - name: New_Graph_star_f_2
-    albedoMap: {fileID: 2800000, guid: 4fa9d41ee55660046b8196218f7ef278, type: 3}
-    normalMap: {fileID: 2800000, guid: 8e47c02d1b5b9bf46b497cf2edf874d3, type: 3}
-  - name: New_Graph_star_f_3
-    albedoMap: {fileID: 2800000, guid: 0c12346c5c031744bac0f1a0048d7d55, type: 3}
-    normalMap: {fileID: 2800000, guid: 6077342686a9b6140a17844ba1913f14, type: 3}
+  - name: icon_Protal_1
+    albedoMap: {fileID: 2800000, guid: 578cd4b7fabb7d844967df3fc22f41ce, type: 3}
+    normalMap: {fileID: 0}
+  - name: icon_Spawn_1
+    albedoMap: {fileID: 2800000, guid: dbb4645b90472eb448779b4f0f0d6b45, type: 3}
+    normalMap: {fileID: 0}
   bakedArray: {fileID: 18700000, guid: f72f0df42e6dea848860a4993f84a7f8, type: 2}
   bakedNormalArray: {fileID: 18700000, guid: 1c34298b9ae0eda48802e26ac936c615, type: 2}

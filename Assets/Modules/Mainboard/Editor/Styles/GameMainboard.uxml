@@ -18,6 +18,7 @@
             <ui:Label text="SYSTEM PROFILE" class="mainboard-section-header" />
             <uie:PropertyField binding-path="profile" label="Boot Profile" 
                 tooltip="The mainboard profile containing the list of features to boot." />
+            <ui:VisualElement name="uve_ProfileModules" class="mainboard-profile-modules" />
         </ui:VisualElement>
 
         <!-- 3. Runtime State Information -->

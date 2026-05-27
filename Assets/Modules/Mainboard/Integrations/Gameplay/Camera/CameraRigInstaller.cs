@@ -30,7 +30,7 @@ namespace Mainboard.Runtime.Integrations
     public sealed class CameraRigInstaller : MainboardInstaller
     {
         [SerializeField] private string cameraViewKey = "Assets/Demo/Art/Prefabs/CameraView.prefab";
-        [SerializeField] private string uiCameraKey = "CameraUI";
+        [SerializeField] private string uiCameraKey = "";
 
         public override IGameFeature CreateFeature()
         {

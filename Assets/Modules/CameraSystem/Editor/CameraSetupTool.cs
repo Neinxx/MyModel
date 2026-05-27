@@ -25,6 +25,10 @@ namespace CameraSystem.Editor
 
         private GameObject _characterTarget;
         private string _prefabSavePath = "Assets/Demo/Art/Prefabs/CameraView.prefab";
+        private string _characterLogicPrefabSavePath =
+            "Assets/Demo/Art/Prefabs/Character_logic.prefab";
+        private string _uiCameraPrefabSavePath = "Assets/Demo/Art/Prefabs/UICamera.prefab";
+        private string _uiRootPrefabSavePath = "Assets/Demo/Art/Prefabs/UIRoot.prefab";
         private Vector3 _pivotOffset = new Vector3(0f, 1.5f, 0f);
         private float _cameraDistance = 6.0f;
         private Vector3 _shoulderOffset = new Vector3(0.5f, -0.4f, 0f);
@@ -127,6 +131,9 @@ namespace CameraSystem.Editor
 
             _characterTarget = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Target Character", "The Character GameObject (Scene Instance or Project Prefab) to attach camera pivot."), _characterTarget, typeof(GameObject), true);
             _prefabSavePath = EditorGUILayout.TextField(new GUIContent("Prefab Save Path", "The path where the generated perfect camera prefab will be saved."), _prefabSavePath);
+            _characterLogicPrefabSavePath = EditorGUILayout.TextField(new GUIContent("Character Logic Prefab", "The path where the generated character logic prefab will be saved."), _characterLogicPrefabSavePath);
+            _uiCameraPrefabSavePath = EditorGUILayout.TextField(new GUIContent("UI Camera Prefab", "The path where the generated UI camera prefab will be saved."), _uiCameraPrefabSavePath);
+            _uiRootPrefabSavePath = EditorGUILayout.TextField(new GUIContent("UIRoot Prefab", "The path where the generated UIRoot prefab will be saved."), _uiRootPrefabSavePath);
 
             GUILayout.Space(5);
             _cameraComponentType = (CameraComponentType)EditorGUILayout.EnumPopup(new GUIContent("Camera Body Type", "The Cinemachine body component type to configure inside the virtual camera."), _cameraComponentType);
@@ -174,6 +181,28 @@ namespace CameraSystem.Editor
             GUI.backgroundColor = Color.white; // 重置
             GUI.enabled = true;
 
+            GUILayout.Space(10);
+            DrawLine();
+            GUILayout.Label(" SUPPORT PREFAB GENERATORS", sectionHeaderStyle);
+            GUILayout.Space(5);
+
+            GUI.backgroundColor = new Color(0.24f, 0.72f, 1.00f);
+            if (GUILayout.Button(" GENERATE CHARACTER LOGIC PREFAB ", buttonStyle))
+            {
+                GenerateCharacterLogicPrefab(_characterLogicPrefabSavePath);
+            }
+
+            if (GUILayout.Button(" GENERATE UI CAMERA PREFAB ", buttonStyle))
+            {
+                GenerateUICameraPrefab(_uiCameraPrefabSavePath, true);
+            }
+
+            if (GUILayout.Button(" GENERATE UI ROOT PREFAB ", buttonStyle))
+            {
+                GenerateUIRootPrefabViaUISystem(_uiRootPrefabSavePath);
+            }
+
+            GUI.backgroundColor = Color.white;
             GUILayout.Space(20);
             EditorGUILayout.EndScrollView();
         }
@@ -234,6 +263,7 @@ namespace CameraSystem.Editor
             tempCamGo.AddComponent<AudioListener>();
             tempCamGo.AddComponent<CinemachineBrain>();
             tempCamGo.AddComponent<CameraManager>();
+            tempCamGo.AddComponent<URPCameraStackLinker>();
 
             // 3.3 创建 cm (Virtual Camera) 子节点
             GameObject tempVCamGo = new GameObject("cm");
@@ -362,6 +392,195 @@ namespace CameraSystem.Editor
             EditorUtility.DisplayDialog("Camera Generation Successful", summaryMsg, "Perfect");
         }
 
+        [MenuItem("Tools/Camera System/Generate Character Logic Prefab", false, 21)]
+        public static void GenerateDefaultCharacterLogicPrefab()
+        {
+            GenerateCharacterLogicPrefab("Assets/Demo/Art/Prefabs/Character_logic.prefab");
+        }
+
+        [MenuItem("Tools/Camera System/Generate UI Camera Prefab", false, 22)]
+        public static void GenerateDefaultUICameraPrefab()
+        {
+            GenerateUICameraPrefab("Assets/Demo/Art/Prefabs/UICamera.prefab", true);
+        }
+
+        private static GameObject GenerateCharacterLogicPrefab(string prefabPath)
+        {
+            if (string.IsNullOrWhiteSpace(prefabPath))
+            {
+                EditorUtility.DisplayDialog("Character Logic Generator", "Prefab path is empty.", "OK");
+                return null;
+            }
+
+            EnsureAssetFolder(prefabPath);
+
+            GameObject root = new GameObject(Path.GetFileNameWithoutExtension(prefabPath));
+            try
+            {
+                root.AddComponent<UnityEngine.CharacterController>();
+                root.AddComponent<CharacterMotor>();
+                var registry = root.AddComponent<CharacterSocketRegistry>();
+                TryAddComponentByTypeName(root, "ModularDemo.Runtime.PlayerCharacterBrain, ModularDemo.Runtime");
+                TryAddComponentByTypeName(root, "ModularDemo.Runtime.PlayerStateBridge, ModularDemo.Runtime");
+                Component interactor = TryAddComponentByTypeName(
+                    root,
+                    "InteractionSystem.Runtime.ProximityInteractor, InteractionSystem.Runtime"
+                );
+                ConfigureGeneratedInteractor(interactor);
+
+                CreateSocket(root.transform, CharacterSocketId.VisualRoot, "VisualRoot", new Vector3(0f, 0f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.CameraTarget, "CameraTarget", new Vector3(0f, 1.5f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.Body, "Body", new Vector3(0f, 1.0f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.Head, "Head", new Vector3(0f, 1.65f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.Aura, "Aura", new Vector3(0f, 0.05f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.Footprint, "Footprint", new Vector3(0f, 0.05f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.LeftFoot, "LeftFoot", new Vector3(-0.18f, 0.05f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.RightFoot, "RightFoot", new Vector3(0.18f, 0.05f, 0f));
+                CreateSocket(root.transform, CharacterSocketId.HitPoint, "HitPoint", new Vector3(0f, 1.0f, 0f));
+
+                registry.Refresh();
+
+                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+                SetSerializedStringIfAssetExists(
+                    "Assets/Modules/Mainboard/Data/PlayerFeature.asset",
+                    "playerPrefabKey",
+                    prefabPath
+                );
+                AssetDatabase.SaveAssets();
+                Selection.activeObject = prefab;
+                Debug.Log($"<color=#40B84F><b>[Character Logic Generator]</b></color> Generated character logic prefab: {prefabPath}");
+                return prefab;
+            }
+            finally
+            {
+                DestroyImmediate(root);
+            }
+        }
+
+        private static void ConfigureGeneratedInteractor(Component interactor)
+        {
+            if (interactor == null)
+                return;
+
+            SerializedObject serializedObject = new SerializedObject(interactor);
+            SetSerializedFloat(serializedObject, "radius", 1.5f);
+            SetSerializedVector3(serializedObject, "detectionOffset", Vector3.zero);
+            SetSerializedLayerMask(serializedObject, "targetLayers", ~0);
+            SetSerializedFloat(serializedObject, "scanFrequency", 0.2f);
+            SetSerializedBool(serializedObject, "_autoTrigger", true);
+            serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetSerializedFloat(SerializedObject serializedObject, string propertyName, float value)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property != null && property.propertyType == SerializedPropertyType.Float)
+                property.floatValue = value;
+        }
+
+        private static void SetSerializedBool(SerializedObject serializedObject, string propertyName, bool value)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property != null && property.propertyType == SerializedPropertyType.Boolean)
+                property.boolValue = value;
+        }
+
+        private static void SetSerializedVector3(SerializedObject serializedObject, string propertyName, Vector3 value)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property != null && property.propertyType == SerializedPropertyType.Vector3)
+                property.vector3Value = value;
+        }
+
+        private static void SetSerializedLayerMask(SerializedObject serializedObject, string propertyName, int value)
+        {
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property != null && property.propertyType == SerializedPropertyType.LayerMask)
+                property.intValue = value;
+        }
+
+        private static GameObject GenerateUICameraPrefab(string prefabPath, bool showDialog)
+        {
+            if (string.IsNullOrWhiteSpace(prefabPath))
+            {
+                if (showDialog)
+                    EditorUtility.DisplayDialog("UI Camera Generator", "Prefab path is empty.", "OK");
+                return null;
+            }
+
+            EnsureAssetFolder(prefabPath);
+
+            GameObject root = new GameObject(Path.GetFileNameWithoutExtension(prefabPath));
+            try
+            {
+                Camera uiCamera = root.AddComponent<Camera>();
+                uiCamera.clearFlags = CameraClearFlags.Depth;
+                uiCamera.cullingMask = GetUILayerMask();
+                uiCamera.orthographic = true;
+                uiCamera.orthographicSize = 5f;
+                uiCamera.nearClipPlane = -100f;
+                uiCamera.farClipPlane = 100f;
+                uiCamera.depth = 10f;
+                uiCamera.allowHDR = false;
+                uiCamera.allowMSAA = false;
+
+                root.AddComponent<UICameraRegisterHook>();
+
+                GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
+                SetSerializedStringIfAssetExists(
+                    "Assets/Modules/Mainboard/Data/CameraRigFeature.asset",
+                    "uiCameraKey",
+                    prefabPath
+                );
+                AssetDatabase.SaveAssets();
+                Selection.activeObject = prefab;
+                Debug.Log($"<color=#40B84F><b>[UI Camera Generator]</b></color> Generated UI camera prefab: {prefabPath}");
+
+                if (showDialog)
+                    EditorUtility.DisplayDialog("UI Camera Generated", $"Generated UI camera prefab:\n{prefabPath}", "OK");
+
+                return prefab;
+            }
+            finally
+            {
+                DestroyImmediate(root);
+            }
+        }
+
+        private static Object GenerateUIRootPrefabViaUISystem(string prefabPath)
+        {
+            System.Type generatorType = System.Type.GetType(
+                "UISystem.Editor.UIRootGenerator, Assembly-CSharp-Editor"
+            );
+
+            if (generatorType == null)
+            {
+                EditorUtility.DisplayDialog(
+                    "UIRoot Generator",
+                    "Could not find UISystem.Editor.UIRootGenerator.",
+                    "OK"
+                );
+                return null;
+            }
+
+            var method = generatorType.GetMethod(
+                "GenerateUIRootPrefab",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static
+            );
+
+            if (method == null)
+            {
+                EditorUtility.DisplayDialog(
+                    "UIRoot Generator",
+                    "UIRootGenerator.GenerateUIRootPrefab(string) was not found.",
+                    "OK"
+                );
+                return null;
+            }
+
+            return method.Invoke(null, new object[] { prefabPath }) as Object;
+        }
+
         private void DrawLine()
         {
             Rect rect = EditorGUILayout.GetControlRect(false, 1);
@@ -458,6 +677,80 @@ namespace CameraSystem.Editor
             socketComponent.Configure(CharacterSocketId.CameraTarget);
             registry.Refresh();
             return pivot;
+        }
+
+        private static Transform CreateSocket(
+            Transform parent,
+            CharacterSocketId id,
+            string name,
+            Vector3 localPosition
+        )
+        {
+            GameObject socketGo = new GameObject(name);
+            socketGo.transform.SetParent(parent, false);
+            socketGo.transform.localPosition = localPosition;
+            socketGo.transform.localRotation = Quaternion.identity;
+            socketGo.transform.localScale = Vector3.one;
+
+            CharacterSocket socket = socketGo.AddComponent<CharacterSocket>();
+            socket.Configure(id);
+            return socketGo.transform;
+        }
+
+        private static Component TryAddComponentByTypeName(GameObject target, string qualifiedTypeName)
+        {
+            if (target == null || string.IsNullOrWhiteSpace(qualifiedTypeName))
+                return null;
+
+            System.Type type = System.Type.GetType(qualifiedTypeName);
+            if (type == null || !typeof(Component).IsAssignableFrom(type))
+                return null;
+
+            return target.GetComponent(type) ?? target.AddComponent(type);
+        }
+
+        private static void EnsureAssetFolder(string assetPath)
+        {
+            string directory = Path.GetDirectoryName(assetPath)?.Replace("\\", "/");
+            if (string.IsNullOrWhiteSpace(directory) || AssetDatabase.IsValidFolder(directory))
+                return;
+
+            string[] parts = directory.Split('/');
+            string current = parts[0];
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string next = $"{current}/{parts[i]}";
+                if (!AssetDatabase.IsValidFolder(next))
+                    AssetDatabase.CreateFolder(current, parts[i]);
+
+                current = next;
+            }
+        }
+
+        private static int GetUILayerMask()
+        {
+            int uiLayer = LayerMask.NameToLayer("UI");
+            return uiLayer >= 0 ? 1 << uiLayer : 0;
+        }
+
+        private static void SetSerializedStringIfAssetExists(
+            string assetPath,
+            string propertyName,
+            string value
+        )
+        {
+            Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
+            if (asset == null)
+                return;
+
+            SerializedObject serializedObject = new SerializedObject(asset);
+            SerializedProperty property = serializedObject.FindProperty(propertyName);
+            if (property == null || property.propertyType != SerializedPropertyType.String)
+                return;
+
+            property.stringValue = value;
+            serializedObject.ApplyModifiedProperties();
+            EditorUtility.SetDirty(asset);
         }
     }
 }

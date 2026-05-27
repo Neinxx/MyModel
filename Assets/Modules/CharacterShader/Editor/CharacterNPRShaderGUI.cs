@@ -194,6 +194,15 @@ namespace CharacterShader.Editor
                     {
                         EditorGUI.indentLevel++;
                         materialEditor.TexturePropertySingleLine(MatCapArrayLabel, Find(properties, "_MatCapArray"));
+                        
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.Space(EditorGUI.indentLevel * 15);
+                        if (GUILayout.Button("Create / Edit MatCap Config", EditorStyles.miniButton, GUILayout.Width(180)))
+                        {
+                            OpenOrCreateMatCapConfig((Material)materialEditor.target);
+                        }
+                        EditorGUILayout.EndHorizontal();
+                        
                         EditorGUI.indentLevel--;
                     }
                     EditorGUILayout.Space(4);
@@ -553,6 +562,37 @@ namespace CharacterShader.Editor
             }
 
             RampArrayGeneratorWindow.ShowWindow(config);
+        }
+
+        private void OpenOrCreateMatCapConfig(Material material)
+        {
+            if (material == null) return;
+            string materialPath = AssetDatabase.GetAssetPath(material);
+            if (string.IsNullOrEmpty(materialPath)) return;
+
+            string directory = System.IO.Path.GetDirectoryName(materialPath);
+            string configPath = $"{directory}/{material.name}_MatCapConfig.asset".Replace("\\", "/");
+
+            MatCapArrayConfig config = AssetDatabase.LoadAssetAtPath<MatCapArrayConfig>(configPath);
+            if (config == null)
+            {
+                config = ScriptableObject.CreateInstance<MatCapArrayConfig>();
+                config.previewMaterial = material;
+                AssetDatabase.CreateAsset(config, configPath);
+                AssetDatabase.SaveAssets();
+                Debug.Log($"Created new MatCapArrayConfig at {configPath}");
+            }
+            else
+            {
+                if (config.previewMaterial != material)
+                {
+                    config.previewMaterial = material;
+                    EditorUtility.SetDirty(config);
+                    AssetDatabase.SaveAssets();
+                }
+            }
+
+            MatCapArrayGeneratorWindow.ShowWindow(config);
         }
     }
 }

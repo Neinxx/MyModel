@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   priority: 30
   cameraViewKey: Assets/Demo/Art/Prefabs/CameraView.prefab
-  uiCameraKey: CameraUI
+  uiCameraKey: Assets/Demo/Art/Prefabs/UICamera.prefab

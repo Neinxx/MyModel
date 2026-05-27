@@ -17,18 +17,28 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: cb07710ad337efc47a325aadf39d8dbd
   m_SerializeEntries:
-  - m_GUID: 616e0352d9f9cbb4a8885b5150a2d424
-    m_Address: Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6093847dfd4623c44bd004cb645fa6ac
     m_Address: Assets/Demo/Data/WorldSceneDriver.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ecb1dc2c92fd394791d583a855995fd
+    m_Address: Assets/Demo/Art/Prefabs/Anbu_art.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa38823a4d2d89848a7e055574498d1a
+    m_Address: Assets/Demo/Art/Prefabs/Character_logic.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 611dd7cbef4bba842b6c8eb91aa61280
+    m_Address: Assets/Demo/Art/Prefabs/CameraView.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9439546392628344d88ab374d063b4a1
-    m_Address: Assets/Demo/Data/NewShaderVariants.shadervariants
+    m_Address: Assets/Demo/Shader/NewShaderVariants.shadervariants
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -37,13 +47,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5bde8290565847b4b869950435efa2ee
-    m_Address: Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 611dd7cbef4bba842b6c8eb91aa61280
-    m_Address: Assets/Demo/Art/Prefabs/CameraView.prefab
+  - m_GUID: d970fd73fc17ae2448de4544a8cf9c5a
+    m_Address: Assets/Demo/Art/Prefabs/UICamera.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -18,18 +18,13 @@ MonoBehaviour:
   launcherSceneAsset: {fileID: 102900000, guid: 5d0ad171f5e102040bcffa54b7749a00,
     type: 3}
   defaultSubLevel: Level1
-  playerPrefab: {fileID: 4706108296981383100, guid: 5bde8290565847b4b869950435efa2ee,
-    type: 3}
-  cameraPrefab: {fileID: 3417542047468628606, guid: 611dd7cbef4bba842b6c8eb91aa61280,
-    type: 3}
-  uiCameraPrefab: {fileID: 0}
   levels:
   - levelName: Level1
     sceneAsset: {fileID: 102900000, guid: 86bff0a44ce95de4599674cc9c331716, type: 3}
     moduleData: {fileID: 11400000, guid: 1f4b76b6e80a22e448c99ce82e734578, type: 2}
     cachedScenePath: Assets/Demo/Art/Scenes/Scenes/SubScenes/Level1/Level1.unity
   - levelName: Level2
-    sceneAsset: {fileID: 102900000, guid: 63f1b4224a8e78d4a80c7f02d6c86602, type: 3}
+    sceneAsset: {fileID: 102900000, guid: 16d15c38e2804a646b391b6662f840f3, type: 3}
     moduleData: {fileID: 11400000, guid: 5aca645e4e14f5e42b9f2fe1abbbd4f7, type: 2}
     cachedScenePath: Assets/Demo/Art/Scenes/Scenes/SubScenes/Level2/Level2.unity
   - levelName: TheWorld

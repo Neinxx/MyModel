@@ -35,6 +35,16 @@ MonoBehaviour:
     m_SerializedLabels:
     - shader
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8209db3ee45aca408148d60221f0fd6
+    m_Address: DecalAtlasConfig
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af9f9e767ed47cf47a7992d946d7cf88
+    m_Address: NewDecalAtlasMini
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 43c7c11caad5fdc45a53a8cd1b8a0fec, type: 2}
   m_SchemaSet:

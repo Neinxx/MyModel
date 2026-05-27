@@ -18,7 +18,7 @@ MonoBehaviour:
   hpModifier: 0
   attackModifier: 0
   auraModule:
-    auraTexture: {fileID: 2800000, guid: 59277e94d92841b4ab704d34115e0934, type: 3}
+    auraTexture: {fileID: 2800000, guid: dbb4645b90472eb448779b4f0f0d6b45, type: 3}
     softFade: 0.1
     pulseIntensity: 0.5
     layerR:

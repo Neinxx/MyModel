@@ -19,12 +19,6 @@ MonoBehaviour:
     type: 3}
   launcherSceneAsset: {fileID: 102900000, guid: b6ee946a5f33c574eb667858ed5938c1,
     type: 3}
-  playerPrefab: {fileID: 4706108296981383100, guid: 5bde8290565847b4b869950435efa2ee,
-    type: 3}
-  cameraPrefab: {fileID: 6844827832873968229, guid: 8cb73e8ee6d8c2f4da95c0c05ed2408e,
-    type: 3}
-  uiCameraPrefab: {fileID: 7066583102957403285, guid: ea71ed7fed5551b4a912bc7c4e44c614,
-    type: 3}
   testingHudPrefab: {fileID: 2078240875974433231, guid: 61604f2be72fb694db99ac8d4f2c82e5,
     type: 3}
   levels:

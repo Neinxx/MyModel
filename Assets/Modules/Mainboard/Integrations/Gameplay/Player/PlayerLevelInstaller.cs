@@ -28,9 +28,9 @@ namespace Mainboard.Runtime.Integrations
         [Header("Player")]
         [SerializeField] private PlayerStateSO playerState;
         [SerializeField] private string playerPrefabKey =
-            "Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab";
+            "Assets/Demo/Art/Prefabs/Character_logic.prefab";
         [SerializeField] private string visualPrefabKey =
-            "Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab";
+            "Assets/Demo/Art/Prefabs/Anbu_art.prefab";
         [SerializeField] private string defaultSpawnPointID = "Start";
         [SerializeField] private bool ensureCharacterMotor = true;
         [SerializeField] private bool warnIfCharacterBrainMissing = true;

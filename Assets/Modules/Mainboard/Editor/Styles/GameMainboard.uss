@@ -56,6 +56,68 @@
     background-color: rgba(255, 255, 255, 0.02);
 }
 
+.mainboard-profile-modules {
+    margin-top: 8px;
+}
+
+.mainboard-profile-summary {
+    margin-top: 6px;
+    margin-bottom: 6px;
+    padding: 6px 8px;
+    background-color: rgba(63, 185, 80, 0.08);
+    border-left-width: 2px;
+    border-left-color: #3FB950;
+}
+
+.mainboard-profile-summary-title {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: #DDDDDD;
+}
+
+.mainboard-profile-summary-subtitle {
+    font-size: 9px;
+    color: #A8B3A8;
+}
+
+.mainboard-module-foldout {
+    margin-top: 6px;
+    padding: 5px 6px;
+    background-color: rgba(255, 255, 255, 0.025);
+    border-left-width: 2px;
+    border-left-color: rgba(124, 140, 255, 0.65);
+}
+
+.mainboard-module-header-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mainboard-module-title {
+    font-size: 11px;
+    -unity-font-style: bold;
+    color: #D8DEFF;
+}
+
+.mainboard-module-meta {
+    font-size: 9px;
+    color: #8EA0C0;
+}
+
+.mainboard-module-button-row {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.mainboard-module-mini-button {
+    min-width: 48px;
+    height: 18px;
+    margin-left: 4px;
+    font-size: 9px;
+}
+
 /* Diagnostics Button */
 .mainboard-action-button {
     margin-top: 10px;

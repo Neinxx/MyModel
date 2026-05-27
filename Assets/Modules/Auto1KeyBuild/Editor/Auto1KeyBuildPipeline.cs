@@ -7,6 +7,7 @@ using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEditor.Build.Reporting;
 using WorldSceneModule.Editor;
 using WorldSceneModule.Runtime;
@@ -324,11 +325,14 @@ namespace Auto1KeyBuildModule.Editor
             AddCheck(report, "LevelRegistry", registryGUIDs == null || registryGUIDs.Length == 0 ? "No LevelRegistry asset found. Scene path baking will be skipped." : $"Found {registryGUIDs.Length} LevelRegistry asset(s).", registryGUIDs == null || registryGUIDs.Length == 0 ? Auto1KeyBuildCheckSeverity.Warning : Auto1KeyBuildCheckSeverity.Pass);
             ValidateLevelRegistryBuildRules(report, registryGUIDs);
             ValidateGeneratedAddressRules(report, settings);
+            ValidateProtectedLocalAddressables(report, settings);
+            ValidateRenderPipelinePackaging(report);
 
             if (addressableSettings != null)
             {
                 int duplicateAddressCount = CountDuplicateAddressables(addressableSettings);
                 AddCheck(report, "Address Duplicates", duplicateAddressCount == 0 ? "No duplicate Addressables addresses detected." : $"{duplicateAddressCount} duplicate address(es) detected.", duplicateAddressCount == 0 ? Auto1KeyBuildCheckSeverity.Pass : Auto1KeyBuildCheckSeverity.Warning);
+                ValidateContentUpdateSceneIsolation(report, addressableSettings, registryGUIDs);
             }
 
             if (!TryResolveOutputDirectory(profile, out string outputDir, out string outputError))
@@ -546,6 +550,14 @@ namespace Auto1KeyBuildModule.Editor
             else
             {
                 string[] decalConfigGUIDs = AssetDatabase.FindAssets(buildSettings.decalConfigSearchQuery);
+                AddCheck(
+                    report,
+                    "Decal Config Query",
+                    decalConfigGUIDs.Length == 0
+                        ? $"Query '{buildSettings.decalConfigSearchQuery}' found no decal config assets. Decal atlas data will not be explicitly grouped for player/content builds."
+                        : $"Query '{buildSettings.decalConfigSearchQuery}' found {decalConfigGUIDs.Length} decal config asset(s).",
+                    decalConfigGUIDs.Length == 0 ? Auto1KeyBuildCheckSeverity.Error : Auto1KeyBuildCheckSeverity.Pass);
+
                 foreach (string guid in decalConfigGUIDs)
                 {
                     string configPath = AssetDatabase.GUIDToAssetPath(guid);
@@ -582,6 +594,238 @@ namespace Auto1KeyBuildModule.Editor
             }
 
             AddCheck(report, "Generated Addresses", duplicates.Count == 0 ? "Auto-generated Addressables addresses are unique." : $"Auto-generated Addressables address conflict(s): {string.Join("; ", duplicates)}.", duplicates.Count == 0 ? Auto1KeyBuildCheckSeverity.Pass : Auto1KeyBuildCheckSeverity.Error);
+        }
+
+        private static void ValidateProtectedLocalAddressables(Auto1KeyBuildReport report, Auto1KeyBuildSettings buildSettings)
+        {
+            if (buildSettings == null || buildSettings.protectedLocalAddressableKeys == null || buildSettings.protectedLocalAddressableKeys.Count == 0)
+            {
+                AddCheck(report, "Protected Local Assets", "No protected local Addressables are configured.", Auto1KeyBuildCheckSeverity.Warning);
+                return;
+            }
+
+            var missing = new List<string>();
+            foreach (string key in buildSettings.protectedLocalAddressableKeys)
+            {
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    continue;
+                }
+
+                string assetPath = key.Replace('\\', '/').Trim();
+                if (string.IsNullOrWhiteSpace(AssetDatabase.AssetPathToGUID(assetPath)))
+                {
+                    missing.Add(assetPath);
+                }
+            }
+
+            AddCheck(
+                report,
+                "Protected Local Assets",
+                missing.Count == 0
+                    ? $"All {buildSettings.protectedLocalAddressableKeys.Count} protected local asset key(s) resolve to project assets."
+                    : $"Missing protected local asset path(s): {string.Join("; ", missing)}. These boot-critical assets cannot be restored into the shipped local group.",
+                missing.Count == 0 ? Auto1KeyBuildCheckSeverity.Pass : Auto1KeyBuildCheckSeverity.Error);
+        }
+
+        private static void ValidateRenderPipelinePackaging(Auto1KeyBuildReport report)
+        {
+            ValidateQualityRenderPipelineReferences(report);
+
+            RenderPipelineAsset defaultPipeline = GraphicsSettings.defaultRenderPipeline;
+            if (defaultPipeline == null)
+            {
+                AddCheck(report, "URP Renderer", "GraphicsSettings.defaultRenderPipeline is empty. Player quality fallback can run without the Decal renderer feature.", Auto1KeyBuildCheckSeverity.Error);
+                return;
+            }
+
+            string pipelinePath = AssetDatabase.GetAssetPath(defaultPipeline);
+            if (string.IsNullOrWhiteSpace(pipelinePath))
+            {
+                AddCheck(report, "URP Renderer", $"Cannot resolve render pipeline asset path for {defaultPipeline.name}.", Auto1KeyBuildCheckSeverity.Error);
+                return;
+            }
+
+            var serializedPipeline = new SerializedObject(defaultPipeline);
+            SerializedProperty rendererList = serializedPipeline.FindProperty("m_RendererDataList");
+            if (rendererList == null || !rendererList.isArray || rendererList.arraySize == 0)
+            {
+                AddCheck(report, "URP Renderer", $"{pipelinePath} has no renderer data entries.", Auto1KeyBuildCheckSeverity.Error);
+                return;
+            }
+
+            bool foundDecalFeature = false;
+            bool activeDecalFeature = false;
+            bool completeDecalAssets = false;
+            var rendererPaths = new List<string>();
+
+            for (int i = 0; i < rendererList.arraySize; i++)
+            {
+                UnityEngine.Object rendererData = rendererList.GetArrayElementAtIndex(i).objectReferenceValue;
+                if (rendererData == null)
+                {
+                    continue;
+                }
+
+                string rendererPath = AssetDatabase.GetAssetPath(rendererData);
+                if (!string.IsNullOrWhiteSpace(rendererPath))
+                {
+                    rendererPaths.Add(rendererPath);
+                }
+
+                foreach (UnityEngine.Object subAsset in AssetDatabase.LoadAllAssetsAtPath(rendererPath))
+                {
+                    if (subAsset == null || subAsset.GetType().Name != "DecalFeatureMini")
+                    {
+                        continue;
+                    }
+
+                    foundDecalFeature = true;
+                    var serializedFeature = new SerializedObject(subAsset);
+                    SerializedProperty activeProp = serializedFeature.FindProperty("m_Active");
+                    SerializedProperty atlasProp = serializedFeature.FindProperty("atlasConfig");
+                    SerializedProperty decalShaderProp = serializedFeature.FindProperty("decalShader");
+                    SerializedProperty stencilShaderProp = serializedFeature.FindProperty("stencilShader");
+
+                    bool isActive = activeProp == null || activeProp.boolValue;
+                    bool hasAtlas = atlasProp != null && atlasProp.objectReferenceValue != null;
+                    bool hasDecalShader = decalShaderProp != null && decalShaderProp.objectReferenceValue != null;
+                    bool hasStencilShader = stencilShaderProp != null && stencilShaderProp.objectReferenceValue != null;
+
+                    activeDecalFeature |= isActive;
+                    completeDecalAssets |= isActive && hasAtlas && hasDecalShader && hasStencilShader;
+                }
+            }
+
+            Auto1KeyBuildCheckSeverity severity = foundDecalFeature && activeDecalFeature && completeDecalAssets
+                ? Auto1KeyBuildCheckSeverity.Pass
+                : Auto1KeyBuildCheckSeverity.Error;
+
+            string rendererSummary = rendererPaths.Count == 0 ? "(no renderer paths)" : string.Join(", ", rendererPaths);
+            string message = foundDecalFeature && activeDecalFeature && completeDecalAssets
+                ? $"Default URP asset {pipelinePath} uses renderer(s) {rendererSummary}; active DecalFeatureMini has atlas, decal shader, and stencil shader references."
+                : $"Default URP asset {pipelinePath} renderer(s) {rendererSummary} do not contain a complete active DecalFeatureMini. Aura decals will not render in player builds.";
+
+            AddCheck(report, "URP Renderer", message, severity);
+        }
+
+        private static void ValidateQualityRenderPipelineReferences(Auto1KeyBuildReport report)
+        {
+            const string qualitySettingsPath = "ProjectSettings/QualitySettings.asset";
+            if (!File.Exists(qualitySettingsPath))
+            {
+                AddCheck(report, "Quality URP Assets", "ProjectSettings/QualitySettings.asset was not found.", Auto1KeyBuildCheckSeverity.Warning);
+                return;
+            }
+
+            string[] lines = File.ReadAllLines(qualitySettingsPath);
+            var missingQualityGuids = new List<string>();
+            int standaloneQualityIndex = -1;
+            int qualityIndex = -1;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string trimmed = lines[i].Trim();
+                if (trimmed.StartsWith("- serializedVersion:", StringComparison.Ordinal))
+                {
+                    qualityIndex++;
+                    continue;
+                }
+
+                if (trimmed.StartsWith("customRenderPipeline:", StringComparison.Ordinal))
+                {
+                    string guid = ExtractYamlGuid(trimmed);
+                    if (!string.IsNullOrWhiteSpace(guid) && string.IsNullOrWhiteSpace(AssetDatabase.GUIDToAssetPath(guid)))
+                    {
+                        missingQualityGuids.Add($"quality[{qualityIndex}] guid {guid}");
+                    }
+                    continue;
+                }
+
+                if (trimmed.StartsWith("Standalone:", StringComparison.Ordinal))
+                {
+                    int.TryParse(trimmed.Substring("Standalone:".Length).Trim(), out standaloneQualityIndex);
+                }
+            }
+
+            Auto1KeyBuildCheckSeverity severity = missingQualityGuids.Count == 0 ? Auto1KeyBuildCheckSeverity.Pass : Auto1KeyBuildCheckSeverity.Warning;
+            string message = missingQualityGuids.Count == 0
+                ? $"All serialized quality render pipeline references resolve. Standalone default quality index: {standaloneQualityIndex}."
+                : $"Missing quality render pipeline asset reference(s): {string.Join("; ", missingQualityGuids)}. If runtime quality switches to one of these levels, URP renderer features and lighting can disappear.";
+            AddCheck(report, "Quality URP Assets", message, severity);
+        }
+
+        private static string ExtractYamlGuid(string line)
+        {
+            int guidIndex = line.IndexOf("guid:", StringComparison.Ordinal);
+            if (guidIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            int start = guidIndex + "guid:".Length;
+            int comma = line.IndexOf(',', start);
+            string value = comma >= 0 ? line.Substring(start, comma - start) : line.Substring(start);
+            return value.Trim();
+        }
+
+        private static void ValidateContentUpdateSceneIsolation(Auto1KeyBuildReport report, AddressableAssetSettings addressableSettings, string[] registryGUIDs)
+        {
+            if (addressableSettings == null || registryGUIDs == null || registryGUIDs.Length == 0)
+            {
+                return;
+            }
+
+            var sceneGuids = new HashSet<string>();
+            foreach (string registryGuid in registryGUIDs)
+            {
+                string registryPath = AssetDatabase.GUIDToAssetPath(registryGuid);
+                var registry = AssetDatabase.LoadAssetAtPath<LevelRegistry>(registryPath);
+                if (registry == null || registry.levels == null)
+                {
+                    continue;
+                }
+
+                foreach (var level in registry.levels)
+                {
+                    if (level.sceneAsset == null)
+                    {
+                        continue;
+                    }
+
+                    string scenePath = AssetDatabase.GetAssetPath(level.sceneAsset);
+                    string sceneGuid = AssetDatabase.AssetPathToGUID(scenePath);
+                    if (!string.IsNullOrWhiteSpace(sceneGuid))
+                    {
+                        sceneGuids.Add(sceneGuid);
+                    }
+                }
+            }
+
+            var isolatedScenes = new List<string>();
+            foreach (AddressableAssetGroup group in addressableSettings.groups)
+            {
+                if (group == null || !group.Name.StartsWith("Content_Update", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                foreach (AddressableAssetEntry entry in group.entries)
+                {
+                    if (entry != null && sceneGuids.Contains(entry.guid))
+                    {
+                        isolatedScenes.Add($"{entry.address} in {group.Name}");
+                    }
+                }
+            }
+
+            AddCheck(
+                report,
+                "Content Update Scenes",
+                isolatedScenes.Count == 0
+                    ? "No registered level scene is currently isolated in a Content_Update group."
+                    : $"Registered level scene(s) are in content update group(s): {string.Join("; ", isolatedScenes)}. This is valid for patch builds, but it can make the Windows player load stale remote/local-bundle scene content instead of the freshly built scene.",
+                isolatedScenes.Count == 0 ? Auto1KeyBuildCheckSeverity.Pass : Auto1KeyBuildCheckSeverity.Warning);
         }
 
         private static void AddPlannedAddress(Dictionary<string, List<string>> plannedAddresses, string address, string source)

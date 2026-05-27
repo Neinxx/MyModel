@@ -35,11 +35,6 @@ namespace WorldSceneModule.Runtime
         )]
         public string defaultSubLevel = "Level1";
 
-        [Header("Actor Prefabs")]
-        public GameObject playerPrefab;
-        public GameObject cameraPrefab;
-        public GameObject uiCameraPrefab;
-
         [Header("Registered Levels")]
         public List<LevelConfig> levels = new List<LevelConfig>();
 

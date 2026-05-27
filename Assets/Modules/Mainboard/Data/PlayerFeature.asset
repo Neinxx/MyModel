@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   priority: 20
   playerState: {fileID: 11400000, guid: 9635d204eec2f9b4bbe9c94b72403b35, type: 2}
-  playerPrefabKey: Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab
-  visualPrefabKey: Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab
+  playerPrefabKey: Assets/Demo/Art/Prefabs/Character_logic.prefab
+  visualPrefabKey: Assets/Demo/Art/Prefabs/Anbu_art.prefab
   defaultSpawnPointID: Start
   ensureCharacterMotor: 1
   warnIfCharacterBrainMissing: 1

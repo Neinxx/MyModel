@@ -17,7 +17,7 @@ MonoBehaviour:
   - profileName: Windows Release
     buildTarget: 19
     outputDirectory: E:\Demo001
-    developmentBuild: 1
+    developmentBuild: 0
     cleanOutputBeforeBuild: 1
     runPreflightBeforeBuild: 1
     writeBuildReport: 1
@@ -27,7 +27,7 @@ MonoBehaviour:
   - Assets/Modules/DecalSystem/Shaders
   - Assets/Modules/CharacterShader
   decalGroupName: Decal_Group
-  decalConfigSearchQuery: t:DecalAtlasConfig
+  decalConfigSearchQuery: t:DecalAtlasConfigMini
   autoPromoteRedundancies: 1
   sharedGroupName: Shared_AutoGroup
   enableContentUpdateSupport: 1
@@ -37,11 +37,10 @@ MonoBehaviour:
   localContentUpdateTestMode: 1
   localContentUpdateServerDataPath: ServerData/[BuildTarget]
   protectedLocalAddressableKeys:
-  - Assets/Demo/Art/Prefabs/Prefab_Art/TheBigGirl.prefab
+  - Assets/Demo/Art/Prefabs/Anbu_art.prefab
   - Assets/Demo/Data/WorldSceneDriver.prefab
-  - Assets/Demo/Data/NewShaderVariants.shadervariants
-  - Assets/Demo/Art/Prefabs/UIRoot.prefab
-  - Assets/Demo/Art/Prefabs/Prefab_Logic/Player_Logic.prefab
+  - Assets/Demo/Shader/NewShaderVariants.shadervariants
+  - Assets/Demo/Art/Prefabs/Character_logic.prefab
   - Assets/Demo/Art/Prefabs/CameraView.prefab
   previousContentStatePath: 
   contentUpdateRestrictionMode: 2
