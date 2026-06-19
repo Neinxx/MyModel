@@ -9,8 +9,73 @@ namespace CharacterShader.Runtime
         public const int SlotCount = 8;
 
         [SerializeField] private MaterialSlot[] slots = CreateDefaultSlots();
+        [SerializeField] private RampArrayConfig rampArrayConfig;
+        [SerializeField] private MatCapArrayConfig matCapArrayConfig;
+        [SerializeField] private Texture2DArray rampArray;
+        [SerializeField] private Texture2DArray matCapArray;
 
         public MaterialSlot[] Slots => slots;
+        public RampArrayConfig RampArrayConfig => rampArrayConfig;
+        public MatCapArrayConfig MatCapArrayConfig => matCapArrayConfig;
+        public Texture2DArray RampArray => rampArray;
+        public Texture2DArray MatCapArray => matCapArray;
+
+        public string GetSlotDisplayName(int index)
+        {
+            EnsureSlotCount();
+            if (index < 0 || index >= slots.Length)
+            {
+                return $"ID {index}";
+            }
+
+            MaterialSlot slot = slots[index];
+            string slotName = string.IsNullOrWhiteSpace(slot.name) ? slot.kind.ToString() : slot.name;
+            return $"ID {index} - {slotName} ({slot.kind})";
+        }
+
+        public string[] GetSlotDisplayNames()
+        {
+            EnsureSlotCount();
+            string[] names = new string[SlotCount];
+            for (int i = 0; i < SlotCount; i++)
+            {
+                names[i] = GetSlotDisplayName(i);
+            }
+
+            return names;
+        }
+
+        public static string GetDefaultSlotDisplayName(int index)
+        {
+            MaterialSlot[] defaults = CreateDefaultSlots();
+            if (index < 0 || index >= defaults.Length)
+            {
+                return $"ID {index}";
+            }
+
+            MaterialSlot slot = defaults[index];
+            return $"ID {index} - {slot.name} ({slot.kind})";
+        }
+
+        public void SetRampArrayConfig(RampArrayConfig config)
+        {
+            rampArrayConfig = config;
+        }
+
+        public void SetMatCapArrayConfig(MatCapArrayConfig config)
+        {
+            matCapArrayConfig = config;
+        }
+
+        public void SetRampArray(Texture2DArray array)
+        {
+            rampArray = array;
+        }
+
+        public void SetMatCapArray(Texture2DArray array)
+        {
+            matCapArray = array;
+        }
 
         public void EnsureSlotCount()
         {
@@ -47,6 +112,30 @@ namespace CharacterShader.Runtime
                 material.SetVector($"_MatProfile0_{i}", p0);
                 material.SetVector($"_MatProfile1_{i}", p1);
             }
+
+            if (rampArray != null)
+            {
+                material.SetTexture("_RampArray", rampArray);
+                material.SetFloat("_UseRampArray", 1.0f);
+                material.EnableKeyword("_USERAMPARRAY_ON");
+            }
+            else if (material.HasProperty("_UseRampArray"))
+            {
+                material.SetFloat("_UseRampArray", 0.0f);
+                material.DisableKeyword("_USERAMPARRAY_ON");
+            }
+
+            if (matCapArray != null)
+            {
+                material.SetTexture("_MatCapArray", matCapArray);
+                material.SetFloat("_UseMatCapArray", 1.0f);
+                material.EnableKeyword("_USEMATCAPARRAY_ON");
+            }
+            else if (material.HasProperty("_UseMatCapArray"))
+            {
+                material.SetFloat("_UseMatCapArray", 0.0f);
+                material.DisableKeyword("_USEMATCAPARRAY_ON");
+            }
         }
 
         public void PullFrom(Material material)
@@ -70,6 +159,16 @@ namespace CharacterShader.Runtime
                 slots[i].rampBiasScale = profile1.y;
                 slots[i].metalShadowLift = profile1.z;
                 slots[i].aoStrength = profile1.w;
+            }
+
+            if (material.HasProperty("_RampArray"))
+            {
+                rampArray = material.GetTexture("_RampArray") as Texture2DArray;
+            }
+
+            if (material.HasProperty("_MatCapArray"))
+            {
+                matCapArray = material.GetTexture("_MatCapArray") as Texture2DArray;
             }
         }
 

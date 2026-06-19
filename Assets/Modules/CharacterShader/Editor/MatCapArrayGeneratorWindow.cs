@@ -7,12 +7,19 @@ namespace CharacterShader.Editor
 {
     public class MatCapArrayGeneratorWindow : EditorWindow
     {
+        private CharacterMaterialProfile _profile;
         private MatCapArrayConfig _config;
         private Texture2DArray _memoryArray;
 
         public static void ShowWindow(MatCapArrayConfig config)
         {
+            ShowWindow(null, config);
+        }
+
+        public static void ShowWindow(CharacterMaterialProfile profile, MatCapArrayConfig config)
+        {
             var window = GetWindow<MatCapArrayGeneratorWindow>("MatCap Array Generator");
+            window._profile = profile;
             window._config = config;
             window.minSize = new Vector2(400, 550);
             window.Show();
@@ -90,16 +97,7 @@ namespace CharacterShader.Editor
             GUILayout.Label("MatCap Textures (Material ID 0-7)", sectionHeaderStyle);
             GUILayout.Space(5);
 
-            string[] labels = {
-                "ID 0 (Skin / Default)",
-                "ID 1 (Hair)",
-                "ID 2 (Cloth 1)",
-                "ID 3 (Cloth 2)",
-                "ID 4 (Metal / Hard)",
-                "ID 5 (Custom 1)",
-                "ID 6 (Custom 2)",
-                "ID 7 (Custom 3)"
-            };
+            string[] labels = GetSlotLabels();
 
             if (_config.matcaps == null || _config.matcaps.Length != 8)
             {
@@ -226,6 +224,7 @@ namespace CharacterShader.Editor
             {
                 _config.previewMaterial.SetTexture("_MatCapArray", _memoryArray);
                 _config.previewMaterial.SetFloat("_UseMatCapArray", 1.0f);
+                _config.previewMaterial.EnableKeyword("_USEMATCAPARRAY_ON");
             }
         }
 
@@ -273,11 +272,42 @@ namespace CharacterShader.Editor
                 Undo.RecordObject(_config.previewMaterial, "Apply Baked MatCap Array");
                 _config.previewMaterial.SetTexture("_MatCapArray", savedArray);
                 _config.previewMaterial.SetFloat("_UseMatCapArray", 1.0f);
+                _config.previewMaterial.EnableKeyword("_USEMATCAPARRAY_ON");
                 EditorUtility.SetDirty(_config.previewMaterial);
+            }
+
+            if (_profile != null)
+            {
+                Undo.RecordObject(_profile, "Apply Baked MatCap Array To Profile");
+                _profile.SetMatCapArrayConfig(_config);
+                _profile.SetMatCapArray(savedArray);
+                if (_config.previewMaterial != null)
+                {
+                    _profile.ApplyTo(_config.previewMaterial);
+                    EditorUtility.SetDirty(_config.previewMaterial);
+                }
+                EditorUtility.SetDirty(_profile);
+                AssetDatabase.SaveAssets();
             }
             
             Debug.Log($"[MatCapArrayConfig] Successfully baked matcap array to: {savePath}");
             EditorGUIUtility.PingObject(savedArray);
+        }
+
+        private string[] GetSlotLabels()
+        {
+            if (_profile != null)
+            {
+                return _profile.GetSlotDisplayNames();
+            }
+
+            string[] labels = new string[CharacterMaterialProfile.SlotCount];
+            for (int i = 0; i < labels.Length; i++)
+            {
+                labels[i] = CharacterMaterialProfile.GetDefaultSlotDisplayName(i);
+            }
+
+            return labels;
         }
     }
 }

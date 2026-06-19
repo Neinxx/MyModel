@@ -104,12 +104,17 @@ namespace CharacterShader.Editor
             var header = new VisualElement();
             header.AddToClassList("card-header");
 
-            var title = new Label($"[Slot {index}] {slotProp.FindPropertyRelative("name").stringValue}");
+            var title = new Label(profile.GetSlotDisplayName(index));
             title.AddToClassList("card-title");
             
             // Re-bind title when name changes dynamically
             title.TrackPropertyValue(slotProp.FindPropertyRelative("name"), prop => {
-                title.text = $"[Slot {index}] {prop.stringValue}";
+                serializedObject.ApplyModifiedProperties();
+                title.text = profile.GetSlotDisplayName(index);
+            });
+            title.TrackPropertyValue(slotProp.FindPropertyRelative("kind"), prop => {
+                serializedObject.ApplyModifiedProperties();
+                title.text = profile.GetSlotDisplayName(index);
             });
 
             header.Add(title);

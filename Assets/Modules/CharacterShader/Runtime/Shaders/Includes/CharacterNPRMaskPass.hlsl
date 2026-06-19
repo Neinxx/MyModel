@@ -2,7 +2,6 @@
 #define CHARACTER_NPR_MASK_PASS_INCLUDED
 
 #include "CharacterNPRInput.hlsl"
-#include "CharacterSurfaceData.hlsl"
 
 Varyings MaskPassVertex(Attributes input)
 {
@@ -31,16 +30,18 @@ half4 MaskPassFragment(Varyings input) : SV_Target
     UNITY_SETUP_INSTANCE_ID(input);
     UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
+    half alpha = 1.0h;
     #if defined(_ALPHATEST_ON)
-        half4 baseColor = _BaseColor;
-        half alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a;
-        clip(alpha * baseColor.a - _Cutoff);
+        alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
+        clip(alpha - _Cutoff);
     #endif
 
-    CharacterSurfaceData surfaceData;
-    InitializeCharacterSurfaceData(input, surfaceData);
+    half rimPostMask = 1.0h;
+    #if defined(_USEMASKMAPS_ON)
+        rimPostMask = SAMPLE_TEXTURE2D(_Mask1, sampler_Mask1, input.uv).a;
+    #endif
 
-    half postMask = saturate(surfaceData.mask1.a * _PostProcessMaskStrength);
+    half postMask = saturate(rimPostMask * _PostProcessMaskStrength);
     return half4(1.0h, 1.0h, 1.0h, lerp(1.0h, postMask, _PostProcessMaskStrength));
 }
 

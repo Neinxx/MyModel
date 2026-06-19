@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdd074cb05b0c0840a98f1e068078881, type: 3}
+  m_Name: CharacterMaterialProfile_MatCapConfig
+  m_EditorClassIdentifier: 
+  previewMaterial: {fileID: 2100000, guid: 35079bc6f13c7a147bebd8183570c8c4, type: 2}
+  resolution: 256
+  matcaps:
+  - {fileID: 2800000, guid: d4af20b2e799b4f4095ce1c4eb63980a, type: 3}
+  - {fileID: 2800000, guid: 45310b9ee271c2a4285c5c46aebf4a9e, type: 3}
+  - {fileID: 2800000, guid: 309d697c42661e449b00c15f7686921a, type: 3}
+  - {fileID: 2800000, guid: 45310b9ee271c2a4285c5c46aebf4a9e, type: 3}
+  - {fileID: 2800000, guid: 1917b35a4d6d0dc4fa707d1e4e1f9ea5, type: 3}
+  - {fileID: 2800000, guid: 7f33ca9f5f6ff274ca3cf47b8312806f, type: 3}
+  - {fileID: 2800000, guid: b7dfca8957f950e478e277d1d6f95007, type: 3}
+  - {fileID: 2800000, guid: 57ea8a2684cbc5c4286ad9d01ce8e7fd, type: 3}

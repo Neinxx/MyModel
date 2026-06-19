@@ -19,7 +19,7 @@ namespace CharacterPostProcess.Runtime
         {
             public RenderPassEvent renderEvent = RenderPassEvent.AfterRenderingTransparents;
             public LayerMask characterLayer = -1;
-            public bool includeSceneView = false;
+            public bool includeSceneView = true;
             public Shader shader;
 
             [Header("Dual Kawase Bloom")]
@@ -251,7 +251,7 @@ namespace CharacterPostProcess.Runtime
         {
             if (_settings != null && _settings.enableOutline && _settings.outlineIntensity > 0f)
             {
-                ConfigureInput(ScriptableRenderPassInput.Depth);
+                ConfigureInput(ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Normal);
             }
         }
 

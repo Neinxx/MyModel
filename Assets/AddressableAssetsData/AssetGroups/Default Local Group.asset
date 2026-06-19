@@ -52,6 +52,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35079bc6f13c7a147bebd8183570c8c4
+    m_Address: Assets/Demo/Art/CharacterOnly/MAT_Clara_Map1_UI.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 43c7c11caad5fdc45a53a8cd1b8a0fec, type: 2}
   m_SchemaSet:

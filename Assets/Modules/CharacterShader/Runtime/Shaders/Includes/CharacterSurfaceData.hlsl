@@ -13,6 +13,7 @@ struct CharacterSurfaceData
     
     half4 mask0; // R MaterialID, G AO, B Smoothness, A Metallic
     half4 mask1; // R RampBias, G ShadowSoftness, B MatCap, A Rim/Post Mask
+    half4 detail; // R SSS/Translucency, G Wear/Fabric, B Spec Shape, A Clearcoat/Alpha Feel
     
     half4 profile0; // RampSlice, MatCapSlice, MatCapStrength, RimStrength
     half4 profile1; // ShadowHardness, BiasScale, MetalLift, AOIntensity
@@ -22,6 +23,11 @@ struct CharacterSurfaceData
 half3 GetCharacterNormalWS(Varyings input)
 {
     half3 normalWS = normalize(input.normalWS);
+
+    #if !defined(_NORMALMAP)
+        return normalWS;
+    #endif
+
     half4 tangentWS = input.tangentWS;
     half tangentSign = tangentWS.w;
     half3 bitangentWS = cross(normalWS, tangentWS.xyz) * tangentSign;
@@ -37,21 +43,33 @@ void InitializeCharacterSurfaceData(Varyings input, out CharacterSurfaceData sur
         clip(surfaceData.albedoAlpha.a - _Cutoff);
     #endif
 
-    if (_UseMaskMaps > 0.5h)
+    #if defined(_USEMASKMAPS_ON)
     {
         surfaceData.mask0 = SAMPLE_TEXTURE2D(_Mask0, sampler_Mask0, input.uv);
         surfaceData.mask1 = SAMPLE_TEXTURE2D(_Mask1, sampler_Mask1, input.uv);
     }
-    else
+    #else
     {
         surfaceData.mask0 = half4(0.0h, 1.0h, _Smoothness, _Metallic);
         surfaceData.mask1 = half4(0.5h, 0.5h, 1.0h, 1.0h);
     }
+    #endif
+
+    #if defined(_USE_MATERIAL_DETAIL)
+    {
+        half2 detailUV = input.uv * _MaterialDetailMap_ST.xy + _MaterialDetailMap_ST.zw;
+        surfaceData.detail = SAMPLE_TEXTURE2D(_MaterialDetailMap, sampler_MaterialDetailMap, detailUV);
+    }
+    #else
+    {
+        surfaceData.detail = half4(0.0h, 0.0h, 0.0h, 0.0h);
+    }
+    #endif
 
     // Material ID mapped to 0-7 and clamped strictly to prevent array bounds corruption
     surfaceData.profileID = clamp(round(surfaceData.mask0.r * 7.0h), 0.0h, 7.0h);
     
-    if (_UseRampArray > 0.5h || _UseMatCapArray > 0.5h)
+    #if defined(_USERAMPARRAY_ON) || defined(_USEMATCAPARRAY_ON)
     {
         // Decode Profile Data dynamically from global uniforms array based on Profile ID
         // (Assuming _MatProfile0 and _MatProfile1 arrays are populated by script)
@@ -59,11 +77,12 @@ void InitializeCharacterSurfaceData(Varyings input, out CharacterSurfaceData sur
         surfaceData.profile0 = GetProfile0(id);
         surfaceData.profile1 = GetProfile1(id);
     }
-    else
+    #else
     {
         surfaceData.profile0 = half4(0, 0, 1, 1);
         surfaceData.profile1 = half4(0.5, 1, 0, 1);
     }
+    #endif
 
     surfaceData.normalWS = GetCharacterNormalWS(input);
     surfaceData.viewDirWS = normalize(input.viewDirWS);

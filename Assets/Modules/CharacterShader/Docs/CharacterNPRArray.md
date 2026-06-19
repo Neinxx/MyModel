@@ -130,7 +130,70 @@ MatCap array:
 
 ## Mobile Notes
 
-- Texture arrays require GLES3, Metal, or Vulkan. Keep fallback mode available for unsupported targets.
+- Texture arrays require GLES3, Metal, or Vulkan. Keep `Use Ramp Texture2DArray` and `Use MatCap Texture2DArray` disabled for fallback materials on unsupported targets.
 - Prefer one shared character material template and override profiles per character.
 - Keep mask textures compressed, but avoid compression formats that destroy ID channels.
 - Put the character on the `Character` layer so `CharacterPostProcessFeature` can capture it separately.
+
+## Runtime Binding Notes
+
+`CharacterFaceSDFController` writes `_HeadForwardWS` and `_HeadRightWS` through `MaterialPropertyBlock` per renderer. This keeps SDF face shadows correct when multiple characters are visible at the same time.
+
+The material inspector and array generator tools keep shader keywords in sync with their float toggles. If you set these toggles from custom scripts, also enable or disable the matching local keyword on the material.
+
+## Single Source Of Truth
+
+`CharacterMaterialProfile` is the source asset for character material style data. Materials are treated as runtime caches that receive profile vectors, baked texture arrays, and shader keywords.
+
+The material inspector, Ramp Array Generator, and MatCap Array Generator all work through the bound profile:
+
+- Assign or create a `CharacterMaterialProfile` in the material inspector.
+- Use `Create / Edit Ramp Config` or `Create / Edit MatCap Config` from that material inspector.
+- The generated config assets are stored next to the profile and referenced by the profile.
+- When an array is baked, the resulting `Texture2DArray` is written back to the profile and applied to the preview material.
+
+This keeps material ID profile data, ramp slices, matcap slices, source configs, and baked arrays aligned across editor tools.
+
+Material ID display names in the material inspector, Ramp Array Generator, MatCap Array Generator, and profile inspector all come from `CharacterMaterialProfile.Slots`. Rename a slot in the profile when artists need a project-specific label such as `Face Skin`, `Hair Front`, or `Coat Metal`.
+
+## ZZZ-Style Control Notes
+
+Face SDF now blends only onto the selected `Face Material ID`, so enabling face shadows no longer overrides the body ramp. `Mirror SDF by Light Side` samples the same SDF texture with flipped X when the light comes from the opposite side, which lets a single face SDF texture cover left/right lighting for symmetric faces.
+
+Hair anisotropic highlights use `_HairAnisoMap` as a packed control map:
+
+| Channel | Meaning |
+| --- | --- |
+| R | Tangent shift / highlight height |
+| G | Primary highlight mask |
+| B | Secondary highlight mask |
+| A | Highlight shape mask |
+
+Use the material `Debug Mode` to inspect production data directly on the character. The most useful modes during authoring are `MaterialID`, `Mask0`, `Mask1`, `Ramp`, `FaceSDF`, `HairMask`, and `PostMask`.
+`Ramp` displays the actual ramp light result, including `Texture2DArray` sampling when `Use Ramp Array` is enabled.
+
+## Material Detail Layers
+
+Enable `Use Material Detail Map` when a character needs more ZZZ-style material separation without splitting into many shaders.
+
+`MaterialDetailMap` is packed as:
+
+| Channel | Meaning |
+| --- | --- |
+| R | Skin SSS/blush/translucency or glass internal tint |
+| G | Leather edge wear, fabric weave direction blend, or metal facet regions |
+| B | Local stylized specular shape or cloth value variation |
+| A | Clearcoat/glass edge feel, metal edge intensity, or low-frequency hair variation |
+
+Current material ID behavior:
+
+| ID | Profile | Extra response |
+| --- | --- | --- |
+| 0 | Skin | SSS tint, nose/cheek/ear color accents, softer half-shadow feel |
+| 2 | Fabric | Shadow color variation, UV-space weave bands, broad woven-detail value shift |
+| 3 | Metal | Painted facet regions, stronger clearcoat/spec shape, view-edge highlight |
+| 4 | Leather | Warm worn edges and compact oily highlight |
+| 6 | Glass | Opaque-pipeline glassy edge highlight, internal tint, thickness feel |
+| 7 | Effect | Rubber/plastic-style hard blocky toon highlight |
+
+Transparent or semi-transparent parts still need a separate material/pass if they require true sorting or alpha blending. The detail layer only gives opaque characters a glassy response while preserving the existing character mask and post-process path.

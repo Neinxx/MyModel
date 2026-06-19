@@ -6,6 +6,7 @@
 #include "CharacterNPRSilk.hlsl"
 #include "CharacterNPRFaceSDF.hlsl"
 #include "CharacterNPRTunifiedPBR.hlsl"
+#include "CharacterNPRMaterialLayers.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface)
@@ -18,7 +19,7 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
     half maxIlluminance = max(0.001h, length(mainLight.color) * mainLight.shadowAttenuation);
 
     // 0. Stockings & Silk (Modify Albedo before lighting based on ID 5)
-    if (_UseSilk > 0.5h)
+    #if defined(_USE_SILK)
     {
         half isSilk = saturate(1.0h - abs(surface.profileID - 5.0h) * 10.0h);
         if (isSilk > 0.0h)
@@ -35,6 +36,7 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
             );
         }
     }
+    #endif
 
     // 1. Ramp & Inner Shadow (Main Light)
     half ndl = saturate(dot(surface.normalWS, mainLight.direction) * 0.5h + 0.5h);
@@ -46,23 +48,28 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
     half rampSlice = surface.profile0.x;
     half rampLight = proceduralRamp;
     
-    if (_UseRampArray > 0.5h)
+    #if defined(_USERAMPARRAY_ON)
     {
         rampLight = SAMPLE_TEXTURE2D_ARRAY(_RampArray, sampler_RampArray, float2(rampU, 0.5), (int)round(rampSlice)).r;
     }
+    #endif
     
     // Override Ramp with Face SDF if enabled
-    if (_UseFaceSDF > 0.5h)
+    #if defined(_USE_FACE_SDF)
     {
-        rampLight = CalculateFaceSDFShadow(
+        half faceSdfLight = CalculateFaceSDFShadow(
             input.uv, 
             mainLight.direction, 
-            _HeadForwardWS, 
-            _HeadRightWS, 
+            _HeadForwardWS.xyz, 
+            _HeadRightWS.xyz, 
             _FaceShadowOffset, 
-            _FaceShadowSoftness
+            _FaceShadowSoftness,
+            _FaceSDFMirrorStrength
         );
+        half faceMaterialMask = saturate(1.0h - abs(surface.profileID - _FaceSDFMaterialID) / max(0.001h, _FaceSDFMaterialTolerance));
+        rampLight = lerp(rampLight, faceSdfLight, faceMaterialMask * _FaceShadowStrength);
     }
+    #endif
 
     half innerShadow = 1.0h - rampLight;
     
@@ -137,10 +144,11 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
     half matcapSlice = surface.profile0.y;
     half3 matcap = half3(0.0h, 0.0h, 0.0h);
     
-    if (_UseMatCapArray > 0.5h)
+    #if defined(_USEMATCAPARRAY_ON)
     {
         matcap = SAMPLE_TEXTURE2D_ARRAY(_MatCapArray, sampler_MatCapArray, matcapUV, (int)round(matcapSlice)).rgb;
     }
+    #endif
     
     half matcapStrength = surface.mask1.b * surface.profile0.z * _MatCapGlobalStrength;
     matcapStrength *= lerp(0.55h, 1.25h, surface.mask0.b);
@@ -172,7 +180,7 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
     color += currentRimColor * rimLight * lerp(half3(1.0h, 1.0h, 1.0h), dominantLight.color, _ReceiveMainLight);
 
     // 8. Hair Anisotropic Specular (Angel Ring) - Driven by Dominant Light
-    if (_UseAnisoHair > 0.5h)
+    #if defined(_USE_ANISO_HAIR)
     {
         half isHair = saturate(1.0h - abs(surface.profileID - 1.0h) * 10.0h);
         
@@ -181,26 +189,33 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
             half2 anisoUV = input.uv * _HairAnisoMap_ST.xy + _HairAnisoMap_ST.zw;
             half4 anisoSample = SAMPLE_TEXTURE2D(_HairAnisoMap, sampler_HairAnisoMap, anisoUV);
             
-            half anisoShift = (anisoSample.r * 2.0h - 1.0h) + _HairSpecShift;
-            half anisoMask = anisoSample.g;
-            
-            half3 offsetTangent = normalize(surface.tangentWS.xyz + surface.normalWS * anisoShift);
+            half anisoShift = (anisoSample.r * 2.0h - 1.0h);
+            half primaryMask = anisoSample.g;
+            half secondaryMask = anisoSample.b;
+            half shapeMask = pow(saturate(max(anisoSample.a, primaryMask)), _HairSpecShapePower);
             
             half3 H = normalize(surface.viewDirWS + dominantLight.direction);
-            half TdotH = dot(offsetTangent, H);
-            half anisoHighlight = 1.0h - abs(TdotH);
-            
-            half thresh = 1.0h - _HairSpecSpread;
-            half hairSpec = smoothstep(thresh - _HairSpecSoftness, thresh + _HairSpecSoftness, anisoHighlight);
-            
-            hairSpec *= anisoMask * shadowMask * _HairSpecIntensity * isHair;
-            
-            color += _HairSpecColor.rgb * hairSpec * dominantLight.color;
+            half viewAlign = lerp(1.0h, saturate(dot(surface.viewDirWS, dominantLight.direction) * 0.5h + 0.5h), _HairSpecViewWeight);
+
+            half3 primaryTangent = normalize(surface.tangentWS.xyz + surface.normalWS * (anisoShift + _HairSpecShift));
+            half primaryHighlight = 1.0h - abs(dot(primaryTangent, H));
+            half primaryThreshold = 1.0h - _HairSpecSpread;
+            half primarySpec = smoothstep(primaryThreshold - _HairSpecSoftness, primaryThreshold + _HairSpecSoftness, primaryHighlight);
+            primarySpec *= primaryMask * shapeMask * shadowMask * viewAlign * _HairSpecIntensity * isHair;
+
+            half3 secondaryTangent = normalize(surface.tangentWS.xyz + surface.normalWS * (anisoShift + _HairSpecSecondaryShift));
+            half secondaryHighlight = 1.0h - abs(dot(secondaryTangent, H));
+            half secondaryThreshold = 1.0h - _HairSpecSecondarySpread;
+            half secondarySpec = smoothstep(secondaryThreshold - _HairSpecSoftness, secondaryThreshold + _HairSpecSoftness, secondaryHighlight);
+            secondarySpec *= secondaryMask * shapeMask * shadowMask * viewAlign * _HairSpecSecondaryIntensity * isHair;
+
+            color += (_HairSpecColor.rgb * primarySpec + _HairSpecSecondaryColor.rgb * secondarySpec) * dominantLight.color;
         }
     }
+    #endif
 
     // 9. Tunified PBR (Stylized Metallic & Specular)
-    if (_UseTunifiedPBR > 0.5h)
+    #if defined(_USE_TUNIFIED_PBR)
     {
         half3 pbrContribution = CalculateTunifiedPBR(
             surface.mask0.a, // Metallic
@@ -216,6 +231,9 @@ half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface
         
         color += pbrContribution;
     }
+    #endif
+
+    color = ApplyCharacterMaterialLayers(color, surface, dominantLight, mixedShadow, rimLight, input.uv);
 
     // 10. Fog
     color = MixFog(color, input.fogFactor);

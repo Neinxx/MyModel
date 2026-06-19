@@ -31,33 +31,64 @@ TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
 TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
 TEXTURE2D(_Mask0); SAMPLER(sampler_Mask0);
 TEXTURE2D(_Mask1); SAMPLER(sampler_Mask1);
+TEXTURE2D(_MaterialDetailMap); SAMPLER(sampler_MaterialDetailMap);
 TEXTURE2D(_HairAnisoMap); SAMPLER(sampler_HairAnisoMap);
 TEXTURE2D(_FaceSDFMap); SAMPLER(sampler_FaceSDFMap);
-TEXTURE2D_ARRAY(_RampArray); SAMPLER(sampler_RampArray);
-TEXTURE2D_ARRAY(_MatCapArray); SAMPLER(sampler_MatCapArray);
-
-// Global Head Vectors pushed by C# Controller
-half3 _HeadForwardWS;
-half3 _HeadRightWS;
+#if defined(_USERAMPARRAY_ON)
+    TEXTURE2D_ARRAY(_RampArray); SAMPLER(sampler_RampArray);
+#endif
+#if defined(_USEMATCAPARRAY_ON)
+    TEXTURE2D_ARRAY(_MatCapArray); SAMPLER(sampler_MatCapArray);
+#endif
 
 CBUFFER_START(UnityPerMaterial)
     float4 _BaseMap_ST;
+    float4 _MaterialDetailMap_ST;
     float4 _HairAnisoMap_ST;
     half4 _BaseColor;
+    half _UseNormalMap;
     half _BumpScale;
     half _Metallic;
     half _Smoothness;
     half _UseMaskMaps;
+    half _UseMaterialDetail;
     half _UseRampArray;
     half _UseMatCapArray;
     half _UseFaceSDF;
     half _UseAnisoHair;
     half _UseTunifiedPBR;
     half _UseSilk;
+
+    // Material Detail Layers
+    half4 _SkinSSSColor;
+    half _SkinSSSStrength;
+    half _SkinBlushStrength;
+    half _SkinShadowSoftness;
+    half4 _LeatherWearColor;
+    half _LeatherWearStrength;
+    half _LeatherSpecStrength;
+    half4 _FabricShadowColor;
+    half _FabricDirectionStrength;
+    half _FabricWeaveScale;
+    half _FabricWeaveStrength;
+    half _MetalFacetStrength;
+    half _MetalEdgeStrength;
+    half4 _RubberSpecColor;
+    half _RubberSpecStrength;
+    half _RubberSpecHardness;
+    half4 _ClearcoatColor;
+    half _ClearcoatStrength;
+    half _GlassThicknessStrength;
     
     // Face SDF
+    half4 _HeadForwardWS;
+    half4 _HeadRightWS;
     half _FaceShadowOffset;
     half _FaceShadowSoftness;
+    half _FaceShadowStrength;
+    half _FaceSDFMirrorStrength;
+    half _FaceSDFMaterialID;
+    half _FaceSDFMaterialTolerance;
     
     // Stockings & Silk
     half4 _SilkSkinColor;
@@ -73,10 +104,16 @@ CBUFFER_START(UnityPerMaterial)
     
     // Hair Aniso
     half4 _HairSpecColor;
+    half4 _HairSpecSecondaryColor;
     half _HairSpecShift;
+    half _HairSpecSecondaryShift;
     half _HairSpecSpread;
+    half _HairSpecSecondarySpread;
     half _HairSpecSoftness;
     half _HairSpecIntensity;
+    half _HairSpecSecondaryIntensity;
+    half _HairSpecViewWeight;
+    half _HairSpecShapePower;
 
     half4 _UnifiedShadowColor;
     half _InnerShadowThreshold;
@@ -120,7 +157,9 @@ CBUFFER_START(UnityPerMaterial)
     half _AlphaClip;
     half _Cutoff;
     half _UseSmoothNormal;
+    half _UseOutlineMask;
     half _StencilRef;
+    half _DebugMode;
 CBUFFER_END
 
 half4 GetProfile0(half id)

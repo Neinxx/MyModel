@@ -7,12 +7,19 @@ namespace CharacterShader.Editor
 {
     public class RampArrayGeneratorWindow : EditorWindow
     {
+        private CharacterMaterialProfile _profile;
         private RampArrayConfig _config;
         private Texture2DArray _memoryArray;
 
         public static void ShowWindow(RampArrayConfig config)
         {
+            ShowWindow(null, config);
+        }
+
+        public static void ShowWindow(CharacterMaterialProfile profile, RampArrayConfig config)
+        {
             var window = GetWindow<RampArrayGeneratorWindow>("Ramp Array Generator");
+            window._profile = profile;
             window._config = config;
             window.minSize = new Vector2(400, 500);
             window.Show();
@@ -90,17 +97,7 @@ namespace CharacterShader.Editor
             GUILayout.Label("Ramp Gradients (Material ID 0-7)", sectionHeaderStyle);
             GUILayout.Space(5);
 
-            // Display gradients directly without array foldouts
-            string[] labels = {
-                "ID 0 (Skin / Default)",
-                "ID 1 (Hair)",
-                "ID 2 (Cloth 1)",
-                "ID 3 (Cloth 2)",
-                "ID 4 (Metal / Hard)",
-                "ID 5 (Custom 1)",
-                "ID 6 (Custom 2)",
-                "ID 7 (Custom 3)"
-            };
+            string[] labels = GetSlotLabels();
 
             if (_config.ramps == null || _config.ramps.Length != 8)
             {
@@ -218,6 +215,7 @@ namespace CharacterShader.Editor
             {
                 _config.previewMaterial.SetTexture("_RampArray", _memoryArray);
                 _config.previewMaterial.SetFloat("_UseRampArray", 1.0f);
+                _config.previewMaterial.EnableKeyword("_USERAMPARRAY_ON");
             }
         }
 
@@ -265,11 +263,42 @@ namespace CharacterShader.Editor
                 Undo.RecordObject(_config.previewMaterial, "Apply Baked Ramp Array");
                 _config.previewMaterial.SetTexture("_RampArray", savedArray);
                 _config.previewMaterial.SetFloat("_UseRampArray", 1.0f);
+                _config.previewMaterial.EnableKeyword("_USERAMPARRAY_ON");
                 EditorUtility.SetDirty(_config.previewMaterial);
+            }
+
+            if (_profile != null)
+            {
+                Undo.RecordObject(_profile, "Apply Baked Ramp Array To Profile");
+                _profile.SetRampArrayConfig(_config);
+                _profile.SetRampArray(savedArray);
+                if (_config.previewMaterial != null)
+                {
+                    _profile.ApplyTo(_config.previewMaterial);
+                    EditorUtility.SetDirty(_config.previewMaterial);
+                }
+                EditorUtility.SetDirty(_profile);
+                AssetDatabase.SaveAssets();
             }
             
             Debug.Log($"[RampArrayConfig] Successfully baked ramp array to: {savePath}");
             EditorGUIUtility.PingObject(savedArray);
+        }
+
+        private string[] GetSlotLabels()
+        {
+            if (_profile != null)
+            {
+                return _profile.GetSlotDisplayNames();
+            }
+
+            string[] labels = new string[CharacterMaterialProfile.SlotCount];
+            for (int i = 0; i < labels.Length; i++)
+            {
+                labels[i] = CharacterMaterialProfile.GetDefaultSlotDisplayName(i);
+            }
+
+            return labels;
         }
     }
 }

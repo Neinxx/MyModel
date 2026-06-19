@@ -5,6 +5,7 @@ Shader "Universal Render Pipeline/Character/NPR Array"
         [Header(Surface)]
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
+        [Toggle(_NORMALMAP)] _UseNormalMap("Use Normal Map", Float) = 0
         _BumpMap("Normal Map", 2D) = "bump" {}
         _BumpScale("Normal Scale", Range(0, 2)) = 1
         _Metallic("Fallback Metallic", Range(0, 1)) = 0
@@ -15,11 +16,40 @@ Shader "Universal Render Pipeline/Character/NPR Array"
         _Mask0("Mask 0: R MaterialID, G AO, B Smoothness, A Metallic", 2D) = "white" {}
         _Mask1("Mask 1: R RampBias, G ShadowSoftness, B MatCap, A Rim Post Mask", 2D) = "white" {}
 
+        [Header(Material Detail Layers)]
+        [Toggle(_USE_MATERIAL_DETAIL)] _UseMaterialDetail("Use Material Detail Map", Float) = 0
+        _MaterialDetailMap("Detail Map: R SSS/Translucency, G Wear/Fabric, B Spec Shape, A Clearcoat/Alpha Feel", 2D) = "black" {}
+        _SkinSSSColor("Skin SSS Color", Color) = (1.0, 0.45, 0.35, 1)
+        _SkinSSSStrength("Skin SSS Strength", Range(0, 1)) = 0.25
+        _SkinBlushStrength("Skin Nose/Cheek Tint Strength", Range(0, 1)) = 0.18
+        _SkinShadowSoftness("Skin Shadow Softness", Range(0, 1)) = 0.35
+        _LeatherWearColor("Leather Wear Color", Color) = (1.0, 0.75, 0.45, 1)
+        _LeatherWearStrength("Leather Edge Wear Strength", Range(0, 1)) = 0.35
+        _LeatherSpecStrength("Leather Oily Spec Strength", Range(0, 2)) = 0.45
+        _FabricShadowColor("Fabric Shadow Color", Color) = (0.55, 0.62, 0.9, 1)
+        _FabricDirectionStrength("Fabric Direction Strength", Range(0, 1)) = 0.3
+        _FabricWeaveScale("Fabric Weave Scale", Range(1, 80)) = 24
+        _FabricWeaveStrength("Fabric Weave Strength", Range(0, 1)) = 0.18
+        _MetalFacetStrength("Metal Facet Strength", Range(0, 2)) = 0.75
+        _MetalEdgeStrength("Metal Edge Highlight Strength", Range(0, 2)) = 0.6
+        _RubberSpecColor("Rubber/Plastic Spec Color", Color) = (1, 1, 1, 1)
+        _RubberSpecStrength("Rubber/Plastic Toon Spec Strength", Range(0, 3)) = 0.75
+        _RubberSpecHardness("Rubber/Plastic Spec Hardness", Range(0, 1)) = 0.75
+        _ClearcoatColor("Clearcoat/Transparent Highlight Color", Color) = (0.75, 0.95, 1, 1)
+        _ClearcoatStrength("Clearcoat/Transparent Highlight Strength", Range(0, 3)) = 0.8
+        _GlassThicknessStrength("Glass Thickness Tint Strength", Range(0, 1)) = 0.45
+
         [Header(Face SDF Shadow)]
         [Toggle(_USE_FACE_SDF)] _UseFaceSDF("Enable SDF Face Shadow", Float) = 0
         [NoScaleOffset] _FaceSDFMap("Face SDF Map (R)", 2D) = "white" {}
         _FaceShadowOffset("Shadow Offset", Range(-1, 1)) = 0.0
         _FaceShadowSoftness("Shadow Softness", Range(0, 0.5)) = 0.05
+        _FaceShadowStrength("Face Shadow Strength", Range(0, 1)) = 1.0
+        _FaceSDFMirrorStrength("Mirror SDF by Light Side", Range(0, 1)) = 1.0
+        _FaceSDFMaterialID("Face Material ID", Range(0, 7)) = 0
+        _FaceSDFMaterialTolerance("Face ID Tolerance", Range(0.1, 2)) = 0.35
+        [HideInInspector] _HeadForwardWS("Head Forward WS", Vector) = (0, 0, 1, 0)
+        [HideInInspector] _HeadRightWS("Head Right WS", Vector) = (1, 0, 0, 0)
         
         [Header(Ramp And MatCap Arrays)]
         [Toggle(_USERAMPARRAY_ON)] _UseRampArray("Use Ramp Texture2DArray", Float) = 0
@@ -70,12 +100,18 @@ Shader "Universal Render Pipeline/Character/NPR Array"
         
         [Header(Hair Anisotropic Specular)]
         [Toggle(_USE_ANISO_HAIR)] _UseAnisoHair("Enable Hair Specular", Float) = 0
-        _HairAnisoMap("Hair Shift (R) / Spec Mask (G)", 2D) = "gray" {}
+        _HairAnisoMap("Hair Shift (R) / Primary Mask (G) / Secondary Mask (B) / Shape (A)", 2D) = "gray" {}
         _HairSpecColor("Hair Specular Color", Color) = (1, 1, 1, 1)
+        _HairSpecSecondaryColor("Secondary Specular Color", Color) = (0.55, 0.75, 1, 1)
         _HairSpecShift("Global Shift", Range(-1, 1)) = 0
+        _HairSpecSecondaryShift("Secondary Shift", Range(-1, 1)) = 0.25
         _HairSpecSpread("Specular Spread", Range(0.01, 1.0)) = 0.5
+        _HairSpecSecondarySpread("Secondary Spread", Range(0.01, 1.0)) = 0.35
         _HairSpecSoftness("Specular Softness", Range(0.001, 0.5)) = 0.05
         _HairSpecIntensity("Specular Intensity", Range(0, 5)) = 1.0
+        _HairSpecSecondaryIntensity("Secondary Intensity", Range(0, 5)) = 0.35
+        _HairSpecViewWeight("View Alignment Weight", Range(0, 1)) = 0.35
+        _HairSpecShapePower("Shape Mask Power", Range(0.1, 8)) = 1.0
 
         [Header(Stylized Outline)]
         [Toggle(_USE_SMOOTH_NORMAL)] _UseSmoothNormal("Use Vertex Color RGB as Smooth Normal", Float) = 0
@@ -95,6 +131,9 @@ Shader "Universal Render Pipeline/Character/NPR Array"
         [Toggle(_ALPHATEST_ON)] _AlphaClip("Alpha Clip", Float) = 0
         _Cutoff("Alpha Cutoff", Range(0, 1)) = 0.5
         _StencilRef("Stencil Ref", Float) = 0
+
+        [Header(Debug)]
+        _DebugMode("Debug Mode", Float) = 0
         
         // Hidden Properties required for SRP Batcher CBUFFER matching
         [HideInInspector] _MatProfile0_0("MatProfile0_0", Vector) = (0,0,0,0)
@@ -144,11 +183,19 @@ Shader "Universal Render Pipeline/Character/NPR Array"
 
             HLSLPROGRAM
             #pragma target 3.5
-            #pragma require 2darray
             #pragma vertex Vert
             #pragma fragment Frag
 
             #pragma shader_feature_local _ALPHATEST_ON
+            #pragma shader_feature_local _NORMALMAP
+            #pragma shader_feature_local _USEMASKMAPS_ON
+            #pragma shader_feature_local _USE_MATERIAL_DETAIL
+            #pragma shader_feature_local _USERAMPARRAY_ON
+            #pragma shader_feature_local _USEMATCAPARRAY_ON
+            #pragma shader_feature_local _USE_FACE_SDF
+            #pragma shader_feature_local _USE_TUNIFIED_PBR
+            #pragma shader_feature_local _USE_SILK
+            #pragma shader_feature_local _USE_ANISO_HAIR
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
@@ -224,6 +271,9 @@ Shader "Universal Render Pipeline/Character/NPR Array"
             #pragma target 3.5
 
             #pragma shader_feature_local _ALPHATEST_ON
+            #pragma shader_feature_local _USEMASKMAPS_ON
+            #pragma shader_feature_local _USERAMPARRAY_ON
+            #pragma shader_feature_local _USEMATCAPARRAY_ON
             #pragma multi_compile_instancing
 
             #pragma vertex MaskPassVertex

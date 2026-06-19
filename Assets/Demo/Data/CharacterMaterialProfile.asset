@@ -33,16 +33,16 @@ MonoBehaviour:
     rampBiasScale: 1
     metalShadowLift: 0.12
     aoStrength: 1
-  - name: Fabric
-    kind: 2
+  - name: Skin
+    kind: 0
     rampSlice: 2
     matCapSlice: 2
-    matCapStrength: 0.8
-    rimStrength: 0.15
-    shadowHardness: 1.25
-    rampBiasScale: 0.8
-    metalShadowLift: 0.35
-    aoStrength: 0.9
+    matCapStrength: 0.45
+    rimStrength: 0.25
+    shadowHardness: 1
+    rampBiasScale: 1
+    metalShadowLift: 0.15
+    aoStrength: 1
   - name: Metal
     kind: 3
     rampSlice: 3
@@ -63,7 +63,7 @@ MonoBehaviour:
     rampBiasScale: 1.2
     metalShadowLift: 0.08
     aoStrength: 1
-  - name: Plastic
+  - name: Silk
     kind: 5
     rampSlice: 5
     matCapSlice: 5
@@ -93,3 +93,7 @@ MonoBehaviour:
     rampBiasScale: 1
     metalShadowLift: 0.2
     aoStrength: 1
+  rampArrayConfig: {fileID: 11400000, guid: 0d204e7d9e72df544838b15ffcff853b, type: 2}
+  matCapArrayConfig: {fileID: 11400000, guid: e41465bc841279141a85307988bc99b3, type: 2}
+  rampArray: {fileID: 18700000, guid: d949c8b9a1fcb5147b178927288406c5, type: 2}
+  matCapArray: {fileID: 18700000, guid: 6e28c5e3cb7d3644090b87bced942f37, type: 2}
