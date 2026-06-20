@@ -6,6 +6,19 @@
 # See: https://github.com/github/gitignore/tree/main/Global
 #
 .utmp/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.TemporaryItems
+.DocumentRevisions-V100
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
