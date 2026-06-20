@@ -194,7 +194,7 @@ namespace GitSprout
             var token = commitTokenSource.Token;
 
             var paths = changes.Select(change => change.Path).Distinct(StringComparer.Ordinal).ToArray();
-            var addArguments = new List<string> { "add", "--" };
+            var addArguments = new List<string> { "add", "-A", "--" };
             addArguments.AddRange(paths);
 
             var addResult = await GitSproutGit.RunAsync(addArguments, token);
@@ -217,6 +217,13 @@ namespace GitSprout
             GitSproutStatusService.MarkPathsClean(paths);
             GitSproutStatusService.QueueRefresh();
             Close();
+        }
+
+        private void OnDisable()
+        {
+            commitTokenSource?.Cancel();
+            commitTokenSource?.Dispose();
+            commitTokenSource = null;
         }
 
         private void ShowGitError(string title, GitSproutCommandResult result)

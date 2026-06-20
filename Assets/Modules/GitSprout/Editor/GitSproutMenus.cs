@@ -89,6 +89,17 @@ namespace GitSprout
         [MenuItem("Tools/Git Sprout/Status Summary", false, 2020)]
         private static void StatusSummary()
         {
+            ShowStatusSummaryDialog();
+        }
+
+        [MenuItem("Tools/Git Sprout/Diagnostics", false, 2021)]
+        private static void Diagnostics()
+        {
+            GitSproutDiagnosticsWindow.Open();
+        }
+
+        internal static void ShowStatusSummaryDialog()
+        {
             var changes = GitSproutStatusService.GetAllProjectChanges();
             var title = changes.Count == 0 ? "Git Sprout" : "Git Sprout - " + changes.Count + " changes";
             var branch = string.IsNullOrEmpty(GitSproutStatusService.BranchSummary)

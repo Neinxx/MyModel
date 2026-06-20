@@ -13,6 +13,7 @@ namespace GitSprout
         public int ExitCode;
         public string Output;
         public string Error;
+        public string Command;
 
         public bool Success
         {
@@ -22,12 +23,14 @@ namespace GitSprout
 
     internal static class GitSproutGit
     {
+        private const int DefaultTimeoutMilliseconds = 30000;
+
         public static string ProjectRoot
         {
             get { return Application.dataPath.Substring(0, Application.dataPath.Length - "/Assets".Length); }
         }
 
-        public static async Task<GitSproutCommandResult> RunAsync(IEnumerable<string> arguments, CancellationToken token)
+        public static async Task<GitSproutCommandResult> RunAsync(IReadOnlyList<string> arguments, CancellationToken token, int timeoutMilliseconds = DefaultTimeoutMilliseconds)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -41,7 +44,8 @@ namespace GitSprout
                 StandardErrorEncoding = Encoding.UTF8
             };
 
-            startInfo.Arguments = JoinArguments(arguments);
+            foreach (var argument in arguments)
+                startInfo.ArgumentList.Add(argument);
 
             try
             {
@@ -50,13 +54,21 @@ namespace GitSprout
                     process.Start();
                     var outputTask = process.StandardOutput.ReadToEndAsync();
                     var errorTask = process.StandardError.ReadToEndAsync();
+                    var startedAt = Environment.TickCount;
 
                     while (!process.HasExited)
                     {
-                        if (token.IsCancellationRequested)
+                        if (token.IsCancellationRequested || HasTimedOut(startedAt, timeoutMilliseconds))
                         {
                             TryKill(process);
                             token.ThrowIfCancellationRequested();
+                            return new GitSproutCommandResult
+                            {
+                                ExitCode = -2,
+                                Output = string.Empty,
+                                Error = "Git command timed out.",
+                                Command = BuildCommandLabel(arguments)
+                            };
                         }
 
                         await Task.Delay(50, token);
@@ -66,7 +78,8 @@ namespace GitSprout
                     {
                         ExitCode = process.ExitCode,
                         Output = await outputTask,
-                        Error = await errorTask
+                        Error = await errorTask,
+                        Command = BuildCommandLabel(arguments)
                     };
                 }
             }
@@ -80,7 +93,8 @@ namespace GitSprout
                 {
                     ExitCode = -1,
                     Output = string.Empty,
-                    Error = exception.Message
+                    Error = exception.Message,
+                    Command = BuildCommandLabel(arguments)
                 };
             }
         }
@@ -98,38 +112,14 @@ namespace GitSprout
             }
         }
 
-        private static string JoinArguments(IEnumerable<string> arguments)
+        private static bool HasTimedOut(int startedAt, int timeoutMilliseconds)
         {
-            var builder = new StringBuilder();
-            foreach (var argument in arguments)
-            {
-                if (builder.Length > 0)
-                    builder.Append(' ');
-                builder.Append(QuoteArgument(argument));
-            }
-
-            return builder.ToString();
+            return timeoutMilliseconds > 0 && Environment.TickCount - startedAt >= timeoutMilliseconds;
         }
 
-        private static string QuoteArgument(string argument)
+        private static string BuildCommandLabel(IReadOnlyList<string> arguments)
         {
-            if (string.IsNullOrEmpty(argument))
-                return "\"\"";
-
-            var needsQuotes = false;
-            for (var i = 0; i < argument.Length; i++)
-            {
-                if (char.IsWhiteSpace(argument[i]) || argument[i] == '"')
-                {
-                    needsQuotes = true;
-                    break;
-                }
-            }
-
-            if (!needsQuotes)
-                return argument;
-
-            return "\"" + argument.Replace("\"", "\\\"") + "\"";
+            return "git " + string.Join(" ", arguments);
         }
     }
 }

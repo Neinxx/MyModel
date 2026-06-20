@@ -22,7 +22,10 @@ namespace GitSprout
 
         public static bool IsRefreshing { get; private set; }
         public static string LastError { get; private set; }
+        public static string LastCommand { get; private set; }
+        public static DateTime LastRefreshTime { get; private set; }
         public static int ChangeCount { get; private set; }
+        public static int ProjectChangeCount { get; private set; }
         public static string BranchSummary { get; private set; } = string.Empty;
         public static bool HasChanges
         {
@@ -129,7 +132,7 @@ namespace GitSprout
         public static IReadOnlyList<GitSproutChange> GetAllProjectChanges()
         {
             return Changes.Values
-                .Where(change => change.Path.StartsWith("Assets/", StringComparison.Ordinal) || change.Path == "Assets")
+                .Where(IsProjectPath)
                 .OrderBy(change => change.Path, StringComparer.Ordinal)
                 .ToArray();
         }
@@ -173,16 +176,12 @@ namespace GitSprout
                 if (!result.Success)
                 {
                     LastError = result.Error.Trim();
+                    LastCommand = result.Command;
                     return;
                 }
 
-                Changes.Clear();
-                BranchSummary = string.Empty;
-                foreach (var change in ParsePorcelain(result.Output))
-                    Changes[change.Path] = change;
-
-                ChangeCount = Changes.Count;
-                RebuildVisualCaches();
+                var snapshot = ParsePorcelain(result.Output);
+                EditorApplication.delayCall += () => ApplyRefreshResult(result, snapshot);
             }
             catch (OperationCanceledException)
             {
@@ -191,12 +190,33 @@ namespace GitSprout
             finally
             {
                 IsRefreshing = false;
-                EditorApplication.RepaintProjectWindow();
             }
         }
 
-        private static IEnumerable<GitSproutChange> ParsePorcelain(string output)
+        private sealed class GitSproutStatusSnapshot
         {
+            public readonly List<GitSproutChange> Changes = new List<GitSproutChange>();
+            public string BranchSummary = string.Empty;
+        }
+
+        private static void ApplyRefreshResult(GitSproutCommandResult result, GitSproutStatusSnapshot snapshot)
+        {
+            Changes.Clear();
+            BranchSummary = snapshot.BranchSummary;
+            foreach (var change in snapshot.Changes)
+                Changes[change.Path] = change;
+
+            ChangeCount = Changes.Count;
+            ProjectChangeCount = Changes.Values.Count(change => IsProjectPath(change.Path));
+            LastCommand = result.Command;
+            LastRefreshTime = DateTime.Now;
+            RebuildVisualCaches();
+            EditorApplication.RepaintProjectWindow();
+        }
+
+        private static GitSproutStatusSnapshot ParsePorcelain(string output)
+        {
+            var snapshot = new GitSproutStatusSnapshot();
             var entries = output.Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries);
             for (var i = 0; i < entries.Length; i++)
             {
@@ -207,19 +227,21 @@ namespace GitSprout
                 var rawStatus = entry.Substring(0, 2);
                 if (rawStatus == "##")
                 {
-                    BranchSummary = entry.Substring(3);
+                    snapshot.BranchSummary = entry.Substring(3);
                     continue;
                 }
 
                 var path = entry.Substring(3).Replace('\\', '/');
                 var state = ParseState(rawStatus);
 
-                if (path.StartsWith("Assets/", StringComparison.Ordinal) || path == "Assets")
-                    yield return new GitSproutChange(path, state, rawStatus);
+                if (IsTrackedScope(path))
+                    snapshot.Changes.Add(new GitSproutChange(path, state, rawStatus));
 
                 if (rawStatus[0] == 'R' || rawStatus[0] == 'C')
                     i++;
             }
+
+            return snapshot;
         }
 
         private static GitSproutState ParseState(string rawStatus)
@@ -309,6 +331,27 @@ namespace GitSprout
 
             GuidVisualStates[guid] = state;
             GuidTooltips[guid] = GetTooltip(assetPath);
+        }
+
+        private static bool IsTrackedScope(string path)
+        {
+            return path == "Assets"
+                || path.StartsWith("Assets/", StringComparison.Ordinal)
+                || path == "Packages"
+                || path.StartsWith("Packages/", StringComparison.Ordinal)
+                || path == "ProjectSettings"
+                || path.StartsWith("ProjectSettings/", StringComparison.Ordinal)
+                || path == ".gitignore";
+        }
+
+        private static bool IsProjectPath(GitSproutChange change)
+        {
+            return IsProjectPath(change.Path);
+        }
+
+        private static bool IsProjectPath(string path)
+        {
+            return IsTrackedScope(path);
         }
 
         private static void AddFolderAggregates(string path, GitSproutState state)
