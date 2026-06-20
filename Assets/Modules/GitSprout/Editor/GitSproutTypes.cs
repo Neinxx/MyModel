@@ -86,11 +86,13 @@ namespace GitSprout
             switch (state)
             {
                 case GitSproutState.Added:
-                    return "+";
+                    return "A";
+                case GitSproutState.Modified:
+                    return "M";
                 case GitSproutState.Untracked:
-                    return "?";
+                    return "U";
                 case GitSproutState.Deleted:
-                    return "-";
+                    return "D";
                 case GitSproutState.Conflict:
                 case GitSproutState.Error:
                     return "!";

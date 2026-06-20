@@ -6,6 +6,8 @@ namespace GitSprout
     [InitializeOnLoad]
     internal static class GitSproutProjectOverlay
     {
+        private static GUIStyle statusLabelStyle;
+
         static GitSproutProjectOverlay()
         {
             EditorApplication.projectWindowItemOnGUI += DrawProjectItem;
@@ -24,11 +26,11 @@ namespace GitSprout
             var tooltip = GitSproutStatusService.GetTooltipForGuid(guid);
             if (IsGridItem(selectionRect))
             {
-                DrawStatusCorner(GetStatusCornerRect(selectionRect), color, tooltip);
+                DrawStatusLabel(GetIconStatusLabelRect(selectionRect), state, color, tooltip);
                 return;
             }
 
-            DrawStatusLine(GetStatusLineRect(selectionRect), color, tooltip);
+            DrawStatusLabel(GetStatusLabelRect(selectionRect), state, color, tooltip);
         }
 
         private static bool IsGridItem(Rect selectionRect)
@@ -36,41 +38,56 @@ namespace GitSprout
             return selectionRect.height > 22f;
         }
 
-        private static Rect GetStatusCornerRect(Rect selectionRect)
+        private static Rect GetIconStatusLabelRect(Rect selectionRect)
         {
-            const float size = 12f;
+            const float width = 20f;
+            const float height = 18f;
             const float labelReserve = 24f;
             const float inset = 6f;
 
+            var iconTop = selectionRect.y + inset;
             var iconBottom = selectionRect.yMax - labelReserve;
-            return new Rect(selectionRect.x + inset, iconBottom - size - inset, size, size);
+            var labelHeight = Mathf.Min(height, Mathf.Max(12f, iconBottom - iconTop));
+            return new Rect(selectionRect.xMax - width - inset, iconTop, width, labelHeight);
         }
 
-        private static Rect GetStatusLineRect(Rect selectionRect)
+        private static Rect GetStatusLabelRect(Rect selectionRect)
         {
-            return new Rect(selectionRect.x + 1f, selectionRect.y + 3f, 3f, Mathf.Max(4f, selectionRect.height - 6f));
+            const float width = 22f;
+            const float rightInset = 6f;
+            return new Rect(selectionRect.xMax - width - rightInset, selectionRect.y, width, selectionRect.height);
         }
 
-        private static void DrawStatusLine(Rect rect, Color color, string tooltip)
+        private static void DrawStatusLabel(Rect rect, GitSproutState state, Color color, string tooltip)
         {
-            var lineColor = color;
-            lineColor.a = 0.9f;
-            EditorGUI.DrawRect(rect, lineColor);
+            var glyph = GitSproutVisuals.GlyphFor(state);
+            if (string.IsNullOrEmpty(glyph))
+                return;
 
-            if (!string.IsNullOrEmpty(tooltip))
-                GUI.Label(new Rect(rect.x - 3f, rect.y - 3f, rect.width + 8f, rect.height + 6f), new GUIContent(string.Empty, tooltip));
+            var content = new GUIContent(glyph, tooltip);
+            var style = GetStatusLabelStyle();
+            var oldColor = GUI.color;
+            var textColor = color;
+            textColor.a = 0.95f;
+            GUI.color = textColor;
+            GUI.Label(rect, content, style);
+            GUI.color = oldColor;
         }
 
-        private static void DrawStatusCorner(Rect rect, Color color, string tooltip)
+        private static GUIStyle GetStatusLabelStyle()
         {
-            var lineColor = color;
-            lineColor.a = 0.92f;
+            if (statusLabelStyle != null)
+                return statusLabelStyle;
 
-            EditorGUI.DrawRect(new Rect(rect.x, rect.yMax - 3f, rect.width, 3f), lineColor);
-            EditorGUI.DrawRect(new Rect(rect.x, rect.y, 3f, rect.height), lineColor);
-
-            if (!string.IsNullOrEmpty(tooltip))
-                GUI.Label(new Rect(rect.x - 4f, rect.y - 4f, rect.width + 8f, rect.height + 8f), new GUIContent(string.Empty, tooltip));
+            statusLabelStyle = new GUIStyle(EditorStyles.label)
+            {
+                alignment = TextAnchor.MiddleRight,
+                fontStyle = FontStyle.Bold,
+                clipping = TextClipping.Clip,
+                padding = new RectOffset(0, 0, 0, 1)
+            };
+            return statusLabelStyle;
         }
+
     }
 }
