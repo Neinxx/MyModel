@@ -236,7 +236,10 @@ namespace GitSprout
 
             GitSproutStatusService.MarkPathsClean(paths);
             GitSproutStatusService.QueueRefresh();
+            var shouldPush = EditorUtility.DisplayDialog("Git Sprout", "Committed. Push now?", "Push", "Later");
             Close();
+            if (shouldPush)
+                GitSproutOperations.PushConfirmed();
         }
 
         private void OnDisable()

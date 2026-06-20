@@ -18,16 +18,22 @@ namespace GitSprout
             GitSproutCommitWindow.Open(GitSproutStatusService.GetChangesForSelection(), "Commit Selected");
         }
 
-        [MenuItem("Assets/Git Sprout/Commit Project Changes...", true)]
-        private static bool CanCommitProject()
+        [MenuItem("Assets/Git Sprout/Revert Selected...", true)]
+        private static bool CanRevertSelected()
         {
-            return GitSproutStatusService.GetAllProjectChanges().Count > 0;
+            return Selection.assetGUIDs.Length > 0 && GitSproutStatusService.GetChangesForSelection().Count > 0;
         }
 
-        [MenuItem("Assets/Git Sprout/Commit Project Changes...", false, 2001)]
-        private static void CommitProject()
+        [MenuItem("Assets/Git Sprout/Revert Selected...", false, 2001)]
+        private static void RevertSelected()
         {
-            GitSproutCommitWindow.Open(GitSproutStatusService.GetAllProjectChanges(), "Commit Project Changes");
+            GitSproutOperations.RevertSelected(GitSproutStatusService.GetChangesForSelection());
+        }
+
+        [MenuItem("Assets/Git Sprout/Show Git Status", false, 2002)]
+        private static void ShowSelectedStatus()
+        {
+            ShowStatusSummaryDialog(GitSproutStatusService.GetChangesForSelection(), "Git Sprout - Selection");
         }
 
         [MenuItem("Assets/Git Sprout/Refresh Status", false, 2020)]
@@ -35,24 +41,6 @@ namespace GitSprout
         {
             GitSproutStatusService.RefreshNow();
             EditorApplication.RepaintProjectWindow();
-        }
-
-        [MenuItem("Assets/Git Sprout/Fetch", false, 2030)]
-        private static void FetchFromAssets()
-        {
-            GitSproutOperations.Fetch();
-        }
-
-        [MenuItem("Assets/Git Sprout/Pull (Fast-forward Only)", false, 2031)]
-        private static void PullFromAssets()
-        {
-            GitSproutOperations.PullFastForward();
-        }
-
-        [MenuItem("Assets/Git Sprout/Push", false, 2032)]
-        private static void PushFromAssets()
-        {
-            GitSproutOperations.Push();
         }
 
         [MenuItem("Tools/Git Sprout/Commit Project Changes...", false, 2000)]
@@ -89,7 +77,7 @@ namespace GitSprout
         [MenuItem("Tools/Git Sprout/Status Summary", false, 2020)]
         private static void StatusSummary()
         {
-            ShowStatusSummaryDialog();
+            ShowStatusSummaryDialog(GitSproutStatusService.GetAllProjectChanges(), "Git Sprout");
         }
 
         [MenuItem("Tools/Git Sprout/Diagnostics", false, 2021)]
@@ -100,8 +88,12 @@ namespace GitSprout
 
         internal static void ShowStatusSummaryDialog()
         {
-            var changes = GitSproutStatusService.GetAllProjectChanges();
-            var title = changes.Count == 0 ? "Git Sprout" : "Git Sprout - " + changes.Count + " changes";
+            ShowStatusSummaryDialog(GitSproutStatusService.GetAllProjectChanges(), "Git Sprout");
+        }
+
+        private static void ShowStatusSummaryDialog(System.Collections.Generic.IReadOnlyList<GitSproutChange> changes, string titlePrefix)
+        {
+            var title = changes.Count == 0 ? titlePrefix : titlePrefix + " - " + changes.Count + " changes";
             var branch = string.IsNullOrEmpty(GitSproutStatusService.BranchSummary)
                 ? string.Empty
                 : "Branch: " + GitSproutStatusService.BranchSummary + "\n\n";
