@@ -10,6 +10,16 @@ namespace DecalMini
     [AddComponentMenu("ShaderMini/Decal Projector")]
     public class DecalProjectorMini : MonoBehaviour, IDecalProvider
     {
+        private static int _animatedPreviewProjectorCount;
+
+        public static bool HasAnimatedPreviewProjectors => _animatedPreviewProjectorCount > 0;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics()
+        {
+            _animatedPreviewProjectorCount = 0;
+        }
+
         // ========================================================================
         // 1. 序列化字段 (Inspector)
         // ========================================================================
@@ -55,6 +65,7 @@ namespace DecalMini
         private float _currentLifeTime = -1f;
         private DecalDataMini _cachedData;
         private bool _isDirty = true;
+        private bool _isTrackedAsAnimatedPreview;
 
         private Transform _transform;
         public new Transform transform => _transform != null ? _transform : (_transform = GetComponent<Transform>());
@@ -81,6 +92,7 @@ namespace DecalMini
         {
             _isDirty = true;
             DecalSystemMini.Register(this);
+            RefreshAnimatedPreviewTracking();
         }
 
         private void Update()
@@ -107,12 +119,16 @@ namespace DecalMini
 
         private void OnDisable()
         {
+            SetAnimatedPreviewTracked(false);
             DecalSystemMini.Unregister(this);
         }
 
         private void OnValidate()
         {
             _isDirty = true;
+            RefreshAnimatedPreviewTracking();
+            if (!Application.isPlaying)
+                DecalEditorRuntimeBridge.RequestSceneRepaint();
         }
 
         // ========================================================================
@@ -193,6 +209,28 @@ namespace DecalMini
             _lastPos = _transform.position;
             _lastRot = _transform.rotation;
             _lastScale = _transform.localScale;
+        }
+
+        private void RefreshAnimatedPreviewTracking()
+        {
+            SetAnimatedPreviewTracked(isActiveAndEnabled && NeedsAnimatedPreview());
+        }
+
+        private bool NeedsAnimatedPreview() =>
+            Mathf.Abs(rotationSpeed) > 0.001f || pulseEffect || HasFlipbookPreview();
+
+        private bool HasFlipbookPreview() =>
+            decalTexture != null && flipbookSpeed > 0.001f && DecalSystemMini.GetFlipbookCount(decalTexture) > 1;
+
+        private void SetAnimatedPreviewTracked(bool shouldTrack)
+        {
+            if (_isTrackedAsAnimatedPreview == shouldTrack)
+                return;
+
+            _isTrackedAsAnimatedPreview = shouldTrack;
+            _animatedPreviewProjectorCount += shouldTrack ? 1 : -1;
+            if (_animatedPreviewProjectorCount < 0)
+                _animatedPreviewProjectorCount = 0;
         }
 
         // ========================================================================

@@ -57,6 +57,7 @@ namespace DecalMini
 
         private bool _isLeftNext = true;
         private float[] _wheelDistances = new float[4];
+        private const float SurfaceOffset = 0.01f;
 
         // ========================================================================
         // 4. 核心逻辑 (API)
@@ -78,7 +79,7 @@ namespace DecalMini
             Texture2D tex = _isLeftNext ? leftFootTex : rightFootTex;
             if (tex != null)
             {
-                DecalSystemMini.Spawn(hit.point, rot, size, tex, lifeTime, tintColor, softFade);
+                DecalSystemMini.Spawn(hit.point + hit.normal * SurfaceOffset, rot, size, tex, lifeTime, tintColor, softFade);
             }
 
             ParticleSystem psPrefab = _isLeftNext ? leftFootParticle : rightFootParticle;
@@ -121,7 +122,7 @@ namespace DecalMini
                     float vOffset = (_wheelDistances[i] / Mathf.Max(0.01f, tilingSize)) % 1.0f;
                     Vector4 uvScaleOffset = new(1, uvScaleY, 0, vOffset);
 
-                    DecalSystemMini.Spawn(hit.point, rot, size, trackTexture, lifeTime, tintColor, softFade, 10000, 0, 0, 0, 0, uvScaleOffset);
+                    DecalSystemMini.Spawn(hit.point + hit.normal * SurfaceOffset, rot, size, trackTexture, lifeTime, tintColor, softFade, 10000, 0, 0, 0, 0, uvScaleOffset);
                     
                     // 累加路程
                     _wheelDistances[i] += sampleInterval;

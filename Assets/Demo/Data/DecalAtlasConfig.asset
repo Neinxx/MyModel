@@ -25,7 +25,7 @@ MonoBehaviour:
   compressionFormat: 5
   showDebugGrid: 1
   sourcePath: Assets/Gizmos
-  exportPath: Assets/Demo/Art/Textures
+  exportPath: Assets/ArtLib/Decal
   slices:
   - name: GridTex
     albedoMap: {fileID: 2800000, guid: 128269df1f8b4754eabf743ccc4aee05, type: 3}
@@ -42,5 +42,5 @@ MonoBehaviour:
   - name: icon_Spawn_1
     albedoMap: {fileID: 2800000, guid: dbb4645b90472eb448779b4f0f0d6b45, type: 3}
     normalMap: {fileID: 0}
-  bakedArray: {fileID: 18700000, guid: f72f0df42e6dea848860a4993f84a7f8, type: 2}
-  bakedNormalArray: {fileID: 18700000, guid: 1c34298b9ae0eda48802e26ac936c615, type: 2}
+  bakedArray: {fileID: 18700000, guid: 81928907c79a64c5b914c6c6a7be8fff, type: 2}
+  bakedNormalArray: {fileID: 18700000, guid: 914a63494edbf42a6ad4b2ce081fd7b0, type: 2}

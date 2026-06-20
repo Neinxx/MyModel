@@ -1,5 +1,5 @@
-using CharacterController.Runtime;
 using DecalMini.Runtime.Modules.Dynamic;
+using System.Reflection;
 using UnityEngine;
 
 namespace DecalMini
@@ -78,7 +78,7 @@ namespace DecalMini
         public int sortingOrder { get; set; } = 100;
 
         [Header("Character Socket")]
-        public CharacterSocketId socketId = CharacterSocketId.Aura;
+        public DecalSocketId socketId = DecalSocketId.Aura;
         public bool autoSnapToSocket = true;
 
         [Header("Orientation")]
@@ -123,20 +123,15 @@ namespace DecalMini
                 _transform = transform;
                 RefreshAnchorLink();
 
-#if UNITY_EDITOR
-                // 核心修复：强制编辑器重绘，解决参数修改后显示不及时的问题
-                UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
-                UnityEditor.SceneView.RepaintAll();
-#endif
+                DecalEditorRuntimeBridge.RequestSceneRepaint();
             }
         }
 
         public void RefreshAnchorLink()
         {
-            var socketRegistry = GetComponentInParent<CharacterSocketRegistry>();
-            if (socketRegistry != null && autoSnapToSocket)
+            if (autoSnapToSocket && TryResolveSocketTransform(socketId.ToString(), out var socketT))
             {
-                if (socketRegistry.TryGet(socketId, out var socketT) && socketT != null)
+                if (socketT != null)
                 {
                     // 智能防御：如果我们直接挂载在 Socket 槽位节点本身上，无需任何重父对齐，防止自循环 parenting 报错
                     if (transform == socketT)
@@ -156,12 +151,73 @@ namespace DecalMini
                     _centerTransform = socketT;
                     _isDirty = true;
                     _lastWorldPos = transform.position; // 同步世界位置缓存，防止网格更新时旧键值漂移
-                    return;
                 }
+                return;
             }
             _centerTransform = _transform;
             _isDirty = true;
             _lastWorldPos = _transform.position; // 同步世界位置缓存，防止网格更新时旧键值漂移
+        }
+
+        private bool TryResolveSocketTransform(string id, out Transform socketTransform)
+        {
+            socketTransform = null;
+            var current = transform;
+            while (current != null)
+            {
+                if (TryResolveSocketOnGameObject(current.gameObject, id, out socketTransform))
+                    return true;
+
+                current = current.parent;
+            }
+
+            return false;
+        }
+
+        private static bool TryResolveSocketOnGameObject(GameObject target, string id, out Transform socketTransform)
+        {
+            socketTransform = null;
+            var components = target.GetComponents<MonoBehaviour>();
+            for (int i = 0; i < components.Length; i++)
+            {
+                var component = components[i];
+                if (component == null)
+                    continue;
+
+                if (TryInvokeStringSocketResolver(component, id, out socketTransform))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryInvokeStringSocketResolver(MonoBehaviour component, string id, out Transform socketTransform)
+        {
+            socketTransform = null;
+            var method = component.GetType().GetMethod(
+                "TryGet",
+                BindingFlags.Instance | BindingFlags.Public,
+                null,
+                new[] { typeof(string), typeof(Transform).MakeByRefType() },
+                null
+            );
+
+            if (method == null || method.ReturnType != typeof(bool))
+                return false;
+
+            object[] args = { id, null };
+            try
+            {
+                if (!(bool)method.Invoke(component, args))
+                    return false;
+            }
+            catch (TargetInvocationException)
+            {
+                return false;
+            }
+
+            socketTransform = args[1] as Transform;
+            return socketTransform != null;
         }
 
         // ========================================================================

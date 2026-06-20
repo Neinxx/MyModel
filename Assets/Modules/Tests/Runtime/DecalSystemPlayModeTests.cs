@@ -38,7 +38,7 @@ namespace Tests.Runtime
             _decalGo = new GameObject("TestAuraDecal");
             _decalGo.transform.SetParent(_entityGo.transform);
             _aura = _decalGo.AddComponent<DecalAuraComponent>();
-            _aura.socketId = CharacterSocketId.Aura;
+            _aura.socketId = (DecalSocketId)(int)CharacterSocketId.Aura;
             _aura.autoSnapToSocket = true;
 
             yield return null;

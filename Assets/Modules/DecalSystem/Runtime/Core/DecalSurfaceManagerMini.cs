@@ -42,7 +42,7 @@ namespace DecalMini
                 }
             }
 
-            Debug.Log(
+            DecalSystemLog.Verbose(
                 $"<color=#7C8CFF><b>[Decal Mini]</b></color> Surface manager initialized. Loaded <color=#9CDCFE>{_lookupCache.Count}</color> interaction mappings."
             );
         }

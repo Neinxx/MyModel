@@ -22,38 +22,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6ecb1dc2c92fd394791d583a855995fd
-    m_Address: Assets/Demo/Art/Prefabs/Anbu_art.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: aa38823a4d2d89848a7e055574498d1a
-    m_Address: Assets/Demo/Art/Prefabs/Character_logic.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 611dd7cbef4bba842b6c8eb91aa61280
-    m_Address: Assets/Demo/Art/Prefabs/CameraView.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9439546392628344d88ab374d063b4a1
     m_Address: Assets/Demo/Shader/NewShaderVariants.shadervariants
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 615c39d330eb1514d932188bbda1140a
-    m_Address: Assets/Demo/Art/Prefabs/UIRoot.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d970fd73fc17ae2448de4544a8cf9c5a
-    m_Address: Assets/Demo/Art/Prefabs/UICamera.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 35079bc6f13c7a147bebd8183570c8c4
-    m_Address: Assets/Demo/Art/CharacterOnly/MAT_Clara_Map1_UI.mat
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

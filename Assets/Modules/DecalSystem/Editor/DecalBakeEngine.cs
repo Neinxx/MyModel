@@ -72,8 +72,7 @@ namespace DecalMini.Editor
             }
 
             // --- STAGE 3: SERIALIZATION ---
-            // 自动将烘焙数据放在当前关卡场景所在的目录
-            string actualExportPath = Path.GetDirectoryName(scene.path).Replace("\\", "/");
+            string actualExportPath = ResolveExportPath(scene, exportPath);
             string assetPath = $"{actualExportPath}/{scene.name}_DecalLevelData.asset";
 
             DecalLevelDataMini data = AssetDatabase.LoadAssetAtPath<DecalLevelDataMini>(assetPath);
@@ -131,6 +130,18 @@ namespace DecalMini.Editor
             Debug.Log(
                 $"<color=#7C8CFF><b>[Decal Bake]</b></color> Success: <color=#3FB950>{data.entries.Count}</color> static entries generated in <color=#9CDCFE>{assetPath}</color>"
             );
+        }
+
+        private static string ResolveExportPath(Scene scene, string exportPath)
+        {
+            if (string.IsNullOrWhiteSpace(exportPath))
+                return Path.GetDirectoryName(scene.path).Replace("\\", "/");
+
+            string normalized = exportPath.Replace("\\", "/").TrimEnd('/');
+            if (!normalized.StartsWith("Assets/") && normalized != "Assets")
+                normalized = "Assets/" + normalized.TrimStart('/');
+
+            return normalized;
         }
     }
 }

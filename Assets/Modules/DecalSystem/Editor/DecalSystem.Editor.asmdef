@@ -3,6 +3,7 @@
     "rootNamespace": "DecalMini.Editor",
     "references": [
         "DecalSystem.Runtime",
+        "DecalSystem.Dynamic",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime"
     ],

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -14,6 +15,16 @@ namespace DecalMini
 
         private static ObjectPool<DecalProjectorMini> _pool;
         private static DecalProjectorMini _prefab;
+        private static readonly Dictionary<int, PoolState> _pools = new();
+        private static readonly Dictionary<DecalProjectorMini, int> _instanceToPoolId = new();
+        private static int _defaultPoolId;
+
+        private sealed class PoolState
+        {
+            public int id;
+            public DecalProjectorMini prefab;
+            public ObjectPool<DecalProjectorMini> pool;
+        }
 
         // ========================================================================
         // 2. 初始化与清理
@@ -22,12 +33,7 @@ namespace DecalMini
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
-            if (_pool != null)
-            {
-                _pool.Clear();
-                _pool = null;
-            }
-            _prefab = null;
+            Clear();
         }
 
         /// <summary>
@@ -35,21 +41,18 @@ namespace DecalMini
         /// </summary>
         public static void Init(DecalProjectorMini prefab, int defaultCap = 20, int maxCap = 100)
         {
-            if (_pool != null)
+            if (prefab == null)
                 return;
 
-            _prefab = prefab;
-            _pool = new ObjectPool<DecalProjectorMini>(
-                CreatePooledItem,
-                OnTakeFromPool,
-                OnReturnedToPool,
-                OnDestroyPoolObject,
-                true,
-                defaultCap,
-                maxCap
-            );
+            int prefabId = prefab.GetInstanceID();
+            if (!_pools.ContainsKey(prefabId))
+                _pools[prefabId] = CreatePool(prefab, defaultCap, maxCap);
 
-            Debug.Log(
+            _defaultPoolId = prefabId;
+            _prefab = prefab;
+            _pool = _pools[prefabId].pool;
+
+            DecalSystemLog.Verbose(
                 $"[DecalPool] Initialized with prefab: {prefab.name} (Cap: {defaultCap}/{maxCap})"
             );
         }
@@ -60,39 +63,108 @@ namespace DecalMini
 
         public static DecalProjectorMini Get() => _pool?.Get();
 
-        public static void Release(DecalProjectorMini projector)
+        public static DecalProjectorMini Get(DecalProjectorMini prefab)
         {
-            if (_pool != null && projector != null)
-                _pool.Release(projector);
+            if (prefab == null)
+                return Get();
+
+            Init(prefab);
+            return _pools.TryGetValue(prefab.GetInstanceID(), out var state)
+                ? state.pool.Get()
+                : null;
         }
 
-        public static void Clear() => _pool?.Clear();
+        public static void Release(DecalProjectorMini projector)
+        {
+            if (projector == null)
+                return;
+
+            if (_instanceToPoolId.TryGetValue(projector, out int poolId) &&
+                _pools.TryGetValue(poolId, out var state))
+            {
+                state.pool.Release(projector);
+                return;
+            }
+
+            _pool?.Release(projector);
+        }
+
+        public static void Clear()
+        {
+            foreach (var state in _pools.Values)
+            {
+                state.pool.Clear();
+            }
+
+            _pools.Clear();
+            _instanceToPoolId.Clear();
+            _pool = null;
+            _prefab = null;
+            _defaultPoolId = 0;
+        }
 
         // ========================================================================
         // 4. 对象池生命周期回调
         // ========================================================================
 
-        private static DecalProjectorMini CreatePooledItem()
+        private static PoolState CreatePool(DecalProjectorMini prefab, int defaultCap, int maxCap)
         {
-            var go = Object.Instantiate(_prefab);
+            var state = new PoolState
+            {
+                id = prefab.GetInstanceID(),
+                prefab = prefab,
+            };
+
+            state.pool = new ObjectPool<DecalProjectorMini>(
+                () => CreatePooledItem(state),
+                OnTakeFromPool,
+                OnReturnedToPool,
+                OnDestroyPoolObject,
+                true,
+                defaultCap,
+                maxCap
+            );
+
+            return state;
+        }
+
+        private static DecalProjectorMini CreatePooledItem(PoolState state)
+        {
+            if (state == null || state.prefab == null)
+                return null;
+
+            var go = Object.Instantiate(state.prefab);
             go.gameObject.SetActive(false);
 
             if (!Application.isPlaying)
                 go.gameObject.hideFlags = HideFlags.DontSave;
 
+            _instanceToPoolId[go] = state.id;
             return go;
         }
 
-        private static void OnTakeFromPool(DecalProjectorMini projector) =>
-            projector.gameObject.SetActive(true);
+        private static void OnTakeFromPool(DecalProjectorMini projector)
+        {
+            if (projector == null || projector.gameObject == null)
+                return;
 
-        private static void OnReturnedToPool(DecalProjectorMini projector) =>
+            projector.gameObject.SetActive(true);
+        }
+
+        private static void OnReturnedToPool(DecalProjectorMini projector)
+        {
+            if (projector == null || projector.gameObject == null)
+                return;
+
             projector.gameObject.SetActive(false);
+        }
 
         private static void OnDestroyPoolObject(DecalProjectorMini projector)
         {
             if (projector == null || projector.gameObject == null)
                 return;
+
+            _instanceToPoolId.Remove(projector);
 
             if (Application.isPlaying)
                 Object.Destroy(projector.gameObject);

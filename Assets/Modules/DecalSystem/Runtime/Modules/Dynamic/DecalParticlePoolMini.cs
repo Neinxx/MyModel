@@ -1,8 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace DecalMini
 {
@@ -34,20 +31,11 @@ namespace DecalMini
         private static float _lastEditorTime = -1f;
 
         public static int maxCapacityPerPrefab = 50;
+        public static int ActiveCount => _activeParticles.Count;
 
         // ========================================================================
         // 3. 初始化与生命周期
         // ========================================================================
-
-        static DecalParticlePoolMini()
-        {
-#if UNITY_EDITOR
-            EditorApplication.update -= EditorUpdate;
-            EditorApplication.update += EditorUpdate;
-            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-#endif
-        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -56,19 +44,6 @@ namespace DecalMini
             _activeParticles.Clear();
             _runtimeBridge = null;
         }
-
-#if UNITY_EDITOR
-        private static void OnPlayModeStateChanged(PlayModeStateChange state)
-        {
-            if (
-                state == PlayModeStateChange.ExitingEditMode
-                || state == PlayModeStateChange.ExitingPlayMode
-            )
-            {
-                ClearAll();
-            }
-        }
-#endif
 
         // ========================================================================
         // 4. 公共 API
@@ -116,6 +91,21 @@ namespace DecalMini
                 EnsureRuntimeManager();
         }
 
+        public static void TickEditorSimulation()
+        {
+            if (Application.isPlaying || _activeParticles.Count == 0)
+            {
+                _lastEditorTime = -1f;
+                return;
+            }
+
+            float now = Time.realtimeSinceStartup;
+            float deltaTime = _lastEditorTime > 0 ? now - _lastEditorTime : 0.02f;
+            _lastEditorTime = now;
+
+            TickParticles(now, deltaTime, true);
+        }
+
         public static void ClearAll()
         {
             foreach (var stack in _pools.Values)
@@ -141,21 +131,6 @@ namespace DecalMini
         // ========================================================================
         // 5. 模拟与更新逻辑 (Simulation)
         // ========================================================================
-
-        private static void EditorUpdate()
-        {
-            if (Application.isPlaying || _activeParticles.Count == 0)
-            {
-                _lastEditorTime = -1f;
-                return;
-            }
-
-            float now = Time.realtimeSinceStartup;
-            float deltaTime = _lastEditorTime > 0 ? now - _lastEditorTime : 0.02f;
-            _lastEditorTime = now;
-
-            TickParticles(now, deltaTime, true);
-        }
 
         private static void RuntimeUpdate()
         {

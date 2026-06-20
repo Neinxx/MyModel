@@ -1,0 +1,22 @@
+{
+    "name": "DecalSystem.Editor.Tests",
+    "rootNamespace": "DecalMini.Editor.Tests",
+    "references": [
+        "DecalSystem.Runtime",
+        "DecalSystem.Dynamic"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "noEngineReferences": false
+}

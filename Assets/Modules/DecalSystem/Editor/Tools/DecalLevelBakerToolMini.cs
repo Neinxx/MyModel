@@ -61,7 +61,7 @@ namespace DecalMini.Editor
             _uve_InvalidLabel = _root.Q<Label>("IssueCountLabel");
             _uve_PathField = _root.Q<TextField>("PathField");
             _uve_ActionField = _root.Q<EnumField>("ActionField");
-            if (_uve_ActionField != null) _uve_ActionField.Init(BakeAction.DisableGameObjects);
+            if (_uve_ActionField != null) _uve_ActionField.Init(BakeAction.DisableComponents);
 
             if (_uve_PathField != null)
             {
@@ -142,6 +142,18 @@ namespace DecalMini.Editor
         {
             BakeAction strategy = (BakeAction)_uve_ActionField.value;
             if (strategy == BakeAction.KeepObjects) return;
+
+            if (strategy == BakeAction.DestroyObjects)
+            {
+                bool confirmed = EditorUtility.DisplayDialog(
+                    "Decal Baker",
+                    $"Destroy {_foundProjectors.Count} decal GameObjects after baking? This can be undone, but it is intentionally not the default.",
+                    "Destroy",
+                    "Cancel"
+                );
+                if (!confirmed)
+                    return;
+            }
 
             Undo.IncrementCurrentGroup();
             int group = Undo.GetCurrentGroup();

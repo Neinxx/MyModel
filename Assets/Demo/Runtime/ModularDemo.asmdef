@@ -3,6 +3,7 @@
     "rootNamespace": "ModularDemo.Runtime",
     "references": [
         "DecalSystem.Runtime",
+        "DecalSystem.Dynamic",
         "SpawnPoint.Runtime",
         "PortalSystem.Runtime",
         "Mainboard.Runtime",

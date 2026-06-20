@@ -2,6 +2,7 @@
     "name": "ModularDemo.Editor",
     "rootNamespace": "ModularDemo.Editor",
     "references": [
+        "DecalSystem.Dynamic",
         "GUID:1fdd25dfc3caf294dbfef6184d6f9fc1",
         "GUID:fec87595395e30443a1a402075c55581",
         "GUID:ba56c0677d6515244a52716546244587",

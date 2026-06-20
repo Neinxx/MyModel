@@ -11,6 +11,7 @@
         "PlayerState.Runtime",
         "InteractionSystem.Runtime",
         "DecalSystem.Runtime",
+        "DecalSystem.Dynamic",
         "CharacterController.Runtime",
         "CameraSystem.Runtime",
         "Unity.InputSystem",

@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,13 +9,106 @@ namespace DecalMini.Editor.Tests
     /// <summary>
     /// 高级自动化单元测试驱动：支持模块分组与步骤追踪
     /// </summary>
-    public static class DecalSystemMiniTests
+    public class DecalSystemMiniTests
     {
-        [InitializeOnLoadMethod]
-        private static void RunAllTests()
+        [Test]
+        public static void CircularBuffer_Overflow_IsClamped()
+        {
+            RunNUnitTest(Test_CircularBuffer_Overflow);
+        }
+
+        [Test]
+        public static void CullingMath_RemovesOutOfRangeDecals()
+        {
+            RunNUnitTest(Test_CullingMath);
+        }
+
+        [Test]
+        public static void AdditiveLevelLoading_MergesAndUnloadsIndependently()
+        {
+            RunNUnitTest(Test_AdditiveLevelLoading);
+        }
+
+        [Test]
+        public static void StreamingSafety_IsIdempotentAndNullSafe()
+        {
+            RunNUnitTest(Test_Streaming_Safety);
+        }
+
+        [Test]
+        public static void PoolingLifecycle_CleansParticleAndProjectorPools()
+        {
+            RunNUnitTest(Test_Pooling_Lifecycle);
+        }
+
+        [Test]
+        public static void ReleaseAll_ClearsRuntimeMemoryState()
+        {
+            RunNUnitTest(Test_ReleaseAll_MemorySafety);
+        }
+
+        [Test]
+        public static void DataSerialization_PreservesGpuFields()
+        {
+            RunNUnitTest(Test_Data_Serialization);
+        }
+
+        [Test]
+        public static void GridRebuild_ReindexesStaticData()
+        {
+            RunNUnitTest(Test_Grid_Rebuild_Trigger);
+        }
+
+        [Test]
+        public static void GpuStride_IsAlignedWithStructSize()
+        {
+            RunNUnitTest(Test_GPU_Stride_Alignment);
+        }
+
+        [Test]
+        public static void SortingStability_OrdersByPriorityAndDistance()
+        {
+            RunNUnitTest(Test_Sorting_Stability);
+        }
+
+        [Test]
+        public static void TotalCount_IncludesStaticAndActiveRuntimeData()
+        {
+            RunNUnitTest(Test_TotalCount_Integrity);
+        }
+
+        [Test]
+        public static void RenderingFillData_RemainsAllocationLight()
+        {
+            RunNUnitTest(Test_ZeroGC_Rendering);
+        }
+
+        [Test]
+        public static void TextureIndex_IsClampedBeforeRenderData()
+        {
+            RunNUnitTest(Test_TextureIndex_Safety);
+        }
+
+        [Test]
+        public static void LifecycleIsolation_PreservesStaticDataWhenRuntimeExpires()
+        {
+            RunNUnitTest(Test_Lifecycle_Isolation);
+        }
+
+        [Test]
+        public static void DynamicFade_ComputesExpectedAlpha()
+        {
+            RunNUnitTest(Test_Dynamic_Fade_Logic);
+        }
+
+        [MenuItem("Tools/Decal System/Run Diagnostics", false, 900)]
+        public static void RunAllTests()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("[DecalSystemMini] Diagnostics skipped while entering or running Play Mode.");
                 return;
+            }
 
             EditorApplication.delayCall += () =>
             {
@@ -91,7 +185,7 @@ namespace DecalMini.Editor.Tests
 
         private static bool RunTest(string testName, System.Action testMethod)
         {
-            DecalSystemMini.ReleaseAll();
+            ResetTestState();
             try
             {
                 testMethod();
@@ -107,8 +201,28 @@ namespace DecalMini.Editor.Tests
             }
             finally
             {
-                DecalSystemMini.ReleaseAll();
+                ResetTestState();
             }
+        }
+
+        private static void RunNUnitTest(System.Action testMethod)
+        {
+            ResetTestState();
+            try
+            {
+                testMethod();
+            }
+            finally
+            {
+                ResetTestState();
+            }
+        }
+
+        private static void ResetTestState()
+        {
+            DecalSystemMini.ReleaseAll();
+            DecalPoolMini.Clear();
+            DecalParticlePoolMini.ClearAll();
         }
 
         private static void Assert(bool condition, string message)
@@ -524,6 +638,32 @@ namespace DecalMini.Editor.Tests
             Assert(
                 dist0 > dist1,
                 $"相同 Order 下的距离排序逻辑错误: 远端({dist0}) 应当在近端({dist1}) 之前绘制"
+            );
+
+            LogStep("验证同位置同 Order 下，后生成的动态贴花后绘制...");
+            DecalSystemMini.ReleaseAll();
+            DecalSystemMini.SpawnRuntimeDecal(Vector3.up, Quaternion.identity, Vector3.one, 0, sortingOrder: 12000);
+            DecalSystemMini.SpawnRuntimeDecal(Vector3.up, Quaternion.identity, Vector3.one, 0, sortingOrder: 12000);
+
+            count = DecalSystemMini.FillData(Vector3.zero, 100f, -1, output, frustum);
+            Assert(count == 2, "同层级序号排序测试数据量异常");
+
+            int sequence0 = (int)
+                sortBuffer
+                    .GetValue(0)
+                    .GetType()
+                    .GetField("Sequence")
+                    .GetValue(sortBuffer.GetValue(0));
+            int sequence1 = (int)
+                sortBuffer
+                    .GetValue(1)
+                    .GetType()
+                    .GetField("Sequence")
+                    .GetValue(sortBuffer.GetValue(1));
+
+            Assert(
+                sequence0 < sequence1,
+                $"同位置同 Order 下的生成顺序逻辑错误: 旧贴花({sequence0}) 应在新贴花({sequence1}) 之前绘制"
             );
         }
 

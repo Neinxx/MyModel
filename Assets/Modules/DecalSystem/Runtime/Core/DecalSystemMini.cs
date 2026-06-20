@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace DecalMini
 {
+    public enum DecalRuntimeFadeMode
+    {
+        None,
+        FadeOut,
+        ShrinkFadeOut,
+    }
+
     /// <summary>
     /// Decal Provider Interface: Defines the contract for any object capable of contributing to the decal rendering pipeline.
     /// Supports both MonoBehaviour-based projectors and low-level data structures.
@@ -64,6 +71,7 @@ namespace DecalMini
             public DecalDataMini data;
             public int SortingOrder;
             public float distSqr;
+            public int Sequence;
         }
 
         // ========================================================================
@@ -78,28 +86,10 @@ namespace DecalMini
         private static void ResetStatics()
         {
             ReleaseAll();
-            Debug.Log(
+            DecalSystemLog.Verbose(
                 "<color=#7C8CFF><b>[Decal Mini]</b></color> System kernel re-initialized for clean boot."
             );
         }
-
-#if UNITY_EDITOR
-        [UnityEditor.InitializeOnLoadMethod]
-        private static void InitEditorLifecycle()
-        {
-            UnityEditor.EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-            UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-        }
-
-        private static void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange state)
-        {
-            // 在退出运行模式时，强制清理底层纯数据缓存，防止残影污染 Scene 视图
-            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode)
-            {
-                ReleaseAll();
-            }
-        }
-#endif
 
         // ========================================================================
         // 3. SPATIAL INDEXING & DATA BUFFERS
@@ -119,7 +109,12 @@ namespace DecalMini
         // 0-Component Runtime Pool (Circular buffer for impacts, footprints, etc.)
         private static DecalDataMini[] _runtimePool;
         private static float[] _runtimeExpirations;
+        private static float[] _runtimeDurations;
+        private static float[] _runtimeFadeDurations;
+        private static float[] _runtimeEndScales;
+        private static DecalRuntimeFadeMode[] _runtimeFadeModes;
         private static int[] _runtimeSortingOrders;
+        private static int[] _runtimeSequences;
         private static float[] _runtimeRadii;
 
         // Core system parameters
@@ -127,6 +122,7 @@ namespace DecalMini
         private static float _gridSize = 15f;
         private static int _poolPtr = 0;
         private static int _maxRuntimeCount = 1024;
+        private static int _nextRuntimeSequence = 0;
 
         // ========================================================================
         // 3. DIAGNOSTIC APIS (For Telemetry & Debugging)
@@ -134,6 +130,14 @@ namespace DecalMini
         public static int ActiveStaticCells => _staticGrid?.Count ?? 0;
         public static int ActiveRuntimeCells => _grid?.Count ?? 0;
         public static int LoadedSourceCount => _loadedSources?.Count ?? 0;
+        public static int RuntimePoolCapacity => _maxRuntimeCount;
+        public static int RuntimePoolActiveCount => GetRuntimeActiveCount();
+        public static int SortBufferCapacity => _sortBuffer?.Length ?? 0;
+        public static int LastVisibleCount { get; private set; }
+        public static int LastCandidateCount { get; private set; }
+        public static int LastStaticVisibleCount { get; private set; }
+        public static int LastProjectorVisibleCount { get; private set; }
+        public static int LastRuntimeVisibleCount { get; private set; }
 
         // ========================================================================
 
@@ -202,7 +206,7 @@ namespace DecalMini
                 {
                     RebuildAllGrids();
                 }
-                Debug.Log(
+                DecalSystemLog.Verbose(
                     $"<color=#7C8CFF><b>[Decal Mini]</b></color> Atlas configuration injected: <color=#9CDCFE>{config.name}</color>"
                 );
             }
@@ -239,7 +243,7 @@ namespace DecalMini
             foreach (var kvp in _staticGrid)
                 kvp.Value.Sort(_staticEntryComparer);
 
-            Debug.Log(
+            DecalSystemLog.Verbose(
                 "<color=#7C8CFF><b>[Decal Mini]</b></color> Spatial grids re-indexed successfully."
             );
         }
@@ -397,6 +401,10 @@ namespace DecalMini
             float maxDistSqr = maxDist * maxDist;
             float currentTime = GetCurrentTime();
             int count = 0;
+            int staticCountBefore;
+            int projectorCountBefore;
+            int runtimeCountBefore;
+            ResetDiagnostics();
 
             // 1. Grid traversal
             float gridSize = _currentConfig != null ? _currentConfig.spatialGridSize : _gridSize;
@@ -412,6 +420,8 @@ namespace DecalMini
 
                     // A. Process Static Grid
                     if (_staticGrid.TryGetValue(key, out var staticList))
+                    {
+                        staticCountBefore = count;
                         count = FillStaticEntries(
                             staticList,
                             camPos,
@@ -420,9 +430,13 @@ namespace DecalMini
                             frustumPlanes,
                             count
                         );
+                        LastStaticVisibleCount += count - staticCountBefore;
+                    }
 
                     // B. Process Dynamic Projectors
                     if (_grid.TryGetValue(key, out var list))
+                    {
+                        projectorCountBefore = count;
                         count = FillProjectorEntries(
                             list,
                             camPos,
@@ -431,11 +445,15 @@ namespace DecalMini
                             frustumPlanes,
                             count
                         );
+                        LastProjectorVisibleCount += count - projectorCountBefore;
+                    }
                 }
             }
 
             // 2. Process Runtime Impacts (Un-indexed pool)
+            runtimeCountBefore = count;
             count = FillRuntimeEntries(currentTime, camPos, maxDistSqr, count, frustumPlanes);
+            LastRuntimeVisibleCount = count - runtimeCountBefore;
 
             // 3. Stable 0-GC QuickSort
             // We sort by SortingOrder (ASC) then Distance (DESC) to ensure stable depth/overlap.
@@ -447,6 +465,8 @@ namespace DecalMini
             for (int i = 0; i < finalCount; i++)
                 dataArray[i] = _sortBuffer[i].data;
 
+            LastCandidateCount = count;
+            LastVisibleCount = finalCount;
             return finalCount;
         }
 
@@ -572,7 +592,11 @@ namespace DecalMini
                 return a.SortingOrder.CompareTo(b.SortingOrder);
 
             // Primary overlap stability: Farther decals render first (bottom of stack)
-            return b.distSqr.CompareTo(a.distSqr);
+            int distanceOrder = b.distSqr.CompareTo(a.distSqr);
+            if (distanceOrder != 0)
+                return distanceOrder;
+
+            return a.Sequence.CompareTo(b.Sequence);
         }
 
         private static float GetCurrentTime() =>
@@ -605,15 +629,7 @@ namespace DecalMini
 
         private static int GetActiveTotalCount()
         {
-            int runtimeActive = 0;
-            if (_runtimeExpirations != null)
-            {
-                float now = GetCurrentTime();
-                for (int i = 0; i < _maxRuntimeCount; i++)
-                    if (_runtimeExpirations[i] > now)
-                        runtimeActive++;
-            }
-            return _projectorsSet.Count + _totalStaticCount + runtimeActive;
+            return _projectorsSet.Count + _totalStaticCount + GetRuntimeActiveCount();
         }
 
         /// <summary>
@@ -629,10 +645,17 @@ namespace DecalMini
             _totalStaticCount = 0;
             _runtimePool = null;
             _runtimeExpirations = null;
+            _runtimeDurations = null;
+            _runtimeFadeDurations = null;
+            _runtimeEndScales = null;
+            _runtimeFadeModes = null;
             _runtimeSortingOrders = null;
+            _runtimeSequences = null;
             _runtimeRadii = null;
             _poolPtr = 0;
+            _nextRuntimeSequence = 0;
             _currentConfig = null;
+            ResetDiagnostics();
         }
 
         // ========================================================================
@@ -663,6 +686,7 @@ namespace DecalMini
                 _sortBuffer[currentCount].data = entry.data;
                 _sortBuffer[currentCount].SortingOrder = entry.sortingOrder;
                 _sortBuffer[currentCount].distSqr = dSqr;
+                _sortBuffer[currentCount].Sequence = 0;
                 currentCount++;
             }
             return currentCount;
@@ -702,6 +726,7 @@ namespace DecalMini
                     _sortBuffer[currentCount].data = proj.ToDecalData();
                     _sortBuffer[currentCount].SortingOrder = proj.sortingOrder;
                     _sortBuffer[currentCount].distSqr = dSqr;
+                    _sortBuffer[currentCount].Sequence = 0;
                     currentCount++;
                 }
                 else
@@ -723,6 +748,7 @@ namespace DecalMini
                     _sortBuffer[currentCount].data = provider.ToDecalData();
                     _sortBuffer[currentCount].SortingOrder = provider.sortingOrder;
                     _sortBuffer[currentCount].distSqr = dSqr;
+                    _sortBuffer[currentCount].Sequence = 0;
                     currentCount++;
                 }
             }
@@ -746,8 +772,9 @@ namespace DecalMini
 
                 DecalDataMini data = _runtimePool[i];
                 float timeLeft = _runtimeExpirations[i] - now;
-                if (timeLeft < 1.0f)
-                    data.color.w *= timeLeft; // Fade out last second
+                float fadeProgress = GetRuntimeFadeProgress(i, timeLeft);
+                if (fadeProgress > 0f)
+                    ApplyRuntimeFade(ref data, i, fadeProgress);
 
                 Vector3 pos = new(data.dtw0.w, data.dtw1.w, data.dtw2.w); // Extract position from matrix
                 float dSqr = Vector3.SqrMagnitude(pos - camPos);
@@ -760,6 +787,7 @@ namespace DecalMini
                 _sortBuffer[currentCount].data = data;
                 _sortBuffer[currentCount].SortingOrder = _runtimeSortingOrders[i];
                 _sortBuffer[currentCount].distSqr = dSqr;
+                _sortBuffer[currentCount].Sequence = _runtimeSequences[i];
                 currentCount++;
             }
             return currentCount;
@@ -777,6 +805,28 @@ namespace DecalMini
         {
             if (count >= _sortBuffer.Length)
                 System.Array.Resize(ref _sortBuffer, _sortBuffer.Length * 2);
+        }
+
+        private static void ResetDiagnostics()
+        {
+            LastVisibleCount = 0;
+            LastCandidateCount = 0;
+            LastStaticVisibleCount = 0;
+            LastProjectorVisibleCount = 0;
+            LastRuntimeVisibleCount = 0;
+        }
+
+        private static int GetRuntimeActiveCount()
+        {
+            if (_runtimeExpirations == null)
+                return 0;
+
+            int active = 0;
+            float now = GetCurrentTime();
+            for (int i = 0; i < _maxRuntimeCount; i++)
+                if (_runtimeExpirations[i] > now)
+                    active++;
+            return active;
         }
 
         /// <summary>
@@ -823,7 +873,7 @@ namespace DecalMini
         )
         {
             InitializeRuntimePool();
-            Matrix4x4 dtw = Matrix4x4.TRS(pos, rot, size);
+            Matrix4x4 dtw = Matrix4x4.TRS(pos, rot, size) * Matrix4x4.Translate(new Vector3(0f, 0f, 0.5f));
 
             // --- GPU Safety: Illegal Texture Index Defense ---
             int texIdx = Mathf.Clamp(textureIndex, 0, _currentConfig != null ? _currentConfig.Count - 1 : 0);
@@ -839,9 +889,44 @@ namespace DecalMini
 
             _runtimePool[_poolPtr] = data;
             _runtimeExpirations[_poolPtr] = GetCurrentTime() + duration;
+            _runtimeDurations[_poolPtr] = duration;
+            _runtimeFadeDurations[_poolPtr] = Mathf.Min(1f, Mathf.Max(0f, duration));
+            _runtimeEndScales[_poolPtr] = 1f;
+            _runtimeFadeModes[_poolPtr] = DecalRuntimeFadeMode.FadeOut;
             _runtimeSortingOrders[_poolPtr] = sortingOrder;
+            _runtimeSequences[_poolPtr] = _nextRuntimeSequence++;
             _runtimeRadii[_poolPtr] = Mathf.Max(size.x, Mathf.Max(size.y, size.z)) * 0.866f;
             _poolPtr = (_poolPtr + 1) % _maxRuntimeCount;
+        }
+
+        private static float GetRuntimeFadeProgress(int index, float timeLeft)
+        {
+            if (_runtimeFadeModes == null || _runtimeFadeModes[index] == DecalRuntimeFadeMode.None)
+                return 0f;
+
+            float fadeDuration = _runtimeFadeDurations[index];
+            if (fadeDuration <= 0.0001f || timeLeft >= fadeDuration)
+                return 0f;
+
+            return 1f - Mathf.Clamp01(timeLeft / fadeDuration);
+        }
+
+        private static void ApplyRuntimeFade(ref DecalDataMini data, int index, float fadeProgress)
+        {
+            float alpha = 1f - Mathf.Clamp01(fadeProgress);
+            data.color.w *= alpha;
+
+            if (_runtimeFadeModes[index] != DecalRuntimeFadeMode.ShrinkFadeOut)
+                return;
+
+            float endScale = _runtimeEndScales != null ? Mathf.Max(0f, _runtimeEndScales[index]) : 1f;
+            float scale = Mathf.Lerp(1f, endScale, fadeProgress);
+            Matrix4x4 decalToWorld = new();
+            decalToWorld.SetRow(0, new Vector4(data.dtw0.x * scale, data.dtw0.y * scale, data.dtw0.z * scale, data.dtw0.w));
+            decalToWorld.SetRow(1, new Vector4(data.dtw1.x * scale, data.dtw1.y * scale, data.dtw1.z * scale, data.dtw1.w));
+            decalToWorld.SetRow(2, new Vector4(data.dtw2.x * scale, data.dtw2.y * scale, data.dtw2.z * scale, data.dtw2.w));
+            decalToWorld.SetRow(3, data.dtw3);
+            data.SetMatrices(decalToWorld.inverse, decalToWorld);
         }
 
         private static void InitializeRuntimePool()
@@ -850,10 +935,18 @@ namespace DecalMini
                 return;
             _runtimePool = new DecalDataMini[_maxRuntimeCount];
             _runtimeExpirations = new float[_maxRuntimeCount];
+            _runtimeDurations = new float[_maxRuntimeCount];
+            _runtimeFadeDurations = new float[_maxRuntimeCount];
+            _runtimeEndScales = new float[_maxRuntimeCount];
+            _runtimeFadeModes = new DecalRuntimeFadeMode[_maxRuntimeCount];
             _runtimeSortingOrders = new int[_maxRuntimeCount];
+            _runtimeSequences = new int[_maxRuntimeCount];
             _runtimeRadii = new float[_maxRuntimeCount];
             for (int i = 0; i < _maxRuntimeCount; i++)
+            {
                 _runtimeExpirations[i] = -1f;
+                _runtimeEndScales[i] = 1f;
+            }
         }
 
         /// <summary>
@@ -880,21 +973,22 @@ namespace DecalMini
         public static Texture2DArray GetTextureArray() =>
             _currentConfig != null ? _currentConfig.bakedArray : null;
 
-#if UNITY_EDITOR
-        public static void DrawDebugGrid()
+        public static void CopyDebugGridCenters(List<Vector3> centers)
         {
+            if (centers == null)
+                return;
+
+            centers.Clear();
             if (_currentConfig == null || !_currentConfig.showDebugGrid)
                 return;
-            UnityEditor.Handles.color = new Color(0.77f, 0.54f, 0.98f, 0.3f);
+
             foreach (var key in _grid.Keys)
             {
                 int x = (int)(key >> 32);
                 int z = (int)(key & 0xFFFFFFFFL);
                 float sv = _currentConfig.spatialGridSize;
-                Vector3 center = new(x * sv + sv * 0.5f, 0, z * sv + sv * 0.5f);
-                UnityEditor.Handles.DrawWireCube(center, new Vector3(sv, 100f, sv));
+                centers.Add(new Vector3(x * sv + sv * 0.5f, 0, z * sv + sv * 0.5f));
             }
         }
-#endif
     }
 }

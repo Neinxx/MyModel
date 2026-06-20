@@ -47,7 +47,7 @@ namespace ModularDemo.Runtime
             aura.auraModule = DeepCopyModule(auraModule);
             aura.radius = radius;
             aura.projectionDepth = projectionDepth;
-            aura.socketId = socketId;
+            aura.socketId = (DecalSocketId)(int)socketId;
             aura.autoSnapToSocket = autoSnapToSocket;
             aura.lockRotation = lockRotation;
             aura.stickToGround = stickToGround;

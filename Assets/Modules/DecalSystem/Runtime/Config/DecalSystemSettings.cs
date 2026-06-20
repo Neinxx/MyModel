@@ -8,6 +8,10 @@ namespace DecalMini
     [CreateAssetMenu(fileName = "DecalSystemSettings", menuName = "Decal System/Settings")]
     public class DecalSystemSettings : ScriptableObject
     {
+        [Header("Diagnostics")]
+        [Tooltip("Enable detailed Decal System logs in the editor and player.")]
+        public bool verboseLogging = false;
+
         [Header("Shader Generation")]
         [Tooltip("生成的 HLSL 文件的相对路径 (从 Assets 开始)")]
         public string generatedHLSLPath = "Assets/Modules/DecalSystem/Shaders/DecalDataMini.generated.hlsl";
@@ -17,6 +21,7 @@ namespace DecalMini
         public string editorStyleSheetName = "DecalSystemEditor";
 
         private static DecalSystemSettings _instance;
+        private const string ResourcesAssetName = "DecalSystemSettings";
 
         public static DecalSystemSettings Instance
         {
@@ -24,18 +29,21 @@ namespace DecalMini
             {
                 if (_instance == null)
                 {
-                    // 在项目中寻找设置文件
-#if UNITY_EDITOR
-                    string[] guids = UnityEditor.AssetDatabase.FindAssets("t:DecalSystemSettings");
-                    if (guids.Length > 0)
+                    _instance = Resources.Load<DecalSystemSettings>(ResourcesAssetName);
+                    if (_instance == null)
                     {
-                        string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guids[0]);
-                        _instance = UnityEditor.AssetDatabase.LoadAssetAtPath<DecalSystemSettings>(path);
+                        _instance = CreateInstance<DecalSystemSettings>();
+                        _instance.hideFlags = HideFlags.DontSave;
                     }
-#endif
                 }
+
                 return _instance;
             }
+        }
+
+        public static void SetInstance(DecalSystemSettings settings)
+        {
+            _instance = settings;
         }
     }
 }
