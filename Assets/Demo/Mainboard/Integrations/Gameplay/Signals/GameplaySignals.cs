@@ -55,4 +55,5 @@ namespace Mainboard.Runtime.Integrations
 
         public LevelConfig Level { get; }
     }
+
 }

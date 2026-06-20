@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using DecalMini;
 using Mainboard.Runtime;
 using UnityEngine;
+using WorldSceneModule.Runtime;
 
 namespace Mainboard.Runtime.Integrations
 {
@@ -20,7 +21,7 @@ namespace Mainboard.Runtime.Integrations
         void UnloadLevelData(DecalLevelDataMini levelData);
     }
 
-    [CreateAssetMenu(fileName = "DecalFeature", menuName = "Mainboard/Features/Decal")]
+    [CreateAssetMenu(fileName = "DecalFeature", menuName = "Demo/Mainboard/Features/Decal")]
     public sealed class DecalLevelInstaller : MainboardInstaller
     {
         [SerializeField] private bool clearRuntimePoolOnLevelLoad = true;
@@ -74,14 +75,15 @@ namespace Mainboard.Runtime.Integrations
                 if (_clearRuntimePoolOnLevelLoad)
                     _decalSystem.ClearRuntimePool();
 
-                if (level.Config.moduleData != null)
+                var hasLevelConfig = level.TryGetConfig<LevelConfig>(out var levelConfig);
+                if (hasLevelConfig && levelConfig.moduleData != null)
                 {
-                    var decalData = level.Config.moduleData.GetSubData<DecalLevelDataMini>();
+                    var decalData = levelConfig.moduleData.GetSubData<DecalLevelDataMini>();
                     if (decalData != null)
                     {
                         LoadLevelData(decalData);
                         RegisterRuntime(level, decalData);
-                        _context.Signals.Publish(new DecalLevelDataLoadedSignal(level.Config));
+                        _context.Signals.Publish(new DecalLevelDataLoadedSignal(levelConfig));
                         return UniTask.CompletedTask;
                     }
                 }
@@ -90,7 +92,7 @@ namespace Mainboard.Runtime.Integrations
                     LoadFallbackSceneData(level);
 
                 RegisterRuntime(level, _loadedLevelData.Count > 0 ? _loadedLevelData[0] : null);
-                _context.Signals.Publish(new DecalLevelDataLoadedSignal(level.Config));
+                _context.Signals.Publish(new DecalLevelDataLoadedSignal(levelConfig));
                 return UniTask.CompletedTask;
             }
 

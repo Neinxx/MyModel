@@ -14,7 +14,6 @@ public sealed class MainboardArchitectureGuardTests
     private static readonly string[] MainboardSourceRoots =
     {
         "Assets/Modules/Mainboard/Runtime",
-        "Assets/Modules/Mainboard/Integrations",
     };
 
     private static readonly string[] RetiredWorldSceneFragments =
@@ -34,6 +33,22 @@ public sealed class MainboardArchitectureGuardTests
         "UIManager.Instance",
         "GameMainboard.Instance",
     };
+
+    [Test]
+    public void Mainboard_ModuleDoesNotOwnProjectComposition()
+    {
+        Assert.That(
+            Directory.Exists("Assets/Modules/Mainboard/Integrations"),
+            Is.False,
+            "Mainboard core must not own project-specific integrations. Put composition under Assets/Demo/Mainboard or a game composition module."
+        );
+
+        Assert.That(
+            Directory.Exists("Assets/Modules/Mainboard/Data"),
+            Is.False,
+            "Mainboard core must not own project-specific profile assets. Put MainboardProfile and Feature assets under Assets/Demo/Mainboard/Data or a game composition module."
+        );
+    }
 
     [Test]
     public void Mainboard_DoesNotDependOnDemoReflectionOrSceneSearchFallbacks()

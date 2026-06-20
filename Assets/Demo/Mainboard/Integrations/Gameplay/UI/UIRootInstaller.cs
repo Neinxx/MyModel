@@ -15,7 +15,7 @@ namespace Mainboard.Runtime.Integrations
         void BindCanvasToCamera(Camera uiCamera, float planeDistance);
     }
 
-    [CreateAssetMenu(fileName = "UIRootFeature", menuName = "Mainboard/Features/UI Root")]
+    [CreateAssetMenu(fileName = "UIRootFeature", menuName = "Demo/Mainboard/Features/UI Root")]
     public sealed class UIRootInstaller : MainboardInstaller
     {
         [SerializeField] private string uiRootKey = "Assets/Demo/Art/Prefabs/UIRoot.prefab";

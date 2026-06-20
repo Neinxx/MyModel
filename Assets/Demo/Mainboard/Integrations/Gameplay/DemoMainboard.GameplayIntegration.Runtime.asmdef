@@ -1,8 +1,9 @@
 {
-    "name": "Mainboard.GameplayIntegration.Runtime",
+    "name": "DemoMainboard.GameplayIntegration.Runtime",
     "rootNamespace": "Mainboard.Runtime.Integrations",
     "references": [
         "Mainboard.Runtime",
+        "DemoMainboard.WorldSceneIntegration.Runtime",
         "UniRx",
         "UniTask",
         "WorldScene.Runtime",

@@ -82,9 +82,4 @@ namespace Mainboard.Runtime
         public LevelContext Level { get; }
     }
 
-    public readonly struct WorldStartUIRequestedSignal
-    {
-        public WorldStartUIRequestedSignal(string viewID) => ViewID = viewID;
-        public string ViewID { get; }
-    }
 }

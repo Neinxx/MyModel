@@ -45,7 +45,7 @@ namespace UISystem.Editor
             {
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(rootObj, prefabPath);
                 SetSerializedStringIfAssetExists(
-                    "Assets/Modules/Mainboard/Data/UIRootFeature.asset",
+                    "Assets/Demo/Mainboard/Data/UIRootFeature.asset",
                     "uiRootKey",
                     prefabPath
                 );

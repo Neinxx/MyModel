@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace Mainboard.Runtime
 {
-    [CreateAssetMenu(fileName = "WorldSceneFeature", menuName = "Mainboard/Features/World Scene")]
+    [CreateAssetMenu(fileName = "WorldSceneFeature", menuName = "Demo/Mainboard/Features/World Scene")]
     public class WorldSceneInstaller : MainboardInstaller
     {
         [SerializeField] private WorldRuntimeConfig config;
@@ -95,7 +95,9 @@ namespace Mainboard.Runtime
                 if (_context?.Board == null)
                     return UniTask.CompletedTask;
 
-                return _context.Board.NotifyLevelLoadedAsync(new LevelContext(config, scene));
+                return _context.Board.NotifyLevelLoadedAsync(
+                    new LevelContext(config.levelName, scene, null, config)
+                );
             }
 
             private UniTask HandleLevelUnloading(
@@ -107,7 +109,9 @@ namespace Mainboard.Runtime
                 if (_context?.Board == null)
                     return UniTask.CompletedTask;
 
-                return _context.Board.NotifyLevelUnloadingAsync(new LevelContext(config, scene));
+                return _context.Board.NotifyLevelUnloadingAsync(
+                    new LevelContext(config.levelName, scene, null, config)
+                );
             }
         }
     }

@@ -1,9 +1,10 @@
 {
-    "name": "Mainboard.Runtime",
+    "name": "DemoMainboard.WorldSceneIntegration.Runtime",
     "rootNamespace": "Mainboard.Runtime",
     "references": [
-        "UniRx",
-        "UniTask"
+        "Mainboard.Runtime",
+        "UniTask",
+        "WorldScene.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

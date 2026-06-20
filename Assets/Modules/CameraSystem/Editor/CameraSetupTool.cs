@@ -442,7 +442,7 @@ namespace CameraSystem.Editor
 
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
                 SetSerializedStringIfAssetExists(
-                    "Assets/Modules/Mainboard/Data/PlayerFeature.asset",
+                    "Assets/Demo/Mainboard/Data/PlayerFeature.asset",
                     "playerPrefabKey",
                     prefabPath
                 );
@@ -528,7 +528,7 @@ namespace CameraSystem.Editor
 
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
                 SetSerializedStringIfAssetExists(
-                    "Assets/Modules/Mainboard/Data/CameraRigFeature.asset",
+                    "Assets/Demo/Mainboard/Data/CameraRigFeature.asset",
                     "uiCameraKey",
                     prefabPath
                 );

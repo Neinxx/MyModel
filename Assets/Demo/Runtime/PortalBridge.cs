@@ -45,9 +45,17 @@ namespace ModularDemo.Runtime
             }
 
             // 2. 执行加载
-            if (mainboard != null)
+            if (mainboard != null && mainboard.Context != null)
             {
-                var result = await mainboard.TransitionToLevelAsync(
+                if (!mainboard.Context.TryResolve<IWorldNavigator>(out var navigator))
+                {
+                    Debug.LogError(
+                        $"[PortalBridge] World navigator is not available. {BuildRuntimeStatus()}"
+                    );
+                    return;
+                }
+
+                var result = await navigator.LoadLevelAsync(
                     targetLevel,
                     mainboard.GetCancellationTokenOnDestroy()
                 );

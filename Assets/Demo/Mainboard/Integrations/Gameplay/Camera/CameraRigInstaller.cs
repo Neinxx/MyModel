@@ -26,7 +26,7 @@ namespace Mainboard.Runtime.Integrations
         void RegisterUICamera(Camera uiCamera);
     }
 
-    [CreateAssetMenu(fileName = "CameraRigFeature", menuName = "Mainboard/Features/Camera Rig")]
+    [CreateAssetMenu(fileName = "CameraRigFeature", menuName = "Demo/Mainboard/Features/Camera Rig")]
     public sealed class CameraRigInstaller : MainboardInstaller
     {
         [SerializeField] private string cameraViewKey = "Assets/Demo/Art/Prefabs/CameraView.prefab";

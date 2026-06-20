@@ -7,6 +7,7 @@
         "SpawnPoint.Runtime",
         "PortalSystem.Runtime",
         "Mainboard.Runtime",
+        "DemoMainboard.WorldSceneIntegration.Runtime",
         "PlayerState.Runtime",
         "UISystem.Runtime",
         "CharacterController.Runtime",

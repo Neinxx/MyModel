@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Mainboard.Runtime.Integrations
 {
-    [CreateAssetMenu(fileName = "HudFeature", menuName = "Mainboard/Features/HUD")]
+    [CreateAssetMenu(fileName = "HudFeature", menuName = "Demo/Mainboard/Features/HUD")]
     public sealed class HudInstaller : MainboardInstaller
     {
         [SerializeField] private string hudViewID = "PlayerHUD";

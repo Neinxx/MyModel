@@ -6,6 +6,7 @@ using Mainboard.Runtime;
 using PlayerState.Runtime;
 using SpawnPoint.Runtime;
 using UnityEngine;
+using WorldSceneModule.Runtime;
 using Object = UnityEngine.Object;
 
 namespace Mainboard.Runtime.Integrations
@@ -22,7 +23,7 @@ namespace Mainboard.Runtime.Integrations
         bool TryGetFirst(out ISpawnPoint spawnPoint);
     }
 
-    [CreateAssetMenu(fileName = "PlayerFeature", menuName = "Mainboard/Features/Player")]
+    [CreateAssetMenu(fileName = "PlayerFeature", menuName = "Demo/Mainboard/Features/Player")]
     public sealed class PlayerLevelInstaller : MainboardInstaller
     {
         [Header("Player")]
@@ -130,7 +131,8 @@ namespace Mainboard.Runtime.Integrations
 
                 _playerRuntime = new PlayerRuntime(player);
                 level.Scope?.RegisterService<IPlayerRuntime>(_playerRuntime);
-                _context.Signals.Publish(new PlayerSpawnedSignal(player, level.Config, level.Scope));
+                level.TryGetConfig<LevelConfig>(out var levelConfig);
+                _context.Signals.Publish(new PlayerSpawnedSignal(player, levelConfig, level.Scope));
             }
 
             public UniTask OnLevelUnloadingAsync(LevelContext level, CancellationToken cancellationToken)
