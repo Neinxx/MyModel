@@ -13,6 +13,8 @@ namespace GitSprout
         private static readonly Dictionary<string, GitSproutChange> Changes = new Dictionary<string, GitSproutChange>(StringComparer.Ordinal);
         private static readonly Dictionary<string, GitSproutState> AssetVisualStates = new Dictionary<string, GitSproutState>(StringComparer.Ordinal);
         private static readonly Dictionary<string, GitSproutState> FolderVisualStates = new Dictionary<string, GitSproutState>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, GitSproutState> GuidVisualStates = new Dictionary<string, GitSproutState>(StringComparer.Ordinal);
+        private static readonly Dictionary<string, string> GuidTooltips = new Dictionary<string, string>(StringComparer.Ordinal);
 
         private static CancellationTokenSource refreshTokenSource;
         private static double nextAllowedRefresh;
@@ -70,6 +72,16 @@ namespace GitSprout
                 return state;
 
             return GitSproutState.Clean;
+        }
+
+        public static bool TryGetVisualStateForGuid(string guid, out GitSproutState state)
+        {
+            return GuidVisualStates.TryGetValue(guid, out state);
+        }
+
+        public static string GetTooltipForGuid(string guid)
+        {
+            return GuidTooltips.TryGetValue(guid, out var tooltip) ? tooltip : string.Empty;
         }
 
         public static string GetTooltip(string assetPath)
@@ -260,6 +272,8 @@ namespace GitSprout
         {
             AssetVisualStates.Clear();
             FolderVisualStates.Clear();
+            GuidVisualStates.Clear();
+            GuidTooltips.Clear();
 
             foreach (var change in Changes.Values)
             {
@@ -273,6 +287,28 @@ namespace GitSprout
 
                 AddFolderAggregates(assetPath, change.State);
             }
+
+            foreach (var pair in AssetVisualStates)
+                CacheGuidState(pair.Key, pair.Value);
+
+            foreach (var pair in FolderVisualStates)
+                CacheGuidState(pair.Key, pair.Value);
+        }
+
+        private static void CacheGuidState(string assetPath, GitSproutState state)
+        {
+            if (state == GitSproutState.Clean || string.IsNullOrEmpty(assetPath))
+                return;
+
+            var guid = AssetDatabase.AssetPathToGUID(assetPath);
+            if (string.IsNullOrEmpty(guid))
+                return;
+
+            if (GuidVisualStates.TryGetValue(guid, out var currentState))
+                state = GitSproutVisuals.Max(currentState, state);
+
+            GuidVisualStates[guid] = state;
+            GuidTooltips[guid] = GetTooltip(assetPath);
         }
 
         private static void AddFolderAggregates(string path, GitSproutState state)

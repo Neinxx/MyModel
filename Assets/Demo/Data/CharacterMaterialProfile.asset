@@ -33,16 +33,16 @@ MonoBehaviour:
     rampBiasScale: 1
     metalShadowLift: 0.12
     aoStrength: 1
-  - name: Skin
-    kind: 0
+  - name: Fabric
+    kind: 2
     rampSlice: 2
     matCapSlice: 2
-    matCapStrength: 0.45
-    rimStrength: 0.25
-    shadowHardness: 1
-    rampBiasScale: 1
-    metalShadowLift: 0.15
-    aoStrength: 1
+    matCapStrength: 0.8
+    rimStrength: 0.15
+    shadowHardness: 1.25
+    rampBiasScale: 0.8
+    metalShadowLift: 0.35
+    aoStrength: 0.9
   - name: Metal
     kind: 3
     rampSlice: 3

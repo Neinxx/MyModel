@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerName: Player
   baseMaxHP: 100
-  baseAttack: 10
+  baseAttack: 20
   lastPosition: {x: 0, y: 0, z: 0}
   lastSceneName: 
   lastSpawnPointID: 
