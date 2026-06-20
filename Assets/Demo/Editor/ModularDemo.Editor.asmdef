@@ -2,13 +2,13 @@
     "name": "ModularDemo.Editor",
     "rootNamespace": "ModularDemo.Editor",
     "references": [
-        "ModularDemo.Runtime",
-        "DecalSystem.Runtime",
-        "DecalSystem.Editor",
-        "WorldScene.Runtime",
-        "PlayerState.Runtime",
-        "UISystem.Runtime",
-        "CameraSystem.Runtime"
+        "GUID:1fdd25dfc3caf294dbfef6184d6f9fc1",
+        "GUID:fec87595395e30443a1a402075c55581",
+        "GUID:ba56c0677d6515244a52716546244587",
+        "GUID:10a8705057fb1344eaa85084ef860cef",
+        "GUID:da0c39e2438a31743add7f2f76d08ca0",
+        "GUID:468c6769749e673429d6e1f44061552d",
+        "GUID:ca96f4ace04f62d47b9f5eb405a49f90"
     ],
     "includePlatforms": [
         "Editor"

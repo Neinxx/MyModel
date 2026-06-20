@@ -72,6 +72,7 @@ namespace ModularDemo.Editor
             header.Add(title);
 
             root.Add(header);
+            
         }
 
         private void CreateModuleSection(VisualElement root)
