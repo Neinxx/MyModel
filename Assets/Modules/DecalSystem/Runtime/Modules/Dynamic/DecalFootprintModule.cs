@@ -5,7 +5,8 @@ namespace DecalMini
     public enum FootprintMode
     {
         Step,   // 传统步进（脚印）
-        Track   // 连续轨迹（车辙、拖痕）
+        [InspectorName("Track (Legacy - use Decal Tire Track)")]
+        Track   // 兼容旧数据；新的车辙请使用 DecalTireTrackComponent。
     }
 
     /// <summary>

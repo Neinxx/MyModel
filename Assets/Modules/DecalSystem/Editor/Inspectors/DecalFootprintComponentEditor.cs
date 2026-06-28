@@ -159,7 +159,7 @@ namespace DecalMini
             var comp = target as DecalFootprintComponent;
             
             // 轨迹模式头部 (高饱和度蓝色强调)
-            var header = new Label(" TRACK MODE SETTINGS");
+            var header = new Label(" LEGACY TRACK MODE");
             header.style.backgroundColor = new Color(0.1f, 0.4f, 0.8f, 0.2f);
             header.style.borderLeftColor = new Color(0.1f, 0.4f, 0.8f, 0.8f);
             header.style.borderLeftWidth = 4;
@@ -169,6 +169,13 @@ namespace DecalMini
             header.style.unityTextAlign = TextAnchor.MiddleLeft;
             header.style.unityFontStyleAndWeight = FontStyle.Bold;
             container.Add(header);
+
+            var help = new HelpBox(
+                "For new tire tracks, use Decal Tire Track. This legacy mode keeps old scenes compatible.",
+                HelpBoxMessageType.Info
+            );
+            help.style.marginTop = 6;
+            container.Add(help);
 
             // 车辙槽位预览
             _uve_TrackPreview = CreateSlotPreview("Main Track Texture (B)", 2);

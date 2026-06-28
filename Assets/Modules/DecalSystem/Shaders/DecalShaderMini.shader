@@ -60,11 +60,8 @@ Shader "Universal Render Pipeline/Decal_Mini"
             float4x4 GetDecalToWorld(DecalDataMini data) { return float4x4(data.dtw0, data.dtw1, data.dtw2, data.dtw3); }
             float4x4 GetWorldToDecal(DecalDataMini data) { return float4x4(data.wtd0, data.wtd1, data.wtd2, data.wtd3); }
 
-            float2 RotateUV(float2 uv, float rotationSpeed, float scale)
+            float2 RotateUV(float2 uv, float s, float c, float scale)
             {
-                float angle = fmod(_Time.y * rotationSpeed, 6.2831853);
-                float s = sin(angle);
-                float c = cos(angle);
                 float2 center = 0.5;
                 uv -= center;
                 uv /= max(0.0001, scale);
@@ -85,6 +82,9 @@ Shader "Universal Render Pipeline/Decal_Mini"
             {
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
+                float4 rotSinCos1 : TEXCOORD1; // xy: Layer 1 or Std, zw: Layer 2
+                float4 rotSinCos2 : TEXCOORD4; // xy: Layer 3, zw: Layer 4
+                float4 pulses : TEXCOORD5;     // x: Layer 1 or Std, y: Layer 2, z: Layer 3, w: Layer 4
                 uint instanceID : SV_InstanceID;
             };
 
@@ -139,6 +139,46 @@ Shader "Universal Render Pipeline/Decal_Mini"
                     output.positionCS = float4(0, 0, 2, 1); 
                 }
 
+                // Precalculate animation parameters
+                float mode = data.animParams2.z;
+                if (mode > 0.5)
+                {
+                    float4 rotSpeeds = data.auraRotSpeeds;
+                    float4 pulseSpeeds = data.auraPulseParams;
+                    
+                    float4 angle = _Time.y * rotSpeeds;
+                    output.rotSinCos1.x = sin(angle.x);
+                    output.rotSinCos1.y = cos(angle.x);
+                    output.rotSinCos1.z = sin(angle.y);
+                    output.rotSinCos1.w = cos(angle.y);
+                    
+                    output.rotSinCos2.x = sin(angle.z);
+                    output.rotSinCos2.y = cos(angle.z);
+                    output.rotSinCos2.z = sin(angle.w);
+                    output.rotSinCos2.w = cos(angle.w);
+                    
+                    float4 pulseAngle = _Time.y * pulseSpeeds;
+                    output.pulses.x = sin(pulseAngle.x);
+                    output.pulses.y = sin(pulseAngle.y);
+                    output.pulses.z = sin(pulseAngle.z);
+                    output.pulses.w = sin(pulseAngle.w);
+                }
+                else
+                {
+                    float rotSpeed = data.animParams.x;
+                    float angle = _Time.y * rotSpeed;
+                    output.rotSinCos1.x = sin(angle);
+                    output.rotSinCos1.y = cos(angle);
+                    output.rotSinCos1.zw = 0.0;
+                    
+                    output.rotSinCos2 = 0.0;
+                    
+                    float pulseFreq = data.animParams.y;
+                    float pulseAngle = _Time.y * pulseFreq;
+                    output.pulses.x = sin(pulseAngle);
+                    output.pulses.yzw = 0.0;
+                }
+
                 return output;
             }
 
@@ -188,35 +228,32 @@ Shader "Universal Render Pipeline/Decal_Mini"
                     // [AURA MODE]
                     col = 0;
                     float4 auraColors[4] = { data.color, data.auraColor2, data.auraColor3, data.auraColor4 };
-                    float4 rotSpeeds = data.auraRotSpeeds;
-                    float4 pulseSpeeds = data.auraPulseParams;
                     float4 scales = data.auraScaleParams;
 
                     // Layer 1 (R)
-                    float2 uv1 = RotateUV(uv, rotSpeeds.x, scales.x);
+                    float2 uv1 = RotateUV(uv, input.rotSinCos1.x, input.rotSinCos1.y, scales.x);
                     half mask1 = SAMPLE_TEXTURE2D_ARRAY(_DecalAtlasArray, sampler_DecalAtlasArray, uv1, index).r;
-                    col += mask1 * (half4)auraColors[0] * (1.0 + sin(_Time.y * pulseSpeeds.x) * data.animParams.z);
+                    col += mask1 * (half4)auraColors[0] * (1.0 + input.pulses.x * data.animParams.z);
 
                     // Layer 2 (G)
-                    float2 uv2 = RotateUV(uv, rotSpeeds.y, scales.y);
+                    float2 uv2 = RotateUV(uv, input.rotSinCos1.z, input.rotSinCos1.w, scales.y);
                     half mask2 = SAMPLE_TEXTURE2D_ARRAY(_DecalAtlasArray, sampler_DecalAtlasArray, uv2, index).g;
-                    col += mask2 * (half4)auraColors[1] * (1.0 + sin(_Time.y * pulseSpeeds.y) * data.animParams.z);
+                    col += mask2 * (half4)auraColors[1] * (1.0 + input.pulses.y * data.animParams.z);
 
                     // Layer 3 (B)
-                    float2 uv3 = RotateUV(uv, rotSpeeds.z, scales.z);
+                    float2 uv3 = RotateUV(uv, input.rotSinCos2.x, input.rotSinCos2.y, scales.z);
                     half mask3 = SAMPLE_TEXTURE2D_ARRAY(_DecalAtlasArray, sampler_DecalAtlasArray, uv3, index).b;
-                    col += mask3 * (half4)auraColors[2] * (1.0 + sin(_Time.y * pulseSpeeds.z) * data.animParams.z);
+                    col += mask3 * (half4)auraColors[2] * (1.0 + input.pulses.z * data.animParams.z);
 
                     // Layer 4 (A)
-                    float2 uv4 = RotateUV(uv, rotSpeeds.w, scales.w);
+                    float2 uv4 = RotateUV(uv, input.rotSinCos2.z, input.rotSinCos2.w, scales.w);
                     half mask4 = SAMPLE_TEXTURE2D_ARRAY(_DecalAtlasArray, sampler_DecalAtlasArray, uv4, index).a;
-                    col += mask4 * (half4)auraColors[3] * (1.0 + sin(_Time.y * pulseSpeeds.w) * data.animParams.z);
+                    col += mask4 * (half4)auraColors[3] * (1.0 + input.pulses.w * data.animParams.z);
                 }
                 else
                 {
                     // [STANDARD MODE]
-                    float rotSpeed = data.animParams.x;
-                    uv = RotateUV(uv, rotSpeed, 1.0);
+                    uv = RotateUV(uv, input.rotSinCos1.x, input.rotSinCos1.y, 1.0);
                     uv = uv * data.uvScaleOffset.xy + data.uvScaleOffset.zw;
 
                     float pulseFreq = data.animParams.y;
@@ -224,7 +261,7 @@ Shader "Universal Render Pipeline/Decal_Mini"
                     float pulse = 1.0;
                     if (abs(pulseFreq) > 0.001)
                     {
-                        pulse = 1.0 + sin(_Time.y * pulseFreq) * pulseIntensity;
+                        pulse = 1.0 + input.pulses.x * pulseIntensity;
                     }
 
                     // Flipbook
@@ -250,8 +287,8 @@ Shader "Universal Render Pipeline/Decal_Mini"
                 float radialFadeMask = smoothstep(0.5, 0.5 - max(0.001, softness), distToCenter);
                 float radialFade = lerp(1.0, radialFadeMask, isMaskEnabled);
                 
-                float3 decalForwardWS = normalize(float3(dtw[0].z, dtw[1].z, dtw[2].z));
-                float3 decalRightWS = normalize(float3(dtw[0].x, dtw[1].x, dtw[2].x));
+                float3 decalForwardWS = SafeNormalize(float3(dtw[0].z, dtw[1].z, dtw[2].z));
+                float3 decalRightWS = SafeNormalize(float3(dtw[0].x, dtw[1].x, dtw[2].x));
                 
                 float3 positionWS_X = ddx(positionWS);
                 float3 positionWS_Y = ddy(positionWS);
@@ -260,16 +297,16 @@ Shader "Universal Render Pipeline/Decal_Mini"
                 float crossLen = length(crossProduct);
                 
                 // 1. 获取原始表面法线 (使用安全归一化，避免对角线偏置 Bug)
-                float3 rawGeoNormalWS = crossLen > 1e-6 ? (crossProduct / crossLen) : -decalForwardWS;
+                float3 rawGeoNormalWS = crossLen > 1e-6 ? (crossProduct / max(crossLen, 1e-6)) : -decalForwardWS;
                 
                 // 工业级偏导法线平滑稳定技术：当摄像机变远时，屏幕偏导数法线由于深度精度衰减产生严重的像素抖动。
                 // 我们基于到摄像机的实际距离 (在 8 米到 25 米之间) 平滑混合到稳定的贴花投影轴向 (-decalForwardWS)
                 float dist = distance(positionWS, _WorldSpaceCameraPos);
                 float stabilizeWeight = saturate((dist - 8.0) / 17.0);
-                rawGeoNormalWS = normalize(lerp(rawGeoNormalWS, -decalForwardWS, stabilizeWeight));
+                rawGeoNormalWS = SafeNormalize(lerp(rawGeoNormalWS, -decalForwardWS, stabilizeWeight));
                 
                 // 2. 修正视点朝向 (使用安全非零判断，避免 dot 为 0 时法线塌缩)
-                float3 viewDirWS = normalize(_WorldSpaceCameraPos - positionWS);
+                float3 viewDirWS = SafeNormalize(_WorldSpaceCameraPos - positionWS);
                 float dotNV = dot(rawGeoNormalWS, viewDirWS);
                 half3 finalGeoNormalWS = rawGeoNormalWS * (dotNV >= 0.0 ? 1.0h : -1.0h);
                 
@@ -277,18 +314,17 @@ Shader "Universal Render Pipeline/Decal_Mini"
                 float4 packedNormal = SAMPLE_TEXTURE2D_ARRAY(_DecalNormalArray, sampler_DecalNormalArray, uv, index);
                 half3 tangentNormal = UnpackNormal(packedNormal);
 
-                // [多平台适配] 处理不同 API 下的 Y 轴翻转问题
+                // [多平台适配] 处理不同 API 下 Tangent y 反转问题
                 #if UNITY_UV_STARTS_AT_TOP
-                    // DirectX 类平台通常需要反转 Y 以匹配图集烘焙顺序
                     tangentNormal.y *= -1.0;
                 #endif
 
                 // 4. 构建 TBN 矩阵 (基于已稳定的原始法线，确保切线空间的平滑与连续)
-                float3 worldTangent = normalize(decalRightWS - rawGeoNormalWS * dot(decalRightWS, rawGeoNormalWS));
+                float3 worldTangent = SafeNormalize(decalRightWS - rawGeoNormalWS * dot(decalRightWS, rawGeoNormalWS));
                 float3 worldBitangent = cross(rawGeoNormalWS, worldTangent);
                 
                 // 最终法线合成 (使用 finalGeoNormalWS 确保双面受光正确)
-                half3 normalWS = normalize(tangentNormal.x * worldTangent + tangentNormal.y * worldBitangent + tangentNormal.z * finalGeoNormalWS);
+                half3 normalWS = SafeNormalize(tangentNormal.x * worldTangent + tangentNormal.y * worldBitangent + tangentNormal.z * finalGeoNormalWS);
 
                 // 3. 完整光照系统 (增强兼容性版本)
                 float3 shadowPosWS = positionWS + normalWS * 0.02;
