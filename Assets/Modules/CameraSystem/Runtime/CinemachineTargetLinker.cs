@@ -4,8 +4,7 @@ using Cinemachine;
 namespace CameraSystem.Runtime
 {
     /// <summary>
-    /// 自动目标链接器 (Automatic Target Linker)
-    /// 用于将虚拟相机自动关联到场景中的特定标签物体（如 Player）。
+    /// Keeps a Cinemachine virtual camera linked to the registered camera target socket.
     /// </summary>
     [RequireComponent(typeof(CinemachineVirtualCamera))]
     public class CinemachineTargetLinker : MonoBehaviour
@@ -22,7 +21,6 @@ namespace CameraSystem.Runtime
             CameraManager.OnPlayerRegistered += OnPlayerRegistered;
             CameraManager.OnPlayerUnregistered += OnPlayerUnregistered;
 
-            // 🌟 黄金自愈：如果玩家已经提早被注册，则立即吸附绑定
             if (CameraManager.PlayerTransform != null)
             {
                 LinkTarget(CameraManager.PlayerTransform);
@@ -64,11 +62,11 @@ namespace CameraSystem.Runtime
 
             _vCam.Follow = pivot;
             _vCam.LookAt = pivot;
-            Debug.Log($"<color=#FF8B8B><b>[Camera]</b></color> Elegant and decoupled target linking: '{_vCam.name}' bound to registered pivot on '{target.name}'.");
+            CameraManager.LogVerbose($"Virtual camera '{_vCam.name}' bound to registered pivot on '{target.name}'.");
         }
 
         /// <summary>
-        /// 允许外部显式注入目标 (保持与旧有引导模块或 WorldScene 的接口兼容性)
+        /// Allows bootstrap code to provide a target explicitly.
         /// </summary>
         public void SetTarget(Transform target)
         {

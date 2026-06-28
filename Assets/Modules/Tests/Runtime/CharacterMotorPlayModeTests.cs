@@ -32,7 +32,7 @@ namespace Tests.Runtime
             _cc.radius = 0.5f;
 
             _motor = _playerGo.AddComponent<CharacterMotor>();
-            _motor.gravity = -9.81f;
+            _motor.SetGravity(-9.81f);
 
             // Wait 2 frames for physics initial snaps and positioning
             yield return null;

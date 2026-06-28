@@ -1,14 +1,16 @@
 using Cinemachine;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
+
+[assembly: InternalsVisibleTo("CameraSystem.Editor.Tests")]
 
 namespace CameraSystem.Runtime
 {
     /// <summary>
-    /// 全局摄像机管理器 (Universal Camera Manager)
-    /// 负责管理 CinemachineBrain 以及全局摄像机状态。
+        /// Coordinates the active camera rig, registered targets, and Cinemachine input ownership.
     /// </summary>
-    [ExecuteAlways]
     [RequireComponent(typeof(CinemachineBrain))]
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-150)]
@@ -29,6 +31,8 @@ namespace CameraSystem.Runtime
         public static event System.Action<Camera> OnCameraUIRegistered;
         public static event System.Action OnCameraUIUnregistered;
 
+        internal static bool IsVerboseLoggingEnabled => Instance != null && Instance._verboseLogging;
+
         public static void RegisterPlayer(Transform player)
         {
             if (player == null) return;
@@ -38,7 +42,7 @@ namespace CameraSystem.Runtime
                 Instance.SetAllTargets(player);
             }
             OnPlayerRegistered?.Invoke(player);
-            Debug.Log($"<color=#3FB950><b>[CameraManager]</b></color> Player character registered: '{player.name}'");
+            LogVerbose($"Player character registered: '{player.name}'");
         }
 
         public static void UnregisterPlayer(Transform player)
@@ -49,7 +53,7 @@ namespace CameraSystem.Runtime
                 CameraTargetTransform = null;
                 PostProcessTargetTransform = null;
                 OnPlayerUnregistered?.Invoke();
-                Debug.Log($"<color=#8A8A8A><b>[CameraManager]</b></color> Player character unregistered.");
+                LogVerbose("Player character unregistered.");
             }
         }
 
@@ -58,7 +62,7 @@ namespace CameraSystem.Runtime
             if (uiCamera == null) return;
             CameraUI = uiCamera;
             OnCameraUIRegistered?.Invoke(uiCamera);
-            Debug.Log($"<color=#3FB950><b>[CameraManager]</b></color> UI Camera registered: '{uiCamera.name}'");
+            LogVerbose($"UI Camera registered: '{uiCamera.name}'");
         }
 
         public static void UnregisterCameraUI(Camera uiCamera)
@@ -67,21 +71,72 @@ namespace CameraSystem.Runtime
             {
                 CameraUI = null;
                 OnCameraUIUnregistered?.Invoke();
-                Debug.Log($"<color=#8A8A8A><b>[CameraManager]</b></color> UI Camera unregistered.");
+                LogVerbose("UI Camera unregistered.");
             }
         }
 
         private CinemachineBrain _brain;
+        private CinemachineCore.AxisInputDelegate _previousInputAxisProvider;
+        private CinemachineCore.AxisInputDelegate _activeInputAxisProvider;
+        private bool _ownsInputAxisProvider;
+
+        [Header("Runtime Ownership")]
+        [Tooltip("When enabled, CameraManager owns CinemachineCore.GetInputAxis while this component is enabled.")]
+        [SerializeField] private bool _overrideCinemachineInput = true;
+        [Tooltip("When enabled, CameraManager may add missing Cinemachine/URP helper components to the resolved Camera at runtime.")]
+        [SerializeField] private bool _autoConfigureCameraComponents = true;
+        [Tooltip("When enabled, CameraSystem writes non-warning lifecycle and binding diagnostics to the Console.")]
+        [SerializeField] private bool _verboseLogging;
 
         [Header("Orbit Settings")]
-        public float mouseSensitivity = 0.15f;
-        public float gamepadSensitivity = 150f;
-        public float minimumPitch = -35f;
-        public float maximumPitch = 70f;
+        [FormerlySerializedAs("mouseSensitivity")]
+        [SerializeField] private float _mouseSensitivity = 0.15f;
+        [FormerlySerializedAs("gamepadSensitivity")]
+        [SerializeField] private float _gamepadSensitivity = 150f;
+        [FormerlySerializedAs("minimumPitch")]
+        [SerializeField] private float _minimumPitch = -35f;
+        [FormerlySerializedAs("maximumPitch")]
+        [SerializeField] private float _maximumPitch = 70f;
 
         private Transform _cameraTargetPivot;
         private float _currentYaw;
         private float _currentPitch;
+
+        public float MouseSensitivity => _mouseSensitivity;
+        public float GamepadSensitivity => _gamepadSensitivity;
+        public float MinimumPitch => _minimumPitch;
+        public float MaximumPitch => _maximumPitch;
+        public bool OverrideCinemachineInput => _overrideCinemachineInput;
+        public bool AutoConfigureCameraComponents => _autoConfigureCameraComponents;
+        public bool VerboseLogging => _verboseLogging;
+
+        [System.Obsolete("Use MouseSensitivity for reading and SetMouseSensitivity for writing.")]
+        public float mouseSensitivity
+        {
+            get => _mouseSensitivity;
+            set => SetMouseSensitivity(value);
+        }
+
+        [System.Obsolete("Use GamepadSensitivity for reading and SetGamepadSensitivity for writing.")]
+        public float gamepadSensitivity
+        {
+            get => _gamepadSensitivity;
+            set => SetGamepadSensitivity(value);
+        }
+
+        [System.Obsolete("Use MinimumPitch for reading and SetPitchLimits for writing.")]
+        public float minimumPitch
+        {
+            get => _minimumPitch;
+            set => SetPitchLimits(value, _maximumPitch);
+        }
+
+        [System.Obsolete("Use MaximumPitch for reading and SetPitchLimits for writing.")]
+        public float maximumPitch
+        {
+            get => _maximumPitch;
+            set => SetPitchLimits(_minimumPitch, value);
+        }
 
         private void Awake()
         {
@@ -103,44 +158,181 @@ namespace CameraSystem.Runtime
                 DontDestroyOnLoad(persistentRoot.gameObject);
             }
 
-            // 🌟 黄金级自愈修复：寻找真正附带 Unity Camera 组件的 GameObject 并挂载 CinemachineBrain
+            BindCameraComponents();
+
+        }
+
+        private void OnEnable()
+        {
+            AcquireInputAxisProvider();
+        }
+
+        private void OnDisable()
+        {
+            ReleaseInputAxisProvider();
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseInputAxisProvider();
+
+            if (Instance != this)
+                return;
+
+            ClearGlobalReferences();
+        }
+
+        public void SetMouseSensitivity(float value)
+        {
+            _mouseSensitivity = Mathf.Max(0f, value);
+        }
+
+        public void SetGamepadSensitivity(float value)
+        {
+            _gamepadSensitivity = Mathf.Max(0f, value);
+        }
+
+        public void SetPitchLimits(float minimum, float maximum)
+        {
+            if (minimum > maximum)
+                (minimum, maximum) = (maximum, minimum);
+
+            _minimumPitch = minimum;
+            _maximumPitch = maximum;
+            _currentPitch = Mathf.Clamp(_currentPitch, _minimumPitch, _maximumPitch);
+        }
+
+        public void SetOverrideCinemachineInput(bool value)
+        {
+            if (_overrideCinemachineInput == value)
+                return;
+
+            _overrideCinemachineInput = value;
+            if (!isActiveAndEnabled)
+                return;
+
+            if (_overrideCinemachineInput)
+                AcquireInputAxisProvider();
+            else
+                ReleaseInputAxisProvider();
+        }
+
+        public void SetAutoConfigureCameraComponents(bool value)
+        {
+            _autoConfigureCameraComponents = value;
+        }
+
+        public void SetVerboseLogging(bool value)
+        {
+            _verboseLogging = value;
+        }
+
+        private void BindCameraComponents()
+        {
             Camera targetCamera = GetComponentInChildren<Camera>(true);
             if (targetCamera == null)
-            {
                 targetCamera = Camera.main;
-            }
 
             if (targetCamera != null)
             {
-                _brain = targetCamera.GetComponent<CinemachineBrain>();
-                if (_brain == null)
-                {
-                    _brain = targetCamera.gameObject.AddComponent<CinemachineBrain>();
-                }
-                Debug.Log($"<color=#3FB950><b>[CameraManager]</b></color> CinemachineBrain successfully bound to Camera on GameObject: '{targetCamera.gameObject.name}'.");
+                BindCameraComponents(targetCamera);
+                return;
+            }
 
-                // 🌟 Auto-attach URPCameraStackLinker to the Main Camera
-                if (targetCamera.GetComponent<URPCameraStackLinker>() == null)
-                {
-                    targetCamera.gameObject.AddComponent<URPCameraStackLinker>();
-                }
+            _brain = GetComponent<CinemachineBrain>();
+            if (_brain == null && _autoConfigureCameraComponents)
+                _brain = gameObject.AddComponent<CinemachineBrain>();
+
+            if (_brain == null)
+                Debug.LogWarning("<color=#FFCC00><b>[CameraManager]</b></color> No Camera component found and no local CinemachineBrain is available.");
+            else
+                Debug.LogWarning("<color=#FFCC00><b>[CameraManager]</b></color> No Camera component found in children. Bound local CinemachineBrain.");
+        }
+
+        private void BindCameraComponents(Camera targetCamera)
+        {
+            _brain = targetCamera.GetComponent<CinemachineBrain>();
+            if (_brain == null && _autoConfigureCameraComponents)
+                _brain = targetCamera.gameObject.AddComponent<CinemachineBrain>();
+
+            if (_brain == null)
+            {
+                Debug.LogWarning($"<color=#FFCC00><b>[CameraManager]</b></color> Camera '{targetCamera.gameObject.name}' has no CinemachineBrain. Enable Auto Configure Camera Components or add it explicitly.");
             }
             else
             {
-                // Fallback locally
-                _brain = GetComponent<CinemachineBrain>();
-                if (_brain == null)
-                    _brain = gameObject.AddComponent<CinemachineBrain>();
-                Debug.LogWarning("<color=#FFCC00><b>[CameraManager]</b></color> No Camera component found in children. Attached CinemachineBrain locally.");
+                LogVerbose($"CinemachineBrain bound to Camera on GameObject: '{targetCamera.gameObject.name}'.");
             }
 
-            // 核心功能：接管 Cinemachine 所有轴向输入，完美融合鼠标左右键拖拽与手柄右摇杆
-            CinemachineCore.GetInputAxis = CustomInputAxisProvider;
+            if (!_autoConfigureCameraComponents || targetCamera.GetComponent<URPCameraStackLinker>() != null)
+                return;
+
+            targetCamera.gameObject.AddComponent<URPCameraStackLinker>();
+        }
+
+        internal static void LogVerbose(string message)
+        {
+            if (!IsVerboseLoggingEnabled)
+                return;
+
+            Debug.Log($"<color=#3FB950><b>[CameraSystem]</b></color> {message}");
+        }
+
+        private void AcquireInputAxisProvider()
+        {
+            if (!_overrideCinemachineInput || _ownsInputAxisProvider)
+                return;
+
+            _activeInputAxisProvider = CustomInputAxisProvider;
+            if (CinemachineCore.GetInputAxis != null && CinemachineCore.GetInputAxis.Equals(_activeInputAxisProvider))
+            {
+                _ownsInputAxisProvider = true;
+                return;
+            }
+
+            _previousInputAxisProvider = CinemachineCore.GetInputAxis;
+            CinemachineCore.GetInputAxis = _activeInputAxisProvider;
+            _ownsInputAxisProvider = true;
+        }
+
+        private void ReleaseInputAxisProvider()
+        {
+            if (!_ownsInputAxisProvider)
+                return;
+
+            if (CinemachineCore.GetInputAxis != null && CinemachineCore.GetInputAxis.Equals(_activeInputAxisProvider))
+                CinemachineCore.GetInputAxis = _previousInputAxisProvider;
+
+            _previousInputAxisProvider = null;
+            _activeInputAxisProvider = null;
+            _ownsInputAxisProvider = false;
+        }
+
+        internal static void ResetForTests()
+        {
+            if (Instance != null)
+                Instance.ReleaseInputAxisProvider();
+
+            ClearGlobalReferences();
+            OnPlayerRegistered = null;
+            OnPlayerUnregistered = null;
+            OnPostProcessTargetRegistered = null;
+            OnCameraUIRegistered = null;
+            OnCameraUIUnregistered = null;
+        }
+
+        private static void ClearGlobalReferences()
+        {
+            Instance = null;
+            PlayerTransform = null;
+            CameraTargetTransform = null;
+            PostProcessTargetTransform = null;
+            CameraUI = null;
+            Shader.SetGlobalFloat(HasPostProcessTargetId, 0f);
         }
 
         private void Update()
         {
-            // 获取鼠标滚轮增量
             float scroll = 0f;
             if (Mouse.current != null)
             {
@@ -154,15 +346,12 @@ namespace CameraSystem.Runtime
         }
 
         /// <summary>
-        /// 劫持 Cinemachine 对 Mouse/Gamepad 轴的查询，实现高度定制化的 UX
-        /// 支持鼠标按住左右键拖拽旋转相机，并完美融合手柄右摇杆（Right Stick）直接推动旋转相机。
-        /// 🌟 遵循架构设计：作为核心通用模块，本类与高层 Demo 键位资源解耦，零依赖编译。
+        /// Provides mouse and gamepad axis input for Cinemachine without depending on project-level input assets.
         /// </summary>
         private float CustomInputAxisProvider(string axisName)
         {
             float value = 0f;
 
-            // 1. 处理 X 轴水平旋转（融合鼠标 Delta 与手柄右摇杆）
             if (
                 axisName == "Mouse X"
                 || axisName == "Gamepad X"
@@ -172,7 +361,7 @@ namespace CameraSystem.Runtime
             {
                 if (Mouse.current != null)
                 {
-                    // Elden Ring 风格：只有在鼠标指针被锁定时才进行自由环绕旋转（防止呼出UI时相机旋转）
+                    // Only rotate from raw mouse delta while the cursor is captured.
                     if (Cursor.lockState == CursorLockMode.Locked)
                     {
                         value += Mouse.current.delta.x.ReadValue() * 0.05f;
@@ -180,13 +369,11 @@ namespace CameraSystem.Runtime
                 }
                 if (Gamepad.current != null)
                 {
-                    // 🌟 黄金级物理修复：手柄右摇杆为持续率输入，必须乘以 Time.deltaTime 进行帧率无关的平滑传动
-                    value += Gamepad.current.rightStick.x.ReadValue() * 150f * Time.deltaTime;
+                    value += Gamepad.current.rightStick.x.ReadValue() * _gamepadSensitivity * Time.deltaTime;
                 }
                 return value;
             }
 
-            // 2. 处理 Y 轴垂直旋转（融合鼠标 Delta 与手柄右摇杆）
             if (
                 axisName == "Mouse Y"
                 || axisName == "Gamepad Y"
@@ -196,7 +383,7 @@ namespace CameraSystem.Runtime
             {
                 if (Mouse.current != null)
                 {
-                    // Elden Ring 风格：只有在鼠标指针被锁定时才进行自由环绕旋转
+                    // Only rotate from raw mouse delta while the cursor is captured.
                     if (Cursor.lockState == CursorLockMode.Locked)
                     {
                         value += Mouse.current.delta.y.ReadValue() * 0.05f;
@@ -204,8 +391,7 @@ namespace CameraSystem.Runtime
                 }
                 if (Gamepad.current != null)
                 {
-                    // 🌟 黄金级物理修复：手柄右摇杆为持续率输入，必须乘以 Time.deltaTime 进行帧率无关的平滑传动
-                    value += Gamepad.current.rightStick.y.ReadValue() * 150f * Time.deltaTime;
+                    value += Gamepad.current.rightStick.y.ReadValue() * _gamepadSensitivity * Time.deltaTime;
                 }
                 return value;
             }
@@ -214,8 +400,7 @@ namespace CameraSystem.Runtime
         }
 
         /// <summary>
-        /// 类型安全地进行视角拉远拉近 (Zoom)，不再依赖反射。
-        /// 支持 Cinemachine3rdPersonFollow, CinemachineFramingTransposer, 以及 CinemachineTransposer 组件。
+        /// Applies scroll zoom to supported Cinemachine body components without reflection.
         /// </summary>
         private void HandleCameraZoom(float scroll)
         {
@@ -226,7 +411,6 @@ namespace CameraSystem.Runtime
             {
                 if (cam == null) continue;
 
-                // 1. 适配 Cinemachine3rdPersonFollow (v3 风格或 3rdPerson Orbit)
                 var thirdPersonFollow = cam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
                 if (thirdPersonFollow != null)
                 {
@@ -234,7 +418,6 @@ namespace CameraSystem.Runtime
                     thirdPersonFollow.CameraDistance = Mathf.Clamp(dist - scroll * 1.5f, 2f, 30f);
                 }
 
-                // 2. 适配 CinemachineFramingTransposer (2D/3D Framing)
                 var framingTransposer = cam.GetCinemachineComponent<CinemachineFramingTransposer>();
                 if (framingTransposer != null)
                 {
@@ -242,7 +425,6 @@ namespace CameraSystem.Runtime
                     framingTransposer.m_CameraDistance = Mathf.Clamp(dist - scroll * 1.5f, 2f, 30f);
                 }
 
-                // 3. 适配 CinemachineTransposer (Elden Ring 风格常用，如 cm 预制体配置)
                 var transposer = cam.GetCinemachineComponent<CinemachineTransposer>();
                 if (transposer != null)
                 {
@@ -266,10 +448,8 @@ namespace CameraSystem.Runtime
             float yawInput = 0f;
             float pitchInput = 0f;
 
-            // 1. 读取鼠标输入
             if (Mouse.current != null)
             {
-                // Elden Ring 风格：支持鼠标锁定模式或按住鼠标左右键拖拽旋转
                 bool canRotate = Cursor.lockState == CursorLockMode.Locked 
                                  || Mouse.current.leftButton.isPressed 
                                  || Mouse.current.rightButton.isPressed;
@@ -277,29 +457,26 @@ namespace CameraSystem.Runtime
                 if (canRotate)
                 {
                     Vector2 mouseDelta = Mouse.current.delta.ReadValue();
-                    yawInput += mouseDelta.x * mouseSensitivity;
-                    pitchInput += mouseDelta.y * mouseSensitivity;
+                    yawInput += mouseDelta.x * _mouseSensitivity;
+                    pitchInput += mouseDelta.y * _mouseSensitivity;
                 }
             }
 
-            // 2. 读取手柄输入
             if (Gamepad.current != null)
             {
                 Vector2 stickInput = Gamepad.current.rightStick.ReadValue();
                 if (stickInput.sqrMagnitude > 0.001f)
                 {
-                    // 手柄右摇杆为持续率输入，必须乘以 Time.deltaTime 进行帧率无关平滑
-                    yawInput += stickInput.x * gamepadSensitivity * Time.deltaTime;
-                    pitchInput += stickInput.y * gamepadSensitivity * Time.deltaTime;
+                    yawInput += stickInput.x * _gamepadSensitivity * Time.deltaTime;
+                    pitchInput += stickInput.y * _gamepadSensitivity * Time.deltaTime;
                 }
             }
 
-            // 3. 累加角度并限位
             _currentYaw += yawInput;
-            _currentPitch -= pitchInput; // Y轴反向
-            _currentPitch = Mathf.Clamp(_currentPitch, minimumPitch, maximumPitch);
+            _currentPitch -= pitchInput;
+            _currentPitch = Mathf.Clamp(_currentPitch, _minimumPitch, _maximumPitch);
 
-            // 4. 应用到枢纽的绝对世界旋转，保持相对父物体的旋转独立性 (防止角色转动时相机跟着乱转)
+            // Use world rotation so character rotation does not feed back into the orbit pivot.
             _cameraTargetPivot.rotation = Quaternion.Euler(_currentPitch, _currentYaw, 0f);
         }
 
@@ -317,7 +494,7 @@ namespace CameraSystem.Runtime
         }
 
         /// <summary>
-        /// 强制设置所有虚拟相机的目标，目标必须由 CharacterSocketRegistry 提供。
+        /// Sets all virtual cameras to the target resolved from the character socket registry.
         /// </summary>
         public void SetAllTargets(Transform target)
         {
@@ -338,7 +515,6 @@ namespace CameraSystem.Runtime
             PostProcessTargetTransform = CameraTargetResolver.ResolvePostProcessTarget(target);
             OnPostProcessTargetRegistered?.Invoke(PostProcessTargetTransform);
 
-            // 初始化角度
             Vector3 angles = pivot.eulerAngles;
             _currentYaw = angles.y;
             _currentPitch = angles.x;
@@ -352,7 +528,7 @@ namespace CameraSystem.Runtime
                 cam.LookAt = _cameraTargetPivot;
             }
             
-            Debug.Log($"<color=#3FB950><b>[CameraManager]</b></color> All cameras linked to character socket target: '{_cameraTargetPivot.name}' at local {pivot.localPosition}. PostProcessTarget='{PostProcessTargetTransform?.name}'.");
+            LogVerbose($"All cameras linked to character socket target: '{_cameraTargetPivot.name}' at local {pivot.localPosition}. PostProcessTarget='{PostProcessTargetTransform?.name}'.");
         }
     }
 }

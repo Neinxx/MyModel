@@ -50,7 +50,11 @@ namespace CharacterPostProcess.Runtime
             [Range(0f, 1f)] public float outlineNormalThreshold = 0.4f;
 
             public bool IsActive =>
-                bloomIntensity > 0f || characterColorBoost > 0f || edgeGlowIntensity > 0f || debugStencil;
+                bloomIntensity > 0f ||
+                characterColorBoost > 0f ||
+                edgeGlowIntensity > 0f ||
+                outlineIntensity > 0f ||
+                debugStencil;
 
             public RuntimeSettings ResolveRuntimeSettings()
             {
@@ -90,8 +94,6 @@ namespace CharacterPostProcess.Runtime
             public readonly float edgeGlowIntensity;
             public readonly float bloomThreshold;
             public readonly Color bloomTint;
-
-            public bool IsActive => bloomIntensity > 0f || characterColorBoost > 0f || edgeGlowIntensity > 0f;
 
             public RuntimeSettings(
                 int downsample,
@@ -137,7 +139,7 @@ namespace CharacterPostProcess.Runtime
                 return;
 
             var runtimeSettings = settings.ResolveRuntimeSettings();
-            if (!runtimeSettings.IsActive && !settings.debugStencil)
+            if (!settings.IsActive)
                 return;
 
             EnsureResources();
@@ -244,6 +246,7 @@ namespace CharacterPostProcess.Runtime
         public static readonly int OutlineThickness = Shader.PropertyToID("_CharacterOutlineThickness");
         public static readonly int OutlineDepthThreshold = Shader.PropertyToID("_CharacterOutlineDepthThreshold");
         public static readonly int OutlineNormalThreshold = Shader.PropertyToID("_CharacterOutlineNormalThreshold");
+        public static readonly int BlitTexture = Shader.PropertyToID("_BlitTexture");
     }
 
     internal static class CharacterPostProcessRtUtility
@@ -278,6 +281,7 @@ namespace CharacterPostProcess.Runtime
         private RTHandle _characterMask;
         private RTHandle _characterMaskResolved;
         private RTHandle _cameraDepth;
+        private RenderStateBlock _stateBlock;
 
         public RTHandle CharacterMask =>
             (_characterMaskResolved != null && _characterMask != null && _characterMask.rt.descriptor.msaaSamples > 1)
@@ -291,6 +295,10 @@ namespace CharacterPostProcess.Runtime
             _shaderTagIds = new List<ShaderTagId>
             {
                 new ShaderTagId("CharacterMask")
+            };
+            _stateBlock = new RenderStateBlock(RenderStateMask.Depth)
+            {
+                depthState = new DepthState(false, CompareFunction.LessEqual)
             };
         }
 
@@ -353,16 +361,11 @@ namespace CharacterPostProcess.Runtime
                 var sortFlags = renderingData.cameraData.defaultOpaqueSortFlags;
                 var drawSettings = CreateDrawingSettings(_shaderTagIds[0], ref renderingData, sortFlags);
 
-                var stateBlock = new RenderStateBlock(RenderStateMask.Depth)
-                {
-                    depthState = new DepthState(false, CompareFunction.LessEqual)
-                };
-
-                context.DrawRenderers(renderingData.cullResults, ref drawSettings, ref _filteringSettings, ref stateBlock);
+                context.DrawRenderers(renderingData.cullResults, ref drawSettings, ref _filteringSettings, ref _stateBlock);
 
                 if (_characterMaskResolved != null && _characterMask.rt.descriptor.msaaSamples > 1)
                 {
-                    cmd.Blit(_characterMask, _characterMaskResolved);
+                    Blitter.BlitCameraTexture(cmd, _characterMask, _characterMaskResolved);
                 }
 
                 cmd.SetGlobalTexture(CharacterPostProcessIds.CharacterMaskTex, CharacterMask);
@@ -433,7 +436,7 @@ namespace CharacterPostProcess.Runtime
                 CoreUtils.SetRenderTarget(cmd, _characterColor);
                 cmd.ClearRenderTarget(false, true, Color.clear);
                 
-                cmd.SetGlobalTexture("_BlitTexture", _cameraColor);
+                cmd.SetGlobalTexture(CharacterPostProcessIds.BlitTexture, _cameraColor);
                 cmd.SetGlobalTexture(CharacterPostProcessIds.CharacterMaskTex, _maskPass.CharacterMask);
                 cmd.DrawProcedural(Matrix4x4.identity, _material, 0, MeshTopology.Triangles, 3);
             }
@@ -461,6 +464,7 @@ namespace CharacterPostProcess.Runtime
         private float _blurRadius = 1.25f;
         private float _bloomThreshold = 0.65f;
         private Color _bloomTint = Color.white;
+        private Vector4 _blurTexelSize;
 
         public void Setup(
             Material material,
@@ -497,6 +501,11 @@ namespace CharacterPostProcess.Runtime
 
             RenderingUtils.ReAllocateIfNeeded(ref _ping, desc, FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_CharacterPostProcess_BloomPing");
             RenderingUtils.ReAllocateIfNeeded(ref _pong, desc, FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_CharacterPostProcess_BloomPong");
+
+            _blurTexelSize.x = 1f / desc.width;
+            _blurTexelSize.y = 1f / desc.height;
+            _blurTexelSize.z = 0f;
+            _blurTexelSize.w = 0f;
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -513,7 +522,7 @@ namespace CharacterPostProcess.Runtime
 
                 cmd.SetGlobalVector(
                     CharacterPostProcessIds.BlurTexelSize,
-                    new Vector4(1f / _ping.rt.width, 1f / _ping.rt.height, 0f, 0f)
+                    _blurTexelSize
                 );
 
                 Blitter.BlitCameraTexture(cmd, _extractPass.CharacterColor, _ping, _material, 1);
@@ -586,7 +595,7 @@ namespace CharacterPostProcess.Runtime
         {
             if (_outlineIntensity > 0f)
             {
-                ConfigureInput(ScriptableRenderPassInput.Depth);
+                ConfigureInput(ScriptableRenderPassInput.Depth | ScriptableRenderPassInput.Normal);
             }
         }
 
@@ -635,12 +644,12 @@ namespace CharacterPostProcess.Runtime
                     Blitter.BlitCameraTexture(cmd, _cameraColor, _tempColor);
 
                     // 2. Render the dimmed grayscale background onto _cameraColor
-                    cmd.SetGlobalTexture("_BlitTexture", _tempColor);
+                    cmd.SetGlobalTexture(CharacterPostProcessIds.BlitTexture, _tempColor);
                     CoreUtils.SetRenderTarget(cmd, _cameraColor, _cameraDepth);
                     cmd.DrawProcedural(Matrix4x4.identity, _material, 5, MeshTopology.Triangles, 3);
 
                     // 3. Render the neon cyan highlights onto _cameraColor using the stable character mask.
-                    cmd.SetGlobalTexture("_BlitTexture", _tempColor);
+                    cmd.SetGlobalTexture(CharacterPostProcessIds.BlitTexture, _tempColor);
                     CoreUtils.SetRenderTarget(cmd, _cameraColor, _cameraDepth);
                     cmd.DrawProcedural(Matrix4x4.identity, _material, 6, MeshTopology.Triangles, 3);
                 }

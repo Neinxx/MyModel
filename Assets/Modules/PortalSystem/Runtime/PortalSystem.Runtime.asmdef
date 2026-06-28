@@ -1,9 +1,7 @@
 {
     "name": "PortalSystem.Runtime",
     "rootNamespace": "PortalSystem.Runtime",
-    "references": [
-        "InteractionSystem.Runtime"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

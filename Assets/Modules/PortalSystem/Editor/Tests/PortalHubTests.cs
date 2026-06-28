@@ -57,8 +57,7 @@ namespace PortalSystem.Tests
             var go = new GameObject("PortalHubTest");
             _spawnedObjects.Add(go);
             var portal = go.AddComponent<PortalHub>();
-            portal.targetLevelName = "LevelA";
-            portal.targetSpawnPointID = "SpawnA";
+            portal.ConfigureDestination("LevelA", "SpawnA");
 
             string receivedLevel = null;
             string receivedSpawn = null;
@@ -83,8 +82,7 @@ namespace PortalSystem.Tests
             var go = new GameObject("PortalHubTest");
             _spawnedObjects.Add(go);
             var portal = go.AddComponent<PortalHub>();
-            portal.targetLevelName = "";
-            portal.targetSpawnPointID = "SpawnA";
+            portal.ConfigureDestination("", "SpawnA");
 
             bool isFired = false;
             portal.OnPortalTriggeredAction += (level, spawn) =>
@@ -109,8 +107,7 @@ namespace PortalSystem.Tests
             var go = new GameObject("PortalHubTest");
             _spawnedObjects.Add(go);
             var portal = go.AddComponent<PortalHub>();
-            portal.targetLevelName = "LevelB";
-            portal.targetSpawnPointID = "SpawnB";
+            portal.ConfigureDestination("LevelB", "SpawnB");
 
             bool isFired = false;
             portal.OnPortalTriggeredAction += (level, spawn) =>

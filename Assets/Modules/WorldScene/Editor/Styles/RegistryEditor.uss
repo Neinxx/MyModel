@@ -26,6 +26,41 @@
     background-color: #2EA043;
 }
 
+.registry-status {
+    flex-direction: row;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-top-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.registry-status-item {
+    flex-grow: 1;
+}
+
+.registry-status-label {
+    font-size: 9px;
+    opacity: 0.55;
+}
+
+.registry-status-value {
+    margin-top: 2px;
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.registry-status-warning {
+    color: #F85149;
+}
+
+.registry-status-ok {
+    color: #3FB950;
+}
+
 .level-item {
     padding: 5px;
     border-bottom-width: 1px;

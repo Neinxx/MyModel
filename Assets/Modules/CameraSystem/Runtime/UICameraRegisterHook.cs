@@ -3,12 +3,11 @@ using UnityEngine;
 namespace CameraSystem.Runtime
 {
     /// <summary>
-    /// UI 摄像机自发现注册钩子 (UI Camera Register Hook)
-    /// 挂载于 UI 摄像机上，在启用/禁用时自动向 CameraManager 进行注册/注销，实现 100% 优雅去耦。
+    /// Registers this camera as the active UI camera while the component is enabled.
     /// </summary>
     [RequireComponent(typeof(Camera))]
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(-190)] // 在常规 UIManager 或 Canvas 唤醒前，提早完成摄像机注册
+    [DefaultExecutionOrder(-190)]
     public class UICameraRegisterHook : MonoBehaviour
     {
         private Camera _camera;

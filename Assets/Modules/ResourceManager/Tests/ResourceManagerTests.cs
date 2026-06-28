@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace ResourceManagerModule.Tests
         {
             _mockAsset = new GameObject("TestMockAsset");
             DirectRefProvider.Clear();
+            ResourceManager.VerboseLogging = false;
+            ResourceManager.EnableResourcesFallback = true;
             ResourceManager.ClearAll();
         }
 
@@ -29,6 +32,8 @@ namespace ResourceManagerModule.Tests
                 UnityEngine.Object.DestroyImmediate(_mockAsset);
             }
             DirectRefProvider.Clear();
+            ResourceManager.VerboseLogging = false;
+            ResourceManager.EnableResourcesFallback = true;
             ResourceManager.ClearAll();
         }
 
@@ -62,7 +67,6 @@ namespace ResourceManagerModule.Tests
         {
             DirectRefProvider.RegisterAsset("ConcurrentKey", _mockAsset);
 
-            // 🚀 同时启动两个加载任务，不等待第一个完成，以测试并发加载合并机制
             var loadTask1 = ResourceManager.LoadAsync<GameObject>("ConcurrentKey");
             var loadTask2 = ResourceManager.LoadAsync<GameObject>("ConcurrentKey");
 
@@ -89,7 +93,6 @@ namespace ResourceManagerModule.Tests
             yield return new WaitUntil(() => loadTask.IsCompleted);
             var handle = loadTask.Result;
 
-            // 🚀 尝试用错误的类型 (比如 Texture2D) 来加载已缓存为 GameObject 的相同 Key 资源，应抛出类型不匹配异常
             var badTask = ResourceManager.LoadAsync<Texture2D>("TypeMismatchKey");
             yield return new WaitUntil(() => badTask.IsCompleted);
 
@@ -114,6 +117,63 @@ namespace ResourceManagerModule.Tests
             ResourceManager.ClearAll();
 
             Assert.AreEqual(0, ResourceManager.GetDebugRefCount("TeardownKey"), "ClearAll 之后缓存应该被清空，引用计数应归 0");
+        }
+
+        [UnityTest]
+        public IEnumerator Test_Load_UsesSameProviderForUnload()
+        {
+            var provider = new CountingProvider("ProviderBindingKey", _mockAsset);
+            ResourceManager.RegisterProviderBefore<ResourcesProvider>(provider);
+
+            var loadTask = ResourceManager.LoadAsync<GameObject>("ProviderBindingKey");
+            yield return new WaitUntil(() => loadTask.IsCompleted);
+
+            var handle = loadTask.Result;
+            handle.Dispose();
+
+            Assert.AreEqual(1, provider.UnloadCount);
+            ResourceManager.UnregisterProvider(provider);
+        }
+
+        [UnityTest]
+        public IEnumerator Test_StrictMode_MissingKeyFailsBeforeResourcesFallback()
+        {
+            ResourceManager.EnableResourcesFallback = false;
+
+            var loadTask = ResourceManager.LoadAsync<GameObject>("MissingStrictKey");
+            yield return new WaitUntil(() => loadTask.IsCompleted);
+
+            Assert.IsTrue(loadTask.IsFaulted);
+            Assert.IsInstanceOf<KeyNotFoundException>(loadTask.Exception.InnerException);
+        }
+
+        private sealed class CountingProvider : IResourceProvider
+        {
+            private readonly string _key;
+            private readonly GameObject _asset;
+
+            public CountingProvider(string key, GameObject asset)
+            {
+                _key = key;
+                _asset = asset;
+            }
+
+            public int UnloadCount { get; private set; }
+
+            public Task<T> LoadAssetAsync<T>(string key) where T : UnityEngine.Object
+            {
+                return Task.FromResult(_asset as T);
+            }
+
+            public void UnloadAsset(string key)
+            {
+                UnloadCount++;
+            }
+
+            public bool CanLoad(string key)
+            {
+                return key == _key;
+            }
         }
     }
 }

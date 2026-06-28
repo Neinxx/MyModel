@@ -33,8 +33,7 @@ namespace Tests.Runtime
             col.size = new Vector3(2f, 2f, 2f);
 
             _portalHub = _portalGo.AddComponent<PortalHub>();
-            _portalHub.targetLevelName = "TestTargetLevel";
-            _portalHub.targetSpawnPointID = "TestTargetSpawn";
+            _portalHub.ConfigureDestination("TestTargetLevel", "TestTargetSpawn");
             
             // Subscribe to portal event
             _portalHub.OnPortalTriggeredAction += HandlePortalTriggered;

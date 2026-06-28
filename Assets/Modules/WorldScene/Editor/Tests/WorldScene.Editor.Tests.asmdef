@@ -1,0 +1,25 @@
+{
+    "name": "WorldScene.Editor.Tests",
+    "rootNamespace": "WorldSceneModule.Tests",
+    "references": [
+        "WorldScene.Runtime",
+        "WorldScene.Editor",
+        "UniTask"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

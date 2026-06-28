@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -12,6 +11,9 @@ namespace WorldSceneModule.Editor
     public class LevelRegistryEditor : UnityEditor.Editor
     {
         private VisualElement _root;
+        private Label _scenesStatusLabel;
+        private Label _registeredStatusLabel;
+        private Label _buildMissingStatusLabel;
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -24,12 +26,17 @@ namespace WorldSceneModule.Editor
             if (uss != null)
                 _root.styleSheets.Add(uss);
 
+            _scenesStatusLabel = _root.Q<Label>("status-scenes");
+            _registeredStatusLabel = _root.Q<Label>("status-registered");
+            _buildMissingStatusLabel = _root.Q<Label>("status-build-missing");
+
             var syncBtn = _root.Q<Button>("sync-btn");
             if (syncBtn != null)
             {
                 syncBtn.clicked += SmartSync;
             }
 
+            RefreshStatus();
             return _root;
         }
 
@@ -46,19 +53,48 @@ namespace WorldSceneModule.Editor
                 return;
             }
 
-            SyncRegistry(registry);
+            var syncPlan = BuildSyncPlan(registry);
+            if (!ConfirmSync(syncPlan))
+            {
+                return;
+            }
+
+            ApplySyncPlan(registry, syncPlan);
+            RefreshStatus();
         }
 
-        /// <summary>
-        /// 关卡注册表核心装配与资产绑定引擎 (Headless-safe Sync Engine)
-        /// 可从编辑器 UI 或自动化构建管线中无感静默调用
-        /// </summary>
         public static void SyncRegistry(LevelRegistry registry)
         {
             if (registry == null || registry.scenesRootFolder == null) return;
 
+            ApplySyncPlan(registry, BuildSyncPlan(registry));
+        }
+
+        public static WorldSceneRegistrySyncPlan BuildSyncPlan(LevelRegistry registry)
+        {
+            if (registry == null || registry.scenesRootFolder == null)
+            {
+                return WorldSceneRegistrySyncPlan.FromScenePaths(null);
+            }
+
             string rootPath = AssetDatabase.GetAssetPath(registry.scenesRootFolder);
             string[] guids = AssetDatabase.FindAssets("t:SceneAsset", new[] { rootPath });
+            var scenePaths = new List<string>();
+            foreach (var guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!string.IsNullOrEmpty(path))
+                {
+                    scenePaths.Add(path);
+                }
+            }
+
+            return WorldSceneRegistrySyncPlan.FromScenePaths(scenePaths);
+        }
+
+        private static void ApplySyncPlan(LevelRegistry registry, WorldSceneRegistrySyncPlan syncPlan)
+        {
+            if (registry == null) return;
 
             registry.levels.Clear();
             if (registry.persistentWorldAsset != null)
@@ -66,25 +102,17 @@ namespace WorldSceneModule.Editor
                 registry.cachedPersistentWorldPath = AssetDatabase.GetAssetPath(registry.persistentWorldAsset);
             }
 
-            foreach (var guid in guids)
+            foreach (var item in syncPlan.Items)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                string name = Path.GetFileNameWithoutExtension(path);
-                var asset = AssetDatabase.LoadAssetAtPath<SceneAsset>(path);
-
-                // 🚀 自动寻获并装配聚合模块数据容器 (LevelModuleData)
-                string sceneDir = Path.GetDirectoryName(path).Replace("\\", "/");
-                string moduleDataPath = $"{sceneDir}/{name}_LevelModuleData.asset";
-                var moduleData = AssetDatabase.LoadAssetAtPath<LevelModuleData>(moduleDataPath);
+                var asset = AssetDatabase.LoadAssetAtPath<SceneAsset>(item.ScenePath);
+                var moduleData = AssetDatabase.LoadAssetAtPath<LevelModuleData>(item.ModuleDataPath);
                 if (moduleData == null)
                 {
                     moduleData = ScriptableObject.CreateInstance<LevelModuleData>();
-                    AssetDatabase.CreateAsset(moduleData, moduleDataPath);
+                    AssetDatabase.CreateAsset(moduleData, item.ModuleDataPath);
                 }
 
-                // 自动寻获当前关场景同目录下的贴花数据，如果存在且未赋值，则自动关联
-                string decalDataPath = $"{sceneDir}/{name}_DecalLevelData.asset";
-                var decalData = AssetDatabase.LoadAssetAtPath<ScriptableObject>(decalDataPath);
+                var decalData = AssetDatabase.LoadAssetAtPath<ScriptableObject>(item.DecalDataPath);
                 if (decalData != null)
                 {
                     moduleData.RegisterSubData(decalData);
@@ -94,18 +122,96 @@ namespace WorldSceneModule.Editor
                 registry.levels.Add(
                     new LevelConfig
                     {
-                        levelName = name,
+                        levelName = item.LevelName,
                         sceneAsset = asset,
                         moduleData = moduleData,
-                        cachedScenePath = path,
+                        cachedScenePath = item.ScenePath,
                     }
                 );
             }
 
             EditorUtility.SetDirty(registry);
             AssetDatabase.SaveAssets();
-            Debug.Log(
-                $"<color=#3FB950><b>[WorldScene]</b></color> Smart Sync Complete. Found {registry.levels.Count} scenes."
+            WarnMissingBuildSettingsScenes(registry);
+            Debug.Log($"[WorldScene] Synced registry. Found {registry.levels.Count} scenes.");
+        }
+
+        private static bool ConfirmSync(WorldSceneRegistrySyncPlan syncPlan)
+        {
+            int sceneCount = syncPlan.Items.Count;
+            int newModuleDataCount = CountMissingModuleDataAssets(syncPlan);
+            string message =
+                $"Scenes found: {sceneCount}\n" +
+                $"New LevelModuleData assets: {newModuleDataCount}\n\n" +
+                "The registry entries will be rebuilt from the selected Scenes Root folder.";
+
+            return EditorUtility.DisplayDialog(
+                "Sync World Scene Registry",
+                message,
+                "Sync",
+                "Cancel"
+            );
+        }
+
+        private static int CountMissingModuleDataAssets(WorldSceneRegistrySyncPlan syncPlan)
+        {
+            int count = 0;
+            foreach (var item in syncPlan.Items)
+            {
+                if (!string.IsNullOrEmpty(item.ModuleDataPath) &&
+                    AssetDatabase.LoadAssetAtPath<LevelModuleData>(item.ModuleDataPath) == null)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private void RefreshStatus()
+        {
+            var registry = target as LevelRegistry;
+            var syncPlan = BuildSyncPlan(registry);
+            int registeredCount = registry?.levels?.Count ?? 0;
+            int buildMissingCount = registry == null
+                ? 0
+                : WorldSceneBuildSettingsValidator.FindMissingScenePaths(
+                    registry,
+                    WorldSceneBuildSettingsValidator.GetEnabledBuildScenePaths()
+                ).Count;
+
+            SetStatusLabel(_scenesStatusLabel, syncPlan.Items.Count.ToString(), false);
+            SetStatusLabel(_registeredStatusLabel, registeredCount.ToString(), false);
+            SetStatusLabel(_buildMissingStatusLabel, buildMissingCount.ToString(), buildMissingCount > 0);
+        }
+
+        private static void SetStatusLabel(Label label, string text, bool isWarning)
+        {
+            if (label == null)
+            {
+                return;
+            }
+
+            label.text = text;
+            label.RemoveFromClassList("registry-status-ok");
+            label.RemoveFromClassList("registry-status-warning");
+            label.AddToClassList(isWarning ? "registry-status-warning" : "registry-status-ok");
+        }
+
+        private static void WarnMissingBuildSettingsScenes(LevelRegistry registry)
+        {
+            var missingPaths = WorldSceneBuildSettingsValidator.FindMissingScenePaths(
+                registry,
+                WorldSceneBuildSettingsValidator.GetEnabledBuildScenePaths()
+            );
+            if (missingPaths.Count == 0)
+            {
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[WorldScene] {missingPaths.Count} registered scenes are not enabled in Build Settings:\n" +
+                string.Join("\n", missingPaths)
             );
         }
     }

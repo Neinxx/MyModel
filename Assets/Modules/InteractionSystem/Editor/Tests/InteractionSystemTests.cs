@@ -74,20 +74,10 @@ namespace InteractionSystem.Tests
             unInteractable.PriorityValue = 200;
             unInteractable.CanInteract = false;
 
-            // Use reflection to mock the private hits array
-            var hitsField = typeof(ProximityInteractor).GetField("_hits", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Assert.IsNotNull(hitsField, "ProximityInteractor should have a private _hits field");
-            
-            Collider[] hits = (Collider[])hitsField.GetValue(interactor);
-            hits[0] = lowCol;
-            hits[1] = highCol;
-            hits[2] = unCol;
+            var hits = new[] { lowCol, highCol, unCol };
 
-            // 2. Execute: Call the private FindBestInteractable method using reflection
-            var findMethod = typeof(ProximityInteractor).GetMethod("FindBestInteractable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Assert.IsNotNull(findMethod, "ProximityInteractor should have a private FindBestInteractable method");
-
-            var best = (IInteractable)findMethod.Invoke(interactor, new object[] { 3 });
+            // 2. Execute
+            var best = interactor.FindBestInteractable(hits, hits.Length);
 
             // 3. Verify: Check that the highest priority interactable (highInteractable) is selected, and uninteractable is ignored
             Assert.AreEqual(highInteractable, best, "ProximityInteractor failed to select the highest priority active interactable");
@@ -96,7 +86,6 @@ namespace InteractionSystem.Tests
         [Test]
         public void ProximityInteractor_OnScanAndInteract_ExecutesInteractionOnBestTarget()
         {
-            // 1. Setup
             var interactorGo = new GameObject("InteractorActor");
             _spawnedObjects.Add(interactorGo);
             var interactor = interactorGo.AddComponent<ProximityInteractor>();
@@ -107,20 +96,85 @@ namespace InteractionSystem.Tests
             var interactable = targetGo.AddComponent<MockInteractable>();
             interactable.PriorityValue = 50;
 
-            // Populate hits array manually via reflection
-            var hitsField = typeof(ProximityInteractor).GetField("_hits", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Collider[] hits = (Collider[])hitsField.GetValue(interactor);
-            hits[0] = col;
+            var hits = new[] { col };
 
-            // 2. Execute: Call the private ScanAndInteract method using reflection
-            var scanMethod = typeof(ProximityInteractor).GetMethod("ScanAndInteract", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            Assert.IsNotNull(scanMethod, "ProximityInteractor should have a private ScanAndInteract method");
+            bool didInteract = interactor.TryInteract(hits, hits.Length);
 
-            scanMethod.Invoke(interactor, null);
-
-            // 3. Verify
+            Assert.IsTrue(didInteract, "Interactor did not report a successful interaction");
             Assert.IsTrue(interactable.HasInteracted, "Best target was not interacted with during proximity scanning");
             Assert.AreEqual(interactorGo, interactable.Interactor, "Interaction was triggered with the wrong interactor reference");
+        }
+
+        [Test]
+        public void ProximityInteractor_InteractCurrent_UsesScannedTarget()
+        {
+            var interactorGo = new GameObject("InteractorActor");
+            _spawnedObjects.Add(interactorGo);
+            var interactor = interactorGo.AddComponent<ProximityInteractor>();
+
+            var targetGo = new GameObject("TargetActive");
+            _spawnedObjects.Add(targetGo);
+            var col = targetGo.AddComponent<BoxCollider>();
+            var interactable = targetGo.AddComponent<MockInteractable>();
+
+            var target = interactor.FindBestInteractable(new[] { col }, 1);
+            interactor.TryInteract(new[] { col }, 1);
+
+            Assert.AreEqual(interactable, target);
+            Assert.AreEqual(interactable, interactor.CurrentInteractable);
+            Assert.IsTrue(interactable.HasInteracted);
+        }
+
+        [Test]
+        public void ProximityInteractor_AutoTriggerDisabled_DoesNotBlockManualInteraction()
+        {
+            var interactorGo = new GameObject("InteractorActor");
+            _spawnedObjects.Add(interactorGo);
+            var interactor = interactorGo.AddComponent<ProximityInteractor>();
+            interactor.SetAutoTrigger(false);
+
+            var targetGo = new GameObject("TargetActive");
+            _spawnedObjects.Add(targetGo);
+            var col = targetGo.AddComponent<BoxCollider>();
+            var interactable = targetGo.AddComponent<MockInteractable>();
+
+            bool didInteract = interactor.TryInteract(new[] { col }, 1);
+
+            Assert.IsTrue(didInteract);
+            Assert.IsTrue(interactable.HasInteracted);
+        }
+
+        [Test]
+        public void ProximityInteractor_TargetChanged_FiresWhenCurrentTargetChanges()
+        {
+            var interactorGo = new GameObject("InteractorActor");
+            _spawnedObjects.Add(interactorGo);
+            var interactor = interactorGo.AddComponent<ProximityInteractor>();
+
+            var targetGo = new GameObject("TargetActive");
+            _spawnedObjects.Add(targetGo);
+            var col = targetGo.AddComponent<BoxCollider>();
+            var interactable = targetGo.AddComponent<MockInteractable>();
+
+            IInteractable receivedTarget = null;
+            interactor.TargetChanged += target => receivedTarget = target;
+
+            interactor.TryInteract(new[] { col }, 1);
+
+            Assert.AreEqual(interactable, receivedTarget);
+            Assert.IsTrue(interactor.HasTarget);
+        }
+
+        [Test]
+        public void ProximityInteractor_FindBestInteractable_ReturnsNullForEmptyHits()
+        {
+            var interactorGo = new GameObject("InteractorActor");
+            _spawnedObjects.Add(interactorGo);
+            var interactor = interactorGo.AddComponent<ProximityInteractor>();
+
+            var best = interactor.FindBestInteractable(System.Array.Empty<Collider>(), 0);
+
+            Assert.IsNull(best);
         }
     }
 }

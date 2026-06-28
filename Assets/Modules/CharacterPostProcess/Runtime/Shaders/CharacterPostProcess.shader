@@ -27,6 +27,8 @@ Shader "Hidden/CharacterPostProcess/Composite"
         #if defined(_CHARACTER_OUTLINE_ON)
             TEXTURE2D_X_FLOAT(_CameraDepthTexture);
             SAMPLER(sampler_CameraDepthTexture);
+            TEXTURE2D_X_FLOAT(_CameraNormalsTexture);
+            SAMPLER(sampler_CameraNormalsTexture);
         #endif
 
         float _CharacterOutlineIntensity;
@@ -197,8 +199,14 @@ Shader "Hidden/CharacterPostProcess/Composite"
                     float depthEdge = abs(LinearEyeDepth(d0, _ZBufferParams) - LinearEyeDepth(d1, _ZBufferParams)) +
                         abs(LinearEyeDepth(d2, _ZBufferParams) - LinearEyeDepth(d3, _ZBufferParams));
 
+                    float3 n0 = SAMPLE_TEXTURE2D_X(_CameraNormalsTexture, sampler_CameraNormalsTexture, uv - deltaX - deltaY).rgb;
+                    float3 n1 = SAMPLE_TEXTURE2D_X(_CameraNormalsTexture, sampler_CameraNormalsTexture, uv + deltaX + deltaY).rgb;
+                    float3 n2 = SAMPLE_TEXTURE2D_X(_CameraNormalsTexture, sampler_CameraNormalsTexture, uv + deltaX - deltaY).rgb;
+                    float3 n3 = SAMPLE_TEXTURE2D_X(_CameraNormalsTexture, sampler_CameraNormalsTexture, uv - deltaX + deltaY).rgb;
+                    float normalEdge = step(_CharacterOutlineNormalThreshold, length(n0 - n1) + length(n2 - n3));
+
                     float innerRegion = centerMask * erodedMask;
-                    float screenInnerEdge = step(_CharacterOutlineDepthThreshold, depthEdge) * innerRegion;
+                    float screenInnerEdge = max(step(_CharacterOutlineDepthThreshold, depthEdge), normalEdge) * innerRegion;
 
                     float edge = saturate(outsideEdge + max(maskInnerEdge, screenInnerEdge)) * _CharacterOutlineIntensity;
                     

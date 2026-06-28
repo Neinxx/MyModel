@@ -10,18 +10,17 @@ namespace UISystem.Editor
 {
     public static class UIRootGenerator
     {
-        public const string DefaultPrefabPath = "Assets/Demo/Art/Prefabs/UIRoot.prefab";
+        public const string DefaultPrefabPath = "Assets/Modules/UISystem/Prefabs/UIRoot.prefab";
 
-        [MenuItem("GameObject/UI System/UIRoot (AAA Standard)", false, 11)]
+        [MenuItem("GameObject/UI System/UIRoot", false, 11)]
         public static void GenerateUIRoot(MenuCommand menuCommand)
         {
-            RemoveSceneEventSystems();
-            GameObject rootObj = CreateUIRoot("UIRoot", true);
+            GameObject rootObj = CreateUIRoot("UIRoot", true, true);
 
-            Undo.RegisterCreatedObjectUndo(rootObj, "Create AAA UIRoot");
+            Undo.RegisterCreatedObjectUndo(rootObj, "Create UIRoot");
             Selection.activeGameObject = rootObj;
             
-            Debug.Log("<color=#3FB950><b>[UIRootGenerator]</b></color> Successfully generated AAA Standard UIRoot scene instance!");
+            Debug.Log("[UIRootGenerator] Created UIRoot scene instance.");
         }
 
         [MenuItem("Tools/UI System/Generate UIRoot Prefab", false, 20)]
@@ -40,19 +39,14 @@ namespace UISystem.Editor
 
             EnsureAssetFolder(prefabPath);
 
-            GameObject rootObj = CreateUIRoot(Path.GetFileNameWithoutExtension(prefabPath), false);
+            GameObject rootObj = CreateUIRoot(Path.GetFileNameWithoutExtension(prefabPath), false, false);
             try
             {
                 GameObject prefab = PrefabUtility.SaveAsPrefabAsset(rootObj, prefabPath);
-                SetSerializedStringIfAssetExists(
-                    "Assets/Demo/Mainboard/Data/UIRootFeature.asset",
-                    "uiRootKey",
-                    prefabPath
-                );
 
                 AssetDatabase.SaveAssets();
                 Selection.activeObject = prefab;
-                Debug.Log($"<color=#3FB950><b>[UIRootGenerator]</b></color> Successfully generated UIRoot prefab: {prefabPath}");
+                Debug.Log($"[UIRootGenerator] Generated UIRoot prefab: {prefabPath}");
                 return prefab;
             }
             finally
@@ -61,16 +55,13 @@ namespace UISystem.Editor
             }
         }
 
-        private static GameObject CreateUIRoot(string rootName, bool includeUICamera)
+        private static GameObject CreateUIRoot(string rootName, bool includeUICamera, bool skipEventSystemIfSceneHasOne)
         {
-            // 1. Create Root Object
             GameObject rootObj = new GameObject(string.IsNullOrWhiteSpace(rootName) ? "UIRoot" : rootName);
             var uiManager = rootObj.AddComponent<UIManager>();
 
-            // 2. Optional embedded UICamera for scene-only quick setup.
             Camera uiCamera = includeUICamera ? CreateUICamera(rootObj.transform) : null;
 
-            // 3. Create Canvas
             GameObject canvasObj = new GameObject("UI_Canvas");
             canvasObj.layer = GetUILayer();
             canvasObj.transform.SetParent(rootObj.transform, false);
@@ -88,14 +79,13 @@ namespace UISystem.Editor
 
             canvasObj.AddComponent<GraphicRaycaster>();
 
-            // 4. Create Layers
-            uiManager.backgroundLayer = CreateLayer("1_BackgroundLayer", canvasObj.transform);
-            uiManager.hudLayer = CreateLayer("2_HUDLayer", canvasObj.transform);
-            uiManager.mainPanelLayer = CreateLayer("3_MainPanelLayer", canvasObj.transform);
-            uiManager.popupLayer = CreateLayer("4_PopupLayer", canvasObj.transform);
-            uiManager.toastLayer = CreateLayer("5_ToastLayer", canvasObj.transform);
-            uiManager.systemLayer = CreateLayer("6_SystemLayer", canvasObj.transform);
-            CreateEventSystem(rootObj.transform);
+            uiManager.SetLayer(UILayerType.Background, CreateLayer("1_BackgroundLayer", canvasObj.transform));
+            uiManager.SetLayer(UILayerType.HUD, CreateLayer("2_HUDLayer", canvasObj.transform));
+            uiManager.SetLayer(UILayerType.MainPanel, CreateLayer("3_MainPanelLayer", canvasObj.transform));
+            uiManager.SetLayer(UILayerType.Popup, CreateLayer("4_PopupLayer", canvasObj.transform));
+            uiManager.SetLayer(UILayerType.Toast, CreateLayer("5_ToastLayer", canvasObj.transform));
+            uiManager.SetLayer(UILayerType.System, CreateLayer("6_SystemLayer", canvasObj.transform));
+            CreateEventSystem(rootObj.transform, skipEventSystemIfSceneHasOne);
 
             return rootObj;
         }
@@ -114,8 +104,6 @@ namespace UISystem.Editor
             uiCamera.farClipPlane = 100;
             uiCamera.allowHDR = false;
             uiCamera.allowMSAA = false;
-
-            camObj.AddComponent<CameraSystem.Runtime.UICameraRegisterHook>();
             return uiCamera;
         }
 
@@ -134,8 +122,11 @@ namespace UISystem.Editor
             return rect;
         }
 
-        private static GameObject CreateEventSystem(Transform parent)
+        private static GameObject CreateEventSystem(Transform parent, bool skipIfSceneHasOne)
         {
+            if (skipIfSceneHasOne && Object.FindFirstObjectByType<EventSystem>() != null)
+                return null;
+
             GameObject eventSystemObj = new GameObject("EventSystem");
             eventSystemObj.transform.SetParent(parent, false);
 
@@ -144,21 +135,6 @@ namespace UISystem.Editor
             inputModule.AssignDefaultActions();
 
             return eventSystemObj;
-        }
-
-        private static void RemoveSceneEventSystems()
-        {
-            if (!Application.isEditor || Application.isPlaying)
-                return;
-
-            var eventSystems = Object.FindObjectsByType<EventSystem>(FindObjectsSortMode.None);
-            foreach (var eventSystem in eventSystems)
-            {
-                if (eventSystem == null || !eventSystem.gameObject.scene.IsValid())
-                    continue;
-
-                Undo.DestroyObjectImmediate(eventSystem.gameObject);
-            }
         }
 
         private static int GetUILayer()
@@ -191,24 +167,5 @@ namespace UISystem.Editor
             }
         }
 
-        private static void SetSerializedStringIfAssetExists(
-            string assetPath,
-            string propertyName,
-            string value
-        )
-        {
-            Object asset = AssetDatabase.LoadAssetAtPath<Object>(assetPath);
-            if (asset == null)
-                return;
-
-            SerializedObject serializedObject = new SerializedObject(asset);
-            SerializedProperty property = serializedObject.FindProperty(propertyName);
-            if (property == null || property.propertyType != SerializedPropertyType.String)
-                return;
-
-            property.stringValue = value;
-            serializedObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(asset);
-        }
     }
 }

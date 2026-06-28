@@ -11,11 +11,15 @@ namespace CameraSystem.Tests
     public class CameraSystemTests
     {
         private List<GameObject> _spawnedObjects;
+        private CinemachineCore.AxisInputDelegate _originalInputAxisProvider;
 
         [SetUp]
         public void SetUp()
         {
             _spawnedObjects = new List<GameObject>();
+            _originalInputAxisProvider = CinemachineCore.GetInputAxis;
+            CameraManager.ResetForTests();
+            CinemachineCore.GetInputAxis = _originalInputAxisProvider;
         }
 
         [TearDown]
@@ -30,12 +34,8 @@ namespace CameraSystem.Tests
             }
             _spawnedObjects.Clear();
 
-            // Reset singleton reference
-            var instanceField = typeof(CameraManager).GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-            if (instanceField != null)
-            {
-                instanceField.SetValue(null, null);
-            }
+            CameraManager.ResetForTests();
+            CinemachineCore.GetInputAxis = _originalInputAxisProvider;
         }
 
         [Test]
@@ -45,8 +45,6 @@ namespace CameraSystem.Tests
             var go1 = new GameObject("CameraManager1");
             _spawnedObjects.Add(go1);
             var manager1 = go1.AddComponent<CameraManager>();
-            
-            manager1.SendMessage("Awake", null, SendMessageOptions.DontRequireReceiver);
 
             // Verify first instance became singleton
             Assert.AreEqual(manager1, CameraManager.Instance, "First instance failed to set Singleton reference");
@@ -55,8 +53,6 @@ namespace CameraSystem.Tests
             var go2 = new GameObject("CameraManager2");
             _spawnedObjects.Add(go2);
             var manager2 = go2.AddComponent<CameraManager>();
-            
-            manager2.SendMessage("Awake", null, SendMessageOptions.DontRequireReceiver);
 
             // 3. Verify: Second instance destroyed itself
             Assert.IsTrue(go2 == null || !go2.activeInHierarchy || go2.GetComponent<CameraManager>() == null, 
@@ -70,7 +66,6 @@ namespace CameraSystem.Tests
             var managerGo = new GameObject("CameraManager");
             _spawnedObjects.Add(managerGo);
             var manager = managerGo.AddComponent<CameraManager>();
-            manager.SendMessage("Awake", null, SendMessageOptions.DontRequireReceiver);
 
             // Create target transform
             var targetGo = new GameObject("CameraTarget");
@@ -103,6 +98,79 @@ namespace CameraSystem.Tests
             Assert.AreEqual(expectedTarget, cam1.LookAt, "cam1.LookAt target was not set correctly");
             Assert.AreEqual(expectedTarget, cam2.Follow, "cam2.Follow target was not set correctly");
             Assert.AreEqual(expectedTarget, cam2.LookAt, "cam2.LookAt target was not set correctly");
+        }
+
+        [Test]
+        public void CameraManager_InputProvider_DoesNotOverrideWhenDisabled()
+        {
+            CinemachineCore.AxisInputDelegate existingProvider = _ => 0.25f;
+            CinemachineCore.GetInputAxis = existingProvider;
+
+            var managerGo = new GameObject("CameraManager");
+            _spawnedObjects.Add(managerGo);
+            managerGo.SetActive(false);
+
+            var manager = managerGo.AddComponent<CameraManager>();
+            manager.SetOverrideCinemachineInput(false);
+            managerGo.SetActive(true);
+
+            Assert.AreEqual(existingProvider, CinemachineCore.GetInputAxis, "CameraManager should not override Cinemachine input when disabled.");
+        }
+
+        [Test]
+        public void CameraManager_InputProvider_RestoresPreviousProviderOnDisable()
+        {
+            CinemachineCore.AxisInputDelegate existingProvider = _ => 0.5f;
+            CinemachineCore.GetInputAxis = existingProvider;
+
+            var managerGo = new GameObject("CameraManager");
+            _spawnedObjects.Add(managerGo);
+            var manager = managerGo.AddComponent<CameraManager>();
+
+            Assert.AreNotEqual(existingProvider, CinemachineCore.GetInputAxis, "CameraManager should own Cinemachine input while enabled.");
+
+            manager.enabled = false;
+
+            Assert.AreEqual(existingProvider, CinemachineCore.GetInputAxis, "CameraManager should restore the previous Cinemachine input provider when disabled.");
+        }
+
+        [Test]
+        public void CameraManager_AutoConfigureCameraComponents_AddsMissingHelpersByDefault()
+        {
+            var managerGo = new GameObject("CameraRig");
+            _spawnedObjects.Add(managerGo);
+            managerGo.SetActive(false);
+
+            var cameraGo = new GameObject("Main Camera");
+            _spawnedObjects.Add(cameraGo);
+            cameraGo.transform.SetParent(managerGo.transform, false);
+            cameraGo.AddComponent<Camera>();
+
+            managerGo.AddComponent<CameraManager>();
+            managerGo.SetActive(true);
+
+            Assert.IsNotNull(cameraGo.GetComponent<CinemachineBrain>(), "CameraManager should add a missing CinemachineBrain by default.");
+            Assert.IsNotNull(cameraGo.GetComponent<URPCameraStackLinker>(), "CameraManager should add a missing URPCameraStackLinker by default.");
+        }
+
+        [Test]
+        public void CameraManager_AutoConfigureCameraComponents_CanBeDisabled()
+        {
+            var managerGo = new GameObject("CameraRig");
+            _spawnedObjects.Add(managerGo);
+            managerGo.SetActive(false);
+
+            var cameraGo = new GameObject("Main Camera");
+            _spawnedObjects.Add(cameraGo);
+            cameraGo.transform.SetParent(managerGo.transform, false);
+            cameraGo.AddComponent<Camera>();
+
+            var manager = managerGo.AddComponent<CameraManager>();
+            manager.SetAutoConfigureCameraComponents(false);
+            managerGo.SetActive(true);
+
+            Assert.IsNull(cameraGo.GetComponent<CinemachineBrain>(), "CameraManager should not add CinemachineBrain when auto configure is disabled.");
+            Assert.IsNull(cameraGo.GetComponent<URPCameraStackLinker>(), "CameraManager should not add URPCameraStackLinker when auto configure is disabled.");
         }
     }
 }

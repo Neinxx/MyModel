@@ -1,0 +1,17 @@
+{
+    "name": "PortalSystem.InteractionSystemIntegration",
+    "rootNamespace": "PortalSystem.InteractionSystemIntegration",
+    "references": [
+        "PortalSystem.Runtime",
+        "InteractionSystem.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

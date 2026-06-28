@@ -1,7 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using PortalSystem.Editor;
 using PortalSystem.Runtime;
 using UnityEditor;
@@ -17,8 +14,10 @@ namespace PortalSystem.Editor.Inspectors
     {
         private VisualElement _root;
         private Label _stateLabel;
+        private Label _destinationStatusLabel;
         private DropdownField _levelDropdown;
         private DropdownField _spawnDropdown;
+        private List<string> _discoveredLevelNames = new();
 
         public override VisualElement CreateInspectorGUI()
         {
@@ -35,6 +34,7 @@ namespace PortalSystem.Editor.Inspectors
 
             // 2. Setup Core Elements
             _stateLabel = _root.Q<Label>("uve_RuntimeState");
+            _destinationStatusLabel = _root.Q<Label>("uve_DestinationStatus");
             var testBtn = _root.Q<Button>("uve_TestButton");
             var playInfo = _root.Q<Label>("uve_PlayModeInfo");
 
@@ -80,11 +80,11 @@ namespace PortalSystem.Editor.Inspectors
             var levelContainer = _root.Q<VisualElement>("uve_LevelDropdownContainer");
             var spawnContainer = _root.Q<VisualElement>("uve_SpawnDropdownContainer");
 
-            var levelProp = serializedObject.FindProperty("targetLevelName");
-            var spawnProp = serializedObject.FindProperty("targetSpawnPointID");
+            var levelProp = serializedObject.FindProperty("_targetLevelName");
+            var spawnProp = serializedObject.FindProperty("_targetSpawnPointId");
 
-            // --- Level Dropdown ---
-            var levelNames = GetLevelNamesFromRegistry();
+            var levelNames = PortalDestinationDiscovery.GetLevelNames();
+            _discoveredLevelNames = new List<string>(levelNames);
             if (
                 !string.IsNullOrEmpty(levelProp.stringValue)
                 && !levelNames.Contains(levelProp.stringValue)
@@ -99,6 +99,7 @@ namespace PortalSystem.Editor.Inspectors
                 levelProp.stringValue = evt.newValue;
                 serializedObject.ApplyModifiedProperties();
                 RefreshSpawnDropdown(evt.newValue);
+                RefreshDestinationStatus(evt.newValue);
             });
             levelContainer.Add(_levelDropdown);
 
@@ -124,36 +125,8 @@ namespace PortalSystem.Editor.Inspectors
             });
             spawnContainer.Add(_spawnDropdown);
 
-            // Initial refresh
             RefreshSpawnDropdown(levelProp.stringValue);
-        }
-
-        private List<string> GetLevelNamesFromRegistry()
-        {
-            var names = new List<string> { "" };
-            // Find LevelRegistry by type name (to avoid hard dependency)
-            var guids = AssetDatabase.FindAssets("t:LevelRegistry");
-            foreach (var guid in guids)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                var registry = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-                if (registry != null)
-                {
-                    var so = new SerializedObject(registry);
-                    var levelsProp = so.FindProperty("levels");
-                    if (levelsProp != null && levelsProp.isArray)
-                    {
-                        for (int i = 0; i < levelsProp.arraySize; i++)
-                        {
-                            var element = levelsProp.GetArrayElementAtIndex(i);
-                            var nameProp = element.FindPropertyRelative("levelName");
-                            if (nameProp != null && !string.IsNullOrEmpty(nameProp.stringValue))
-                                names.Add(nameProp.stringValue);
-                        }
-                    }
-                }
-            }
-            return names.Distinct().ToList();
+            RefreshDestinationStatus(levelProp.stringValue);
         }
 
         private void RefreshSpawnDropdown(string levelName)
@@ -164,60 +137,7 @@ namespace PortalSystem.Editor.Inspectors
                 return;
             }
 
-            var spawnIDs = new List<string> { "Start" };
-
-            // Try to find the scene path from the registry
-            string scenePath = "";
-            var guids = AssetDatabase.FindAssets("t:LevelRegistry");
-            foreach (var guid in guids)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                var registry = AssetDatabase.LoadAssetAtPath<ScriptableObject>(path);
-                if (registry != null)
-                {
-                    var so = new SerializedObject(registry);
-                    var levelsProp = so.FindProperty("levels");
-                    for (int i = 0; i < levelsProp.arraySize; i++)
-                    {
-                        var element = levelsProp.GetArrayElementAtIndex(i);
-                        if (element.FindPropertyRelative("levelName").stringValue == levelName)
-                        {
-                            var assetProp = element.FindPropertyRelative("sceneAsset");
-                            if (assetProp != null && assetProp.objectReferenceValue != null)
-                                scenePath = AssetDatabase.GetAssetPath(
-                                    assetProp.objectReferenceValue
-                                );
-                            break;
-                        }
-                    }
-                }
-                if (!string.IsNullOrEmpty(scenePath))
-                    break;
-            }
-
-            // If found, scan the .unity file as text for SpawnPointHub's spawnPointID
-            if (!string.IsNullOrEmpty(scenePath) && File.Exists(scenePath))
-            {
-                try
-                {
-                    string content = File.ReadAllText(scenePath);
-                    // Match pattern for _hubID in YAML: "_hubID: Value"
-                    var matches = Regex.Matches(content, @"_hubID:\s*([^\s\r\n]+)");
-                    foreach (Match match in matches)
-                    {
-                        if (match.Groups.Count > 1)
-                        {
-                            string id = match.Groups[1].Value.Trim();
-                            if (!string.IsNullOrEmpty(id) && !spawnIDs.Contains(id))
-                                spawnIDs.Add(id);
-                        }
-                    }
-                }
-                catch (System.Exception e)
-                {
-                    Debug.LogWarning($"[PortalInspector] Failed to scan scene file: {e.Message}");
-                }
-            }
+            var spawnIDs = PortalDestinationDiscovery.GetSpawnIds(levelName);
 
             if (
                 !string.IsNullOrEmpty(_spawnDropdown.value)
@@ -227,6 +147,35 @@ namespace PortalSystem.Editor.Inspectors
                 spawnIDs.Add(_spawnDropdown.value);
             }
             _spawnDropdown.choices = spawnIDs;
+        }
+
+        private void RefreshDestinationStatus(string levelName)
+        {
+            if (_destinationStatusLabel == null)
+            {
+                return;
+            }
+
+            _destinationStatusLabel.RemoveFromClassList("portal-destination-status-ok");
+            _destinationStatusLabel.RemoveFromClassList("portal-destination-status-warning");
+            _destinationStatusLabel.RemoveFromClassList("portal-destination-status-error");
+
+            if (string.IsNullOrEmpty(levelName))
+            {
+                _destinationStatusLabel.text = "Select a target scene";
+                _destinationStatusLabel.AddToClassList("portal-destination-status-warning");
+                return;
+            }
+
+            if (!_discoveredLevelNames.Contains(levelName))
+            {
+                _destinationStatusLabel.text = "Target not found in registry";
+                _destinationStatusLabel.AddToClassList("portal-destination-status-error");
+                return;
+            }
+
+            _destinationStatusLabel.text = "Destination ready";
+            _destinationStatusLabel.AddToClassList("portal-destination-status-ok");
         }
     }
 }

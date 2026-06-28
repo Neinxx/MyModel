@@ -1,8 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace WorldSceneModule.Runtime
 {
@@ -48,10 +45,6 @@ namespace WorldSceneModule.Runtime
 
         public string GetPersistentWorldPath()
         {
-#if UNITY_EDITOR
-            if (persistentWorldAsset != null)
-                return AssetDatabase.GetAssetPath(persistentWorldAsset);
-#endif
             return !string.IsNullOrEmpty(cachedPersistentWorldPath)
                 ? cachedPersistentWorldPath
                 : (persistentWorldAsset != null ? persistentWorldAsset.name : "");
@@ -60,10 +53,6 @@ namespace WorldSceneModule.Runtime
         public string GetScenePath(string sceneName)
         {
             var config = GetConfig(sceneName);
-#if UNITY_EDITOR
-            if (config.sceneAsset != null)
-                return AssetDatabase.GetAssetPath(config.sceneAsset);
-#endif
             return !string.IsNullOrEmpty(config.cachedScenePath) 
                 ? config.cachedScenePath 
                 : config.levelName;

@@ -1,0 +1,18 @@
+{
+    "name": "CharacterController.Editor",
+    "rootNamespace": "CharacterController.Editor",
+    "references": [
+        "CharacterController.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,6 +3,7 @@
     "rootNamespace": "ResourceManagerModule.Tests",
     "references": [
         "ResourceManager.Runtime",
+        "ResourceManager.Addressables",
         "Unity.Addressables",
         "Unity.ResourceManager"
     ],

@@ -1,0 +1,19 @@
+{
+    "name": "UISystem.Editor",
+    "rootNamespace": "UISystem.Editor",
+    "references": [
+        "UISystem.Runtime",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

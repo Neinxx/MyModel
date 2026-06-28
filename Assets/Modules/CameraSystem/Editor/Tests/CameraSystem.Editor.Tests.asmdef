@@ -1,0 +1,22 @@
+{
+    "name": "CameraSystem.Editor.Tests",
+    "rootNamespace": "CameraSystem.Tests",
+    "references": [
+        "CameraSystem.Runtime",
+        "CharacterController.Runtime",
+        "Cinemachine"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

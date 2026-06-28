@@ -21,10 +21,43 @@ namespace ResourceManagerModule.Tests
         [Test]
         public void Test_CanLoad_InvalidKeys_ReturnsFalse()
         {
-            // 🚀 一个随机或空的 key 绝对不能被 CanLoad 误判为 true，保证 Provider 降级回退机制不被抢占
             Assert.IsFalse(_provider.CanLoad("InvalidAddressableKey_Random_12345"));
             Assert.IsFalse(_provider.CanLoad(string.Empty));
             Assert.IsFalse(_provider.CanLoad(null));
+        }
+
+        [Test]
+        public void Test_CanLoad_UsesCatalogWithoutAddressablesInitialization()
+        {
+            var catalog = ScriptableObject.CreateInstance<AddressablesResourceCatalog>();
+            catalog.SetKeys(new[] { "CatalogKey" });
+
+            var provider = new AddressablesProvider(catalog);
+
+            Assert.IsTrue(provider.CanLoad("CatalogKey"));
+            Assert.IsFalse(provider.CanLoad("MissingCatalogKey"));
+
+            UnityEngine.Object.DestroyImmediate(catalog);
+        }
+
+        [Test]
+        public void Test_SetCatalog_ClearsCachedKeyState()
+        {
+            var firstCatalog = ScriptableObject.CreateInstance<AddressablesResourceCatalog>();
+            firstCatalog.SetKeys(new[] { "FirstKey" });
+            var secondCatalog = ScriptableObject.CreateInstance<AddressablesResourceCatalog>();
+            secondCatalog.SetKeys(new[] { "SecondKey" });
+
+            var provider = new AddressablesProvider(firstCatalog);
+            Assert.IsTrue(provider.CanLoad("FirstKey"));
+
+            provider.SetCatalog(secondCatalog);
+
+            Assert.IsFalse(provider.CanLoad("FirstKey"));
+            Assert.IsTrue(provider.CanLoad("SecondKey"));
+
+            UnityEngine.Object.DestroyImmediate(firstCatalog);
+            UnityEngine.Object.DestroyImmediate(secondCatalog);
         }
 
         [Test]

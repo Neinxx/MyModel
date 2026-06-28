@@ -56,6 +56,32 @@
     background-color: rgba(255, 255, 255, 0.02);
 }
 
+.portal-destination-status {
+    margin-top: 5px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 6px;
+    font-size: 10px;
+    border-left-width: 2px;
+    border-left-color: rgba(255, 255, 255, 0.12);
+    opacity: 0.8;
+}
+
+.portal-destination-status-ok {
+    color: #3FB950;
+    border-left-color: #3FB950;
+}
+
+.portal-destination-status-warning {
+    color: #F0B72F;
+    border-left-color: #F0B72F;
+}
+
+.portal-destination-status-error {
+    color: #F85149;
+    border-left-color: #F85149;
+}
+
 /* Diagnostics Button */
 .portal-action-button {
     margin-top: 10px;

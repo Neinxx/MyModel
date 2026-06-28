@@ -1,0 +1,21 @@
+{
+    "name": "CharacterController.Editor.Tests",
+    "rootNamespace": "CharacterController.Tests",
+    "references": [
+        "CharacterController.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "noEngineReferences": false
+}

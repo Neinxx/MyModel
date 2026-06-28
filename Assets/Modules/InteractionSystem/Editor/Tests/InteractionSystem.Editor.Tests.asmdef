@@ -1,0 +1,21 @@
+{
+    "name": "InteractionSystem.Editor.Tests",
+    "rootNamespace": "InteractionSystem.Tests",
+    "references": [
+        "InteractionSystem.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "noEngineReferences": false
+}

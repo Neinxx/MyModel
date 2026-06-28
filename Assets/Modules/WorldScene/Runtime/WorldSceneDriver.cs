@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace WorldSceneModule.Runtime
 {
-    [ExecuteAlways]
+    [DisallowMultipleComponent]
     [DefaultExecutionOrder(-100)]
     public class WorldSceneDriver : MonoBehaviour, IWorldSceneDriver
     {
@@ -211,15 +211,6 @@ namespace WorldSceneModule.Runtime
 
         private AsyncOperation LoadSceneAsyncHelper(string scenePath, LoadSceneMode mode)
         {
-#if UNITY_EDITOR
-            if (Application.isPlaying)
-            {
-                return UnityEditor.SceneManagement.EditorSceneManager.LoadSceneAsyncInPlayMode(
-                    scenePath,
-                    new LoadSceneParameters(mode)
-                );
-            }
-#endif
             return SceneManager.LoadSceneAsync(scenePath, mode);
         }
 

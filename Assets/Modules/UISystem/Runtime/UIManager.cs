@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace UISystem.Runtime
 {
@@ -17,36 +18,85 @@ namespace UISystem.Runtime
     /// 全局 UI 管理器 (Universal UI Manager)
     /// 负责视图注册、分层与导航导航。
     /// </summary>
-    [ExecuteAlways]
     [DefaultExecutionOrder(-200)]
     public class UIManager : MonoBehaviour
     {
         public static UIManager Instance { get; private set; }
 
         [Header("UI Layers (Mount Points)")]
-        public Transform backgroundLayer;
-        public Transform hudLayer;
-        public Transform mainPanelLayer;
-        public Transform popupLayer;
-        public Transform toastLayer;
-        public Transform systemLayer;
+        [FormerlySerializedAs("backgroundLayer")]
+        [SerializeField] private Transform _backgroundLayer;
+        [FormerlySerializedAs("hudLayer")]
+        [SerializeField] private Transform _hudLayer;
+        [FormerlySerializedAs("mainPanelLayer")]
+        [SerializeField] private Transform _mainPanelLayer;
+        [FormerlySerializedAs("popupLayer")]
+        [SerializeField] private Transform _popupLayer;
+        [FormerlySerializedAs("toastLayer")]
+        [SerializeField] private Transform _toastLayer;
+        [FormerlySerializedAs("systemLayer")]
+        [SerializeField] private Transform _systemLayer;
 
-        private Dictionary<string, UIView> _views = new Dictionary<string, UIView>();
-        private Stack<UIView> _history = new Stack<UIView>();
+        [Header("Runtime Safety")]
+        [Tooltip("When enabled, UIManager creates a missing EventSystem at runtime. Prefer an explicit EventSystem in production prefabs.")]
+        [FormerlySerializedAs("createEventSystemIfMissing")]
+        [SerializeField] private bool _createEventSystemIfMissing;
+
+        private readonly Dictionary<string, UIView> _views = new Dictionary<string, UIView>();
+        private readonly Stack<UIView> _history = new Stack<UIView>();
+
+        public Transform BackgroundLayer => _backgroundLayer;
+        public Transform HudLayer => _hudLayer;
+        public Transform MainPanelLayer => _mainPanelLayer;
+        public Transform PopupLayer => _popupLayer;
+        public Transform ToastLayer => _toastLayer;
+        public Transform SystemLayer => _systemLayer;
+        public bool CreateEventSystemIfMissing => _createEventSystemIfMissing;
 
         public Transform GetLayer(UILayerType type)
         {
             return type switch
             {
-                UILayerType.Background => backgroundLayer,
-                UILayerType.HUD => hudLayer,
-                UILayerType.MainPanel => mainPanelLayer,
-                UILayerType.Popup => popupLayer,
-                UILayerType.Toast => toastLayer,
-                UILayerType.System => systemLayer,
-                _ => mainPanelLayer
+                UILayerType.Background => _backgroundLayer,
+                UILayerType.HUD => _hudLayer,
+                UILayerType.MainPanel => _mainPanelLayer,
+                UILayerType.Popup => _popupLayer,
+                UILayerType.Toast => _toastLayer,
+                UILayerType.System => _systemLayer,
+                _ => _mainPanelLayer
             };
         }
+
+        public void SetLayer(UILayerType type, Transform layer)
+        {
+            switch (type)
+            {
+                case UILayerType.Background:
+                    _backgroundLayer = layer;
+                    break;
+                case UILayerType.HUD:
+                    _hudLayer = layer;
+                    break;
+                case UILayerType.MainPanel:
+                    _mainPanelLayer = layer;
+                    break;
+                case UILayerType.Popup:
+                    _popupLayer = layer;
+                    break;
+                case UILayerType.Toast:
+                    _toastLayer = layer;
+                    break;
+                case UILayerType.System:
+                    _systemLayer = layer;
+                    break;
+            }
+        }
+
+        public void SetCreateEventSystemIfMissing(bool value)
+        {
+            _createEventSystemIfMissing = value;
+        }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -61,12 +111,9 @@ namespace UISystem.Runtime
             if (Application.isPlaying)
             {
                 DontDestroyOnLoad(gameObject);
-                
-                // 🚀 核心自愈：动态布设/接管唯一的 EventSystem 环境，支持新老输入系统自适应交互
-                EnsureEventSystem();
+                EnsureEventSystemIfRequested();
             }
 
-            // 自动注册当前节点下的所有视图
             var views = GetComponentsInChildren<UIView>(true);
             foreach (var view in views)
             {
@@ -74,11 +121,17 @@ namespace UISystem.Runtime
             }
         }
 
-        /// <summary>
-        /// 动态确保场景中存在唯一且与输入系统版本匹配的 EventSystem 环境
-        /// </summary>
-        private void EnsureEventSystem()
+        private void OnDestroy()
         {
+            if (Instance == this)
+                Instance = null;
+        }
+
+        private void EnsureEventSystemIfRequested()
+        {
+            if (!_createEventSystemIfMissing)
+                return;
+
             var eventSystem = FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>();
             var inputModuleType = System.Type.GetType("UnityEngine.InputSystem.UI.InputSystemUIInputModule, Unity.InputSystem");
 
@@ -90,51 +143,52 @@ namespace UISystem.Runtime
                 if (inputModuleType != null)
                 {
                     esObj.AddComponent(inputModuleType);
-                    Debug.Log("<color=#3FB950><b>[UIManager]</b></color> Dynamically created EventSystem with InputSystemUIInputModule (New Input System).");
+                    Debug.Log("[UIManager] Created missing EventSystem with InputSystemUIInputModule.");
                 }
                 else
                 {
                     esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-                    Debug.Log("<color=#3FB950><b>[UIManager]</b></color> Dynamically created EventSystem with StandaloneInputModule (Legacy Input System).");
+                    Debug.Log("[UIManager] Created missing EventSystem with StandaloneInputModule.");
                 }
 
-                // 使其作为 UIManager 的子物体，随 DontDestroyOnLoad 自动常驻
                 esObj.transform.SetParent(transform);
             }
             else
             {
-                // 如果已存在 EventSystem，检查是否缺少 InputModule
                 var inputModule = eventSystem.GetComponent<UnityEngine.EventSystems.BaseInputModule>();
                 if (inputModule == null)
                 {
                     if (inputModuleType != null)
                     {
                         eventSystem.gameObject.AddComponent(inputModuleType);
-                        Debug.Log("<color=#3FB950><b>[UIManager]</b></color> Existing EventSystem had no InputModule. Attached InputSystemUIInputModule.");
+                        Debug.Log("[UIManager] Attached missing InputSystemUIInputModule to existing EventSystem.");
                     }
                     else
                     {
                         eventSystem.gameObject.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-                        Debug.Log("<color=#3FB950><b>[UIManager]</b></color> Existing EventSystem had no InputModule. Attached StandaloneInputModule.");
+                        Debug.Log("[UIManager] Attached missing StandaloneInputModule to existing EventSystem.");
                     }
-                }
-                else if (inputModuleType != null && inputModule.GetType().Name == "StandaloneInputModule")
-                {
-                    // 在新输入系统环境下，如果是老的 StandaloneInputModule，点击事件会被忽略，自动升级
-                    Destroy(inputModule);
-                    eventSystem.gameObject.AddComponent(inputModuleType);
-                    Debug.Log("<color=#BC8CFF><b>[UIManager]</b></color> Upgraded existing StandaloneInputModule to InputSystemUIInputModule for compatibility.");
                 }
             }
         }
 
         public void RegisterView(UIView view)
         {
-            if (view == null) return;
-            if (!_views.ContainsKey(view.viewID))
+            if (view == null)
+                return;
+
+            view.EnsureInitialized();
+            if (string.IsNullOrWhiteSpace(view.ViewId))
+                return;
+
+            if (_views.TryGetValue(view.ViewId, out var existingView))
             {
-                _views.Add(view.viewID, view);
+                if (existingView != view)
+                    Debug.LogWarning($"[UIManager] Duplicate view id ignored: {view.ViewId}", view);
+                return;
             }
+
+            _views.Add(view.ViewId, view);
         }
 
         public T GetView<T>(string id) where T : UIView
@@ -150,14 +204,9 @@ namespace UISystem.Runtime
         {
             if (_views.TryGetValue(id, out var view))
             {
-                if (addToHistory && _history.Count > 0 && _history.Peek() != view)
-                {
-                    // 可以根据需要决定是否关闭当前最顶层的视图
-                }
-                
                 view.Open();
-                if (addToHistory) _history.Push(view);
-                Debug.Log($"<color=#BC8CFF><b>[UI]</b></color> Opening View: {id}");
+                if (addToHistory && (_history.Count == 0 || _history.Peek() != view))
+                    _history.Push(view);
             }
         }
 

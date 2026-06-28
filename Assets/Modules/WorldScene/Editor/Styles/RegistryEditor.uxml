@@ -7,6 +7,21 @@
 
         <ui:Label text="DISCOVERY" style="font-size: 10px; -unity-font-style: bold; color: #3FB950; margin-bottom: 5px;" />
         <uie:PropertyField binding-path="scenesRootFolder" label="Scenes Root" />
+
+        <ui:VisualElement class="registry-status">
+            <ui:VisualElement class="registry-status-item">
+                <ui:Label text="Scenes" class="registry-status-label" />
+                <ui:Label name="status-scenes" text="-" class="registry-status-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="registry-status-item">
+                <ui:Label text="Registered" class="registry-status-label" />
+                <ui:Label name="status-registered" text="-" class="registry-status-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="registry-status-item">
+                <ui:Label text="Missing Build" class="registry-status-label" />
+                <ui:Label name="status-build-missing" text="-" class="registry-status-value" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         
         <ui:Button name="sync-btn" text="SMART SYNC PROJECT" class="sync-button" />
 

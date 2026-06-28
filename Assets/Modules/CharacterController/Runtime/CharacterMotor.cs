@@ -1,4 +1,8 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Serialization;
+
+[assembly: InternalsVisibleTo("CharacterController.Editor.Tests")]
 
 namespace CharacterController.Runtime
 {
@@ -6,14 +10,18 @@ namespace CharacterController.Runtime
     /// 工业级角色马达 (Modular Character Motor)
     /// 纯粹的物理与位移实现层。
     /// </summary>
-    [ExecuteAlways]
     [RequireComponent(typeof(UnityEngine.CharacterController))]
     public class CharacterMotor : MonoBehaviour, ICharacterMotor
     {
         [Header("Physics Settings")]
-        public float gravity = -9.81f;
-        public float slopeLimit = 45f;
-        public float stepOffset = 0.3f;
+        [FormerlySerializedAs("gravity")]
+        [SerializeField] private float _gravity = -9.81f;
+        [FormerlySerializedAs("slopeLimit")]
+        [Range(0f, 90f)]
+        [SerializeField] private float _slopeLimit = 45f;
+        [FormerlySerializedAs("stepOffset")]
+        [Min(0f)]
+        [SerializeField] private float _stepOffset = 0.3f;
 
         private UnityEngine.CharacterController _cc;
         private Vector3 _verticalVelocity;
@@ -21,13 +29,53 @@ namespace CharacterController.Runtime
         private bool _isGrounded;
 
         public bool IsGrounded => _isGrounded;
-        public Vector3 Velocity => _cc.velocity;
+        public Vector3 Velocity => _cc != null ? _cc.velocity : Vector3.zero;
+        public float Gravity => _gravity;
+        public float SlopeLimit => _slopeLimit;
+        public float StepOffset => _stepOffset;
+
+        [System.Obsolete("Use Gravity for reading and SetGravity for writing.")]
+        public float gravity
+        {
+            get => _gravity;
+            set => _gravity = value;
+        }
+
+        [System.Obsolete("Use SlopeLimit for reading and SetSlopeLimit for writing.")]
+        public float slopeLimit
+        {
+            get => _slopeLimit;
+            set => SetSlopeLimit(value);
+        }
+
+        [System.Obsolete("Use StepOffset for reading and SetStepOffset for writing.")]
+        public float stepOffset
+        {
+            get => _stepOffset;
+            set => SetStepOffset(value);
+        }
 
         private void Awake()
         {
             _cc = GetComponent<UnityEngine.CharacterController>();
-            _cc.slopeLimit = slopeLimit;
-            _cc.stepOffset = stepOffset;
+            ApplyControllerSettings();
+        }
+
+        public void SetGravity(float value)
+        {
+            _gravity = value;
+        }
+
+        public void SetSlopeLimit(float value)
+        {
+            _slopeLimit = Mathf.Clamp(value, 0f, 90f);
+            ApplyControllerSettings();
+        }
+
+        public void SetStepOffset(float value)
+        {
+            _stepOffset = Mathf.Max(0f, value);
+            ApplyControllerSettings();
         }
 
         private void Update()
@@ -58,12 +106,23 @@ namespace CharacterController.Runtime
         {
             if (_isGrounded)
             {
-                _verticalVelocity.y = Mathf.Sqrt(force * -2f * gravity);
+                _verticalVelocity.y = Mathf.Sqrt(force * -2f * _gravity);
             }
+        }
+
+        internal Vector3 HorizontalMoveForTests => _horizontalMove;
+        internal Vector3 VerticalVelocityForTests => _verticalVelocity;
+
+        internal void SetGroundedForTests(bool value)
+        {
+            _isGrounded = value;
         }
 
         private void ApplyPhysicsAndMove()
         {
+            if (_cc == null)
+                _cc = GetComponent<UnityEngine.CharacterController>();
+
             _isGrounded = _cc.isGrounded;
             if (_isGrounded && _verticalVelocity.y < 0)
             {
@@ -71,7 +130,7 @@ namespace CharacterController.Runtime
             }
             else
             {
-                _verticalVelocity.y += gravity * Time.deltaTime;
+                _verticalVelocity.y += _gravity * Time.deltaTime;
             }
 
             // 合并水平位移与重力垂直位移，单次调用 _cc.Move，极致性能且物理精准
@@ -80,6 +139,15 @@ namespace CharacterController.Runtime
 
             // 每帧末尾清除上一帧的水平移动输入，防止不间断漂移
             _horizontalMove = Vector3.zero;
+        }
+
+        private void ApplyControllerSettings()
+        {
+            if (_cc == null)
+                return;
+
+            _cc.slopeLimit = _slopeLimit;
+            _cc.stepOffset = _stepOffset;
         }
     }
 }

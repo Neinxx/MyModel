@@ -20,22 +20,35 @@
             <!-- We will replace these string fields with Dropdowns in the C# Inspector -->
             <ui:VisualElement name="uve_LevelDropdownContainer" />
             <ui:VisualElement name="uve_SpawnDropdownContainer" />
+            <ui:Label name="uve_DestinationStatus" text="Select a target scene" class="portal-destination-status" />
             
             <!-- Hidden fields for binding -->
-            <uie:PropertyField binding-path="targetLevelName" name="uve_LevelRaw" style="display: none;" />
-            <uie:PropertyField binding-path="targetSpawnPointID" name="uve_SpawnRaw" style="display: none;" />
+            <uie:PropertyField binding-path="_targetLevelName" name="uve_LevelRaw" style="display: none;" />
+            <uie:PropertyField binding-path="_targetSpawnPointId" name="uve_SpawnRaw" style="display: none;" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="portal-section">
+            <ui:Label text="TRIGGER" class="portal-section-header" />
+            <uie:PropertyField binding-path="_triggerOnTagEnter" label="Trigger On Tag Enter" />
+            <uie:PropertyField binding-path="_triggerTag" label="Trigger Tag" />
         </ui:VisualElement>
 
         <!-- 3. Aesthetics -->
         <ui:VisualElement class="portal-section">
             <ui:Label text="AESTHETICS" class="portal-section-header" />
-            <uie:PropertyField binding-path="portalColor" label="Gizmo Color" 
+            <uie:PropertyField binding-path="_portalColor" label="Gizmo Color" 
                 tooltip="The color of the portal box in the Scene view." />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="portal-section">
+            <ui:Label text="EVENTS" class="portal-section-header" />
+            <uie:PropertyField binding-path="_onPortalTriggered" label="On Portal Triggered" />
         </ui:VisualElement>
 
         <!-- 4. Runtime Actions -->
         <ui:VisualElement class="portal-section">
             <ui:Label text="RUNTIME DIAGNOSTICS" class="portal-section-header" />
+            <uie:PropertyField binding-path="_logTriggers" label="Log Triggers" />
             <ui:Button name="uve_TestButton" text="TEST TELEPORT" class="portal-action-button" />
             <ui:Label text="Only available in Play Mode" name="uve_PlayModeInfo" 
                 style="font-size: 9px; opacity: 0.3; -unity-text-align: middle-center; margin-top: 4px;" />
