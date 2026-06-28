@@ -253,7 +253,7 @@ Shader "Universal Render Pipeline/Character/NPR Array"
             #pragma vertex OutlinePassVertex
             #pragma fragment OutlinePassFragment
 
-            #include "Includes/CharacterNPROutlinePass.hlsl"
+            #include "../../Outline/Shaders/CharacterNPROutlinePass.hlsl"
             ENDHLSL
         }
 

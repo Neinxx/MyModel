@@ -7,26 +7,39 @@ namespace CharacterShader.Editor
 {
     public static class CharacterShaderAssetTools
     {
-        private const string ShaderName = "Universal Render Pipeline/Character/NPR Array";
-        private const string DefaultMaterialPath = "Assets/Modules/CharacterShader/Runtime/CharacterNPR_Default.mat";
+        private const string CompatibilityShaderName = "Universal Render Pipeline/Character/NPR Array";
+        private const string CoreShaderName = "Universal Render Pipeline/Character/NPR Core";
+        private const string CompatibilityMaterialPath = "Assets/Modules/CharacterShader/Runtime/Compatibility/CharacterNPRArray_Default.mat";
+        private const string CoreMaterialPath = "Assets/Modules/CharacterShader/Runtime/Core/CharacterNPRCore_Default.mat";
 
-        [MenuItem("Tools/Character Shader/Create Default NPR Material")]
-        public static void CreateDefaultMaterial()
+        [MenuItem("Tools/Character Shader/Create NPR Core Material")]
+        public static void CreateCoreMaterial()
         {
-            Shader shader = Shader.Find(ShaderName);
+            CreateMaterial(CoreShaderName, CoreMaterialPath, "CharacterNPRCore_Default");
+        }
+
+        [MenuItem("Tools/Character Shader/Create NPR Array Compatibility Material")]
+        public static void CreateCompatibilityMaterial()
+        {
+            CreateMaterial(CompatibilityShaderName, CompatibilityMaterialPath, "CharacterNPRArray_Default");
+        }
+
+        private static void CreateMaterial(string shaderName, string path, string materialName)
+        {
+            Shader shader = Shader.Find(shaderName);
             if (shader == null)
             {
-                EditorUtility.DisplayDialog("Character Shader", $"Shader not found:\n{ShaderName}", "OK");
+                EditorUtility.DisplayDialog("Character Shader", $"Shader not found:\n{shaderName}", "OK");
                 return;
             }
 
             Material material = new Material(shader)
             {
-                name = "CharacterNPR_Default"
+                name = materialName
             };
 
-            Directory.CreateDirectory(Path.GetDirectoryName(DefaultMaterialPath));
-            AssetDatabase.CreateAsset(material, AssetDatabase.GenerateUniqueAssetPath(DefaultMaterialPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            AssetDatabase.CreateAsset(material, AssetDatabase.GenerateUniqueAssetPath(path));
             AssetDatabase.SaveAssets();
             Selection.activeObject = material;
         }

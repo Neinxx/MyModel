@@ -1,5 +1,24 @@
 # Character NPR Array Shader
 
+
+## Shader Choices
+
+Use `Universal Render Pipeline/Character/NPR Core` for new character materials by default. It keeps the foundation small: base color, normal, masks, 2D ramp, 2D matcap, shadow, rim, outline, depth, shadow caster, and character mask output.
+
+Use `Universal Render Pipeline/Character/NPR Array` only when an old material needs the full compatibility surface, including texture arrays, Face SDF, material detail layers, silk, tunified PBR, and hair anisotropic highlights.
+
+## Module Layout
+
+The module is split by responsibility:
+
+- `Runtime/Core`: compatibility NPR shader surface and shared HLSL inputs.
+- `Runtime/Face`: face SDF runtime controller and face-specific HLSL.
+- `Runtime/Outline`: URP outline feature and outline pass HLSL.
+- `Runtime/Experimental`: optional specialized material looks that should not become core until production characters need them.
+- `Editor`: authoring tools, material inspectors, texture array bakers, and profile bindings.
+
+`CharacterNPRArray` remains the compatibility shader while the module is simplified into smaller production surfaces.
+
 This module is the character-body shading layer for the ZZZ-like pipeline.
 The existing `CharacterPostProcess` module should stay responsible for screen-space character effects; this shader is responsible for material ID routing, ramp shading, matcap response, inner shadow, outer projected shadow, AO, smoothness, and metallic response.
 

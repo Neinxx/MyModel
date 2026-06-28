@@ -3,10 +3,10 @@
 
 #include "CharacterNPRInput.hlsl"
 #include "CharacterSurfaceData.hlsl"
-#include "CharacterNPRSilk.hlsl"
-#include "CharacterNPRFaceSDF.hlsl"
-#include "CharacterNPRTunifiedPBR.hlsl"
-#include "CharacterNPRMaterialLayers.hlsl"
+#include "../../../Experimental/Shaders/CharacterNPRSilk.hlsl"
+#include "../../../Face/Shaders/CharacterNPRFaceSDF.hlsl"
+#include "../../../Experimental/Shaders/CharacterNPRTunifiedPBR.hlsl"
+#include "../../../Experimental/Shaders/CharacterNPRMaterialLayers.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 half3 CalculateCharacterNPRLighting(Varyings input, CharacterSurfaceData surface)

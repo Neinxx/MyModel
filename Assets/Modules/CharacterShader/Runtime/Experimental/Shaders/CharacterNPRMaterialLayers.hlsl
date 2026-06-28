@@ -1,8 +1,8 @@
 #ifndef CHARACTER_NPR_MATERIAL_LAYERS_INCLUDED
 #define CHARACTER_NPR_MATERIAL_LAYERS_INCLUDED
 
-#include "CharacterNPRInput.hlsl"
-#include "CharacterSurfaceData.hlsl"
+#include "../../Compatibility/Shaders/Includes/CharacterNPRInput.hlsl"
+#include "../../Compatibility/Shaders/Includes/CharacterSurfaceData.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 half IsMaterialID(half profileID, half targetID)

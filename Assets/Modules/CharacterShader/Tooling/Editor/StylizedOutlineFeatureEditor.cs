@@ -1,4 +1,3 @@
-using CharacterShader.Runtime.Features;
 using UnityEditor;
 using UnityEngine;
 

@@ -706,7 +706,8 @@ namespace CharacterShader.Editor
         {
             foreach (Object target in materialEditor.targets)
             {
-                if (target is not Material targetMaterial) continue;
+                Material targetMaterial = target as Material;
+                if (targetMaterial == null) continue;
 
                 Undo.RecordObject(targetMaterial, "Apply Character Material Profile");
                 profile.ApplyTo(targetMaterial);
