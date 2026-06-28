@@ -1,5 +1,61 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6153866522997024329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99f170c1c74ff4cc8b303e26b1384242, type: 3}
+  m_Name: FogFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    shader: {fileID: 4800000, guid: ef63a33c1cef84bb59c56403cb0228bb, type: 3}
+    fogGradient:
+      serializedVersion: 2
+      key0: {r: 0.8679245, g: 0.7728943, b: 0.19241722, a: 1}
+      key1: {r: 0.17702031, g: 0.9622642, b: 0.58468884, a: 1}
+      key2: {r: 0.23113209, g: 0.65790683, b: 1, a: 0}
+      key3: {r: 0.13952713, g: 0.08752848, b: 0.06905721, a: 0}
+      key4: {r: 0.13952713, g: 0.08752848, b: 0.06905721, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 28913
+      ctime2: 65535
+      ctime3: 53777
+      ctime4: 53777
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: 0
+      m_NumColorKeys: 3
+      m_NumAlphaKeys: 2
+    distanceDensity: 37.53
+    fogStartDistance: 30.6
+    fogEndDistance: 92.9
+    useExponentialDistance: 0
+    heightBase: 0
+    heightDensity: 12
+    heightFogDensity: 9.97
+    affectSkybox: 1
+    skyboxFogDistance: 1000
+    skyboxFogFill: 1
+    renderPassEvent: 550
 --- !u!114 &-5625945075001236351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12,13 +68,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e38fa0bc09f2ff643bb010f97197cda1, type: 3}
   m_Name: StylizedOutlineFeature
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
   settings:
     renderPassEvent: 300
     layerMask:
       serializedVersion: 2
       m_Bits: 8
-    includeSceneView: 0
+    includeSceneView: 1
+--- !u!114 &-4105039649597999212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e38fa0bc09f2ff643bb010f97197cda1, type: 3}
+  m_Name: StylizedOutlineFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    renderPassEvent: 300
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    includeSceneView: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38,8 +113,9 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 57184851164658265}
   - {fileID: 3802006977142680618}
-  - {fileID: -5625945075001236351}
-  m_RendererFeatureMap: 59fa33b45129cb002a6c25aa3371c3348164b106c3a0ecb1
+  - {fileID: -4105039649597999212}
+  - {fileID: -6153866522997024329}
+  m_RendererFeatureMap: 59fa33b45129cb002a6c25aa3371c3349437d12830f807c7b719987d001399aa
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -122,24 +198,24 @@ MonoBehaviour:
   m_Active: 1
   settings:
     shader: {fileID: 4800000, guid: e955bb6cfc73a264cb6dc100d4e3cde7, type: 3}
-    renderEvent: 350
+    renderEvent: 300
     characterLayer:
       serializedVersion: 2
       m_Bits: 8
-    includeSceneView: 0
+    includeSceneView: 1
     qualityPreset: 1
     useCustomQuality: 1
     downsample: 3
     blurIterations: 1
     blurRadius: 1.35
-    bloomIntensity: 0.45
-    characterColorBoost: 0.04
-    edgeGlowIntensity: 0.18
+    bloomIntensity: 0.9
+    characterColorBoost: 0.52
+    edgeGlowIntensity: 0.79
     bloomThreshold: 0.73
     bloomTint: {r: 1, g: 0.5918924, b: 0.25471687, a: 1}
     debugStencil: 0
-    outlineIntensity: 0
+    outlineIntensity: 0.224
     outlineColor: {r: 0, g: 0, b: 0, a: 1}
-    outlineThickness: 1.34
+    outlineThickness: 2.23
     outlineDepthThreshold: 1.9
     outlineNormalThreshold: 0.513

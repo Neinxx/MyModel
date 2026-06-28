@@ -159,9 +159,9 @@ namespace ModularDemo.Editor
             // UIView 必须拥有 CanvasGroup
             var canvasGroup = rootObj.AddComponent<CanvasGroup>();
             var debugView = rootObj.AddComponent<DecalDebugView>();
-            debugView.viewID = "DecalDebugView";
-            debugView.hideOnAwake = true;
-            debugView.fadeDuration = 0.25f;
+            debugView.SetViewId("DecalDebugView");
+            debugView.SetHideOnAwake(true);
+            debugView.SetFadeDuration(0.25f);
 
             // 全屏拉伸 rootObj
             SetRectOffsets(rootObj, Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);

@@ -17,12 +17,6 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 5f9307f4f7dd9634f87483a7000e29b6
   m_SerializeEntries:
-  - m_GUID: 7e3623a098270ab4faaf6d79fb697f58
-    m_Address: SlimeStylized
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shader
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 48bb5f55d8670e349b6e614913f9d910
     m_Address: TMP_Bitmap-Custom-Atlas
     m_ReadOnly: 0

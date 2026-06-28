@@ -289,7 +289,8 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
+  stringTagMap:
+    RenderType: Opaque
   disabledShaderPasses: []
   m_LockedProperties: 
   m_SavedProperties:
@@ -385,7 +386,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.9, g: 0.72, b: 0.28, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.9, g: 0.72, b: 0.27999997, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -815,11 +816,11 @@ MonoBehaviour:
   bulletTemplate: {fileID: 1761927916}
   bulletMuzzle: {fileID: 1207656015}
   bulletTarget: {fileID: 153542149}
-  bulletRange: 80
-  bulletInterval: 0.45
+  bulletRange: 95.8
+  bulletInterval: 0.02
   tracerLifetime: 0.075
-  baseSpreadAngle: 0.35
-  recoilPerShot: 0.45
+  baseSpreadAngle: 4.12
+  recoilPerShot: 4.4
   maxRecoilAngle: 3.5
   recoilRecoverySpeed: 4.5
   runtimeTexture: {fileID: 2800000, guid: 128269df1f8b4754eabf743ccc4aee05, type: 3}
@@ -837,6 +838,7 @@ GameObject:
   - component: {fileID: 732790298}
   - component: {fileID: 732790297}
   - component: {fileID: 732790296}
+  - component: {fileID: 732790299}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -918,6 +920,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &732790299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 732790295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    quality: 3
+    frameInfluence: 0.1
+    jitterScale: 1
+    mipBias: 0
+    varianceClampScale: 0.9
+    contrastAdaptiveSharpening: 0
 --- !u!1 &892476933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1041,7 +1087,7 @@ Transform:
   m_GameObject: {fileID: 1003178154}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.16, z: -4}
+  m_LocalPosition: {x: 0.01, y: 0.16, z: -4}
   m_LocalScale: {x: 2.4, y: 2.4, z: 0.45}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1060,34 +1106,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _auraModule:
-    auraTexture: {fileID: 2800000, guid: 578cd4b7fabb7d844967df3fc22f41ce, type: 3}
+    auraTexture: {fileID: 2800000, guid: dbb4645b90472eb448779b4f0f0d6b45, type: 3}
     softFade: 0.1
     pulseIntensity: 0.5
     layerR:
       name: Core (R)
       active: 1
-      color: {r: 0.2, g: 0.7, b: 1, a: 0.95}
+      color: {r: 0.108668566, g: 0.42864195, b: 0.6226415, a: 0.95}
       scale: 1
       rotationSpeed: 15
       pulseSpeed: 0
     layerG:
       name: Inner (G)
       active: 1
-      color: {r: 0.4, g: 1, b: 0.55, a: 0.75}
+      color: {r: 0.11196155, g: 0.6415094, b: 0.24348329, a: 0.75}
       scale: 1
       rotationSpeed: -8
       pulseSpeed: 0
     layerB:
       name: Outer (B)
       active: 1
-      color: {r: 1, g: 0.55, b: 0.25, a: 0.65}
+      color: {r: 0.4056604, g: 0.05845793, b: 0.051664297, a: 0.65}
       scale: 1
       rotationSpeed: 0
       pulseSpeed: 1.5
     layerA:
       name: Detail (A)
       active: 1
-      color: {r: 1, g: 1, b: 1, a: 1}
+      color: {r: 0.8207547, g: 0.375534, b: 0.375534, a: 1}
       scale: 1
       rotationSpeed: 0
       pulseSpeed: 0
@@ -1329,8 +1375,9 @@ GameObject:
   - component: {fileID: 1189313651}
   - component: {fileID: 1189313650}
   - component: {fileID: 1189313649}
-  - component: {fileID: 1189313648}
-  m_Layer: 0
+  - component: {fileID: 1189313653}
+  - component: {fileID: 1189313654}
+  m_Layer: 3
   m_Name: Track Cart
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1352,44 +1399,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1394994378}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1189313648
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1189313646}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88e104fee1b350544be31aaf525320b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  decalPrefab: {fileID: 0}
-  triggerMode: 0
-  footprintModule:
-    mode: 1
-    lifeTime: 14
-    tintColor: {r: 1, g: 0.8, b: 0.55, a: 1}
-    softFade: 0.35
-    leftFootTex: {fileID: 0}
-    rightFootTex: {fileID: 0}
-    leftFootParticle: {fileID: 0}
-    rightFootParticle: {fileID: 0}
-    footprintSize: 0.3
-    stepSideOffset: 0.15
-    trackTexture: {fileID: 2800000, guid: dbb4645b90472eb448779b4f0f0d6b45, type: 3}
-    trackWidth: 0.35
-    trackLength: 0.45
-    tilingSize: 0.8
-    sampleInterval: 0.22
-    stretchingWithSpeed: 0
-    wheelCount: 2
-    wheelSpacing: 0.7
-    raycastDistance: 1.5
-    groundLayer:
-      serializedVersion: 2
-      m_Bits: 4294967295
-  minStepDistance: 0.25
 --- !u!114 &1189313649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1477,6 +1486,78 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1189313646}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1189313653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189313646}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1a50e1c97854fa7a7208b1e211be156, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wheelAnchors:
+  - {fileID: 1189313647}
+  emitOnPlay: 1
+  tireTrackModule:
+    texture: {fileID: 2800000, guid: 70310011577d23c46a6132896bd5644b, type: 3}
+    material: {fileID: 0}
+    color: {r: 1, g: 1, b: 1, a: 1}
+    trackWidth: 0.32
+    textureRepeatMeters: 1.2
+    sortingOrder: 9000
+    wheelCount: 2
+    wheelSpacing: 1.45
+    sampleDistance: 0.32
+    minSpeed: 0.08
+    groundLayer:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    raycastDistance: 1.2
+    normalOffset: 0.012
+    lifetime: 10
+    fadeDuration: 2
+    maxPointsPerWheel: 192
+--- !u!114 &1189313654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189313646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88e104fee1b350544be31aaf525320b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decalPrefab: {fileID: 0}
+  triggerMode: 0
+  footprintModule:
+    mode: 1
+    lifeTime: 0.91
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    softFade: 0.034
+    leftFootTex: {fileID: 0}
+    rightFootTex: {fileID: 0}
+    leftFootParticle: {fileID: 0}
+    rightFootParticle: {fileID: 0}
+    footprintSize: 0.3
+    stepSideOffset: 0.15
+    trackTexture: {fileID: 2800000, guid: 512646cfba2cb0540b49cfc289b08378, type: 3}
+    trackWidth: 0.4
+    trackLength: 0.5
+    tilingSize: 1
+    sampleInterval: 0.2
+    stretchingWithSpeed: 0
+    wheelCount: 2
+    wheelSpacing: 1.5
+    raycastDistance: 1.5
+    groundLayer:
+      serializedVersion: 2
+      m_Bits: 4294967295
+  minStepDistance: 0.8
 --- !u!1 &1193616967
 GameObject:
   m_ObjectHideFlags: 0
@@ -1624,7 +1705,8 @@ Material:
   m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _NORMALMAP
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -1638,16 +1720,16 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: 128269df1f8b4754eabf743ccc4aee05, type: 3}
+        m_Scale: {x: 20, y: 18.16}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: d481966a6219a68478ccc394bcaeebe6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Scale: {x: 1, y: 1.28}
         m_Offset: {x: 0, y: 0}
     - _DetailMask:
         m_Texture: {fileID: 0}
@@ -1662,8 +1744,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
+        m_Texture: {fileID: 2800000, guid: 128269df1f8b4754eabf743ccc4aee05, type: 3}
+        m_Scale: {x: 20, y: 18.16}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
@@ -1712,7 +1794,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _Metallic: 0
+    - _Metallic: 0.24
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
@@ -1726,8 +1808,8 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.22, g: 0.24, b: 0.25, a: 1}
-    - _Color: {r: 0.21999997, g: 0.23999995, b: 0.24999997, a: 1}
+    - _BaseColor: {r: 0.43373975, g: 0.49873725, b: 0.5377358, a: 1}
+    - _Color: {r: 0.43373972, g: 0.49873722, b: 0.53773576, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -2213,7 +2295,8 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
+  stringTagMap:
+    RenderType: Opaque
   disabledShaderPasses: []
   m_LockedProperties: 
   m_SavedProperties:
@@ -2309,7 +2392,7 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.45, g: 0.72, b: 0.92, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.45, g: 0.72, b: 0.92, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
@@ -2349,9 +2432,9 @@ MonoBehaviour:
     color: {r: 1, g: 0.85, b: 0.35, a: 1}
     sizeRange: {x: 0.18, y: 0.34}
     projectionDepth: 0.45
-    softFade: 0.25
+    softFade: 0
     sortingOrder: 12000
-    lifetime: 16
+    lifetime: 1
     normalOffset: 0.01
     allowedLayers:
       serializedVersion: 2
@@ -2709,9 +2792,9 @@ MonoBehaviour:
   triggerMode: 0
   footprintModule:
     mode: 0
-    lifeTime: 12
-    tintColor: {r: 0.75, g: 0.95, b: 1, a: 1}
-    softFade: 0.4
+    lifeTime: 1
+    tintColor: {r: 1, g: 1, b: 1, a: 1}
+    softFade: 0
     leftFootTex: {fileID: 2800000, guid: 70310011577d23c46a6132896bd5644b, type: 3}
     rightFootTex: {fileID: 2800000, guid: 512646cfba2cb0540b49cfc289b08378, type: 3}
     leftFootParticle: {fileID: 0}
@@ -2744,8 +2827,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localAxis: {x: 0, y: 0, z: 1}
-  distance: 4.5
-  speed: 1.2
+  distance: 6.72
+  speed: 5.64
   rotateAlongPath: 1
 --- !u!23 &2072145950
 MeshRenderer:

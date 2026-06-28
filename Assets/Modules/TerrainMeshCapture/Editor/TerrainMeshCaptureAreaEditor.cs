@@ -88,10 +88,10 @@ namespace TerrainMeshCapture.Editor
 
             Handles.color = AreaHandleColor;
             EditorGUI.BeginChangeCheck();
-            Vector3 newLeft = Handles.Slider(left, -terrainRight, handleSize, Handles.CircleHandleCap, 0f);
-            Vector3 newRight = Handles.Slider(right, terrainRight, handleSize, Handles.CircleHandleCap, 0f);
-            Vector3 newBottom = Handles.Slider(bottom, -terrainForward, handleSize, Handles.CircleHandleCap, 0f);
-            Vector3 newTop = Handles.Slider(top, terrainForward, handleSize, Handles.CircleHandleCap, 0f);
+            Vector3 newLeft = Handles.Slider(left, -terrainRight, handleSize, XzSolidDiscHandleCap, 0f);
+            Vector3 newRight = Handles.Slider(right, terrainRight, handleSize, XzSolidDiscHandleCap, 0f);
+            Vector3 newBottom = Handles.Slider(bottom, -terrainForward, handleSize, XzSolidDiscHandleCap, 0f);
+            Vector3 newTop = Handles.Slider(top, terrainForward, handleSize, XzSolidDiscHandleCap, 0f);
             if (!EditorGUI.EndChangeCheck())
             {
                 return;
@@ -175,6 +175,22 @@ namespace TerrainMeshCapture.Editor
         private static float GetModernHandleSize(Vector3 position, float scale)
         {
             return Mathf.Clamp(HandleUtility.GetHandleSize(position) * scale, 0.25f, 8f);
+        }
+
+        private static void XzSolidDiscHandleCap(int controlId, Vector3 position, Quaternion rotation, float size, EventType eventType)
+        {
+            const float RadiusScale = 0.55f;
+            float radius = size * RadiusScale;
+            switch (eventType)
+            {
+                case EventType.Layout:
+                    HandleUtility.AddControl(controlId, HandleUtility.DistanceToCircle(position, radius));
+                    break;
+                case EventType.Repaint:
+                    Handles.DrawSolidDisc(position, Vector3.up, radius);
+                    Handles.DrawWireDisc(position, Vector3.up, radius);
+                    break;
+            }
         }
 
         private static void DrawSceneLabel(Vector3 position, string text, Color color)

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d6bb0c7b7a5402792c52c13881ddc3c, type: 3}
+  m_Name: AddressablesResourceCatalog
+  m_EditorClassIdentifier: 
+  _keys:
+  - Assets/Demo/Data/WorldSceneDriver.prefab
+  - Assets/Demo/Shader/NewShaderVariants.shadervariants
+  - CharacterNPRArray
+  - DecalAtlasConfig
+  - DecalShaderMini
+  - DecalStencilWriteMini
+  - EditorSceneList
+  - NewDecalAtlasMini
+  - Resources
+  - Shared/DemoAura1_e8362d54
+  - Shared/DemoAura2_60b2f0e7
+  - Shared/GridTex_128269df
+  - Shared/GridTex_1_normal_d481966a
+  - Shared/Icon_DecalMini_1_70310011
+  - Shared/PlayerState_9635d204
+  - Shared/icon_Spawn_1_dbb4645b
+  - Shared/icon_gzm_loot_1_512646cf
+  - TMP_Bitmap
+  - TMP_Bitmap-Custom-Atlas
+  - TMP_Bitmap-Mobile
+  - TMP_SDF
+  - TMP_SDF Overlay
+  - TMP_SDF SSD
+  - TMP_SDF-Mobile
+  - TMP_SDF-Mobile Masking
+  - TMP_SDF-Mobile Overlay
+  - TMP_SDF-Mobile SSD
+  - TMP_SDF-Surface
+  - TMP_SDF-Surface-Mobile
+  - TMP_Sprite
