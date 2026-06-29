@@ -45,4 +45,4 @@ MonoBehaviour:
   textureMipMaps: 1
   fallbackAlbedo: {r: 1, g: 1, b: 1, a: 1}
   createMaterials: 1
-  createPrefab: 1
+  createPrefab: 0
