@@ -20,23 +20,28 @@ MonoBehaviour:
   writeMode: 0
   shader: {fileID: 0}
   bakeScope: 1
-  areaSize: {x: 20, y: 40}
-  blockSize: {x: 20, y: 20}
-  samplesX: 65
-  samplesZ: 65
+  areaSize: {x: 22, y: 11}
+  blockSize: {x: 11, y: 11}
+  samplesX: 33
+  samplesZ: 33
   heightOffset: 0
   boundsMode: 1
-  heightSamplingMode: 1
+  heightSamplingMode: 0
   meshGenerationMode: 0
   generateSkirts: 0
   skirtDepth: 1
-  simplifyTargetRatio: 0.338
-  simplifyMaxError: 0.15
+  adaptiveMaxHeightError: 0.032864273
+  adaptiveMinCellSamples: 1
+  adaptiveMaxTriangles: 1196
+  adaptiveCurvatureThreshold: 0.35
+  adaptiveCurvaturePenalty: 12
+  adaptiveFlipPasses: 48
   generateNormals: 1
   generateTangents: 1
   generateUv2: 0
   textureBakeMode: 1
-  textureResolution: 1024
+  textureSizeMode: 1
+  textureResolution: 512
   textureMipMaps: 1
   fallbackAlbedo: {r: 1, g: 1, b: 1, a: 1}
   createMaterials: 1
