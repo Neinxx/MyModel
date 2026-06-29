@@ -9,9 +9,13 @@ namespace TerrainMeshCapture.Editor
     {
         private static readonly Color AreaHandleColor = new Color(0.1f, 0.85f, 1f, 1f);
         private static readonly Color AreaGuideColor = new Color(0.1f, 0.85f, 1f, 0.65f);
+        private static bool showGizmoSettings;
         private static GUIStyle sceneLabelStyle;
 
         private UnityEditor.Editor profileEditor;
+        private bool hasComplexityAnalysis;
+        private TerrainComplexityAnalysis complexityAnalysis;
+        private string complexityAnalysisError;
 
         public override void OnInspectorGUI()
         {
@@ -20,16 +24,33 @@ namespace TerrainMeshCapture.Editor
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("profile"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("drawGizmo"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("gizmoColor"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("gizmoWireColor"));
+            if (serializedObject.FindProperty("drawGizmo").boolValue)
+            {
+                showGizmoSettings = EditorGUILayout.Foldout(showGizmoSettings, "Gizmo Settings", true);
+                if (showGizmoSettings)
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("gizmoColor"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("gizmoWireColor"));
+                    EditorGUI.indentLevel--;
+                }
+            }
+
             serializedObject.ApplyModifiedProperties();
 
             EditorGUILayout.Space(8);
             DrawResolvedTerrain(area);
             DrawProfileEditor(area);
-            DrawBakeEstimate(area);
-            DrawPreviewButtons(area);
-            DrawBakeButton(area);
+
+            TerrainMeshCaptureAssetWriter.TerrainMeshCaptureBakePlan plan = default;
+            List<string> issues = new List<string>();
+            bool hasPlan = area.Profile != null
+                && TerrainMeshCaptureAssetWriter.TryBuildBakePlan(area, area.Profile, out plan, out issues);
+
+            DrawBakeEstimate(area, hasPlan, plan, issues);
+            DrawAutoConfiguration(area, hasPlan, plan);
+            DrawPreviewButtons(area, hasPlan);
+            DrawBakeButton(area, hasPlan);
         }
 
         private void OnSceneGUI()
@@ -72,7 +93,8 @@ namespace TerrainMeshCapture.Editor
 
         private static void DrawAreaSizeHandles(TerrainMeshCaptureArea area, Terrain terrain, TerrainData terrainData, Rect rect)
         {
-            float blockSize = Mathf.Max(1f, Mathf.Round(area.Profile.SquareBlockSize));
+            bool splitByBlock = area.Profile.BakeScope == TerrainCaptureBakeScope.SplitByBlockSize;
+            float snapSize = splitByBlock ? Mathf.Max(1f, Mathf.Round(area.Profile.SquareBlockSize)) : 1f;
             float handleSize = GetModernHandleSize(area.transform.position, 0.16f);
             Vector3 left = SampleWorld(terrain, terrainData, rect.xMin, rect.center.y);
             Vector3 right = SampleWorld(terrain, terrainData, rect.xMax, rect.center.y);
@@ -83,8 +105,8 @@ namespace TerrainMeshCapture.Editor
             Vector3 terrainForward = terrain.transform.TransformDirection(Vector3.forward);
 
             Handles.color = AreaGuideColor;
-            DrawSceneLabel(right + Vector3.up * handleSize * 1.5f, $"Width {Mathf.RoundToInt(rect.width)} ({Mathf.RoundToInt(rect.width / blockSize)} blocks)", AreaHandleColor);
-            DrawSceneLabel(top + Vector3.up * handleSize * 1.5f, $"Depth {Mathf.RoundToInt(rect.height)} ({Mathf.RoundToInt(rect.height / blockSize)} blocks)", AreaHandleColor);
+            DrawSceneLabel(right + Vector3.up * handleSize * 1.5f, BuildSizeLabel("Width", rect.width, snapSize, splitByBlock), AreaHandleColor);
+            DrawSceneLabel(top + Vector3.up * handleSize * 1.5f, BuildSizeLabel("Depth", rect.height, snapSize, splitByBlock), AreaHandleColor);
 
             Handles.color = AreaHandleColor;
             EditorGUI.BeginChangeCheck();
@@ -101,10 +123,10 @@ namespace TerrainMeshCapture.Editor
             Vector3 rightLocal = terrain.transform.InverseTransformPoint(newRight);
             Vector3 bottomLocal = terrain.transform.InverseTransformPoint(newBottom);
             Vector3 topLocal = terrain.transform.InverseTransformPoint(newTop);
-            Rect snappedRect = SnapDraggedRectToBlockGrid(
+            Rect snappedRect = SnapDraggedRectToGrid(
                 rect,
                 terrainData.size,
-                blockSize,
+                snapSize,
                 leftLocal.x,
                 rightLocal.x,
                 bottomLocal.z,
@@ -122,15 +144,28 @@ namespace TerrainMeshCapture.Editor
             SceneView.RepaintAll();
         }
 
-        private static Rect SnapDraggedRectToBlockGrid(
+        private static string BuildSizeLabel(string axis, float length, float snapSize, bool splitByBlock)
+        {
+            int roundedLength = Mathf.RoundToInt(length);
+            if (!splitByBlock)
+            {
+                return $"{axis} {roundedLength}";
+            }
+
+            int blocks = Mathf.Max(1, Mathf.RoundToInt(length / Mathf.Max(1f, snapSize)));
+            return $"{axis} {roundedLength} ({blocks} blocks)";
+        }
+
+        private static Rect SnapDraggedRectToGrid(
             Rect rect,
             Vector3 terrainSize,
-            float blockSize,
+            float snapSize,
             float draggedLeft,
             float draggedRight,
             float draggedBottom,
             float draggedTop)
         {
+            snapSize = Mathf.Max(1f, Mathf.Round(snapSize));
             float leftDelta = Mathf.Abs(draggedLeft - rect.xMin);
             float rightDelta = Mathf.Abs(draggedRight - rect.xMax);
             float bottomDelta = Mathf.Abs(draggedBottom - rect.yMin);
@@ -143,33 +178,33 @@ namespace TerrainMeshCapture.Editor
 
             if (Mathf.Approximately(maxDelta, leftDelta))
             {
-                int blocks = GetSnappedBlockCount(xMax - Mathf.Clamp(draggedLeft, 0f, xMax - blockSize), blockSize, xMax / blockSize);
-                xMin = xMax - blocks * blockSize;
+                int steps = GetSnappedStepCount(xMax - Mathf.Clamp(draggedLeft, 0f, xMax - snapSize), snapSize, xMax / snapSize);
+                xMin = xMax - steps * snapSize;
             }
             else if (Mathf.Approximately(maxDelta, rightDelta))
             {
-                int blocks = GetSnappedBlockCount(Mathf.Clamp(draggedRight, xMin + blockSize, terrainSize.x) - xMin, blockSize, (terrainSize.x - xMin) / blockSize);
-                xMax = xMin + blocks * blockSize;
+                int steps = GetSnappedStepCount(Mathf.Clamp(draggedRight, xMin + snapSize, terrainSize.x) - xMin, snapSize, (terrainSize.x - xMin) / snapSize);
+                xMax = xMin + steps * snapSize;
             }
             else if (Mathf.Approximately(maxDelta, bottomDelta))
             {
-                int blocks = GetSnappedBlockCount(zMax - Mathf.Clamp(draggedBottom, 0f, zMax - blockSize), blockSize, zMax / blockSize);
-                zMin = zMax - blocks * blockSize;
+                int steps = GetSnappedStepCount(zMax - Mathf.Clamp(draggedBottom, 0f, zMax - snapSize), snapSize, zMax / snapSize);
+                zMin = zMax - steps * snapSize;
             }
             else
             {
-                int blocks = GetSnappedBlockCount(Mathf.Clamp(draggedTop, zMin + blockSize, terrainSize.z) - zMin, blockSize, (terrainSize.z - zMin) / blockSize);
-                zMax = zMin + blocks * blockSize;
+                int steps = GetSnappedStepCount(Mathf.Clamp(draggedTop, zMin + snapSize, terrainSize.z) - zMin, snapSize, (terrainSize.z - zMin) / snapSize);
+                zMax = zMin + steps * snapSize;
             }
 
             return Rect.MinMaxRect(xMin, zMin, xMax, zMax);
         }
 
-        private static int GetSnappedBlockCount(float length, float blockSize, float maxBlocks)
+        private static int GetSnappedStepCount(float length, float snapSize, float maxSteps)
         {
-            int upperBound = Mathf.Max(1, Mathf.FloorToInt(maxBlocks));
-            int blocks = Mathf.RoundToInt(length / Mathf.Max(1f, blockSize));
-            return Mathf.Clamp(blocks, 1, upperBound);
+            int upperBound = Mathf.Max(1, Mathf.FloorToInt(maxSteps));
+            int steps = Mathf.RoundToInt(length / Mathf.Max(1f, snapSize));
+            return Mathf.Clamp(steps, 1, upperBound);
         }
 
         private static float GetModernHandleSize(Vector3 position, float scale)
@@ -216,8 +251,19 @@ namespace TerrainMeshCapture.Editor
         private static void SetAreaSize(TerrainMeshCaptureArea area, Vector2 size)
         {
             var serializedProfile = new SerializedObject(area.Profile);
-            float blockSize = Mathf.Max(1f, Mathf.Round(area.Profile.SquareBlockSize));
-            serializedProfile.FindProperty("areaSize").vector2Value = TerrainMeshCaptureProfile.SnapAreaSizeToBlockGrid(size, blockSize);
+            SerializedProperty areaSize = serializedProfile.FindProperty("areaSize");
+            if (area.Profile.BakeScope == TerrainCaptureBakeScope.SplitByBlockSize)
+            {
+                float blockSize = Mathf.Max(1f, Mathf.Round(area.Profile.SquareBlockSize));
+                areaSize.vector2Value = TerrainMeshCaptureProfile.SnapAreaSizeToBlockGrid(size, blockSize);
+            }
+            else
+            {
+                areaSize.vector2Value = new Vector2(
+                    Mathf.Max(1f, Mathf.Round(size.x)),
+                    Mathf.Max(1f, Mathf.Round(size.y)));
+            }
+
             serializedProfile.ApplyModifiedProperties();
             EditorUtility.SetDirty(area.Profile);
         }
@@ -257,7 +303,11 @@ namespace TerrainMeshCapture.Editor
             profileEditor.OnInspectorGUI();
         }
 
-        private void DrawBakeEstimate(TerrainMeshCaptureArea area)
+        private void DrawBakeEstimate(
+            TerrainMeshCaptureArea area,
+            bool hasPlan,
+            TerrainMeshCaptureAssetWriter.TerrainMeshCaptureBakePlan plan,
+            List<string> issues)
         {
             EditorGUILayout.Space(8);
             if (area.Profile == null)
@@ -265,7 +315,7 @@ namespace TerrainMeshCapture.Editor
                 return;
             }
 
-            if (!TerrainMeshCaptureAssetWriter.TryBuildBakePlan(area, area.Profile, out TerrainMeshCaptureAssetWriter.TerrainMeshCaptureBakePlan plan, out List<string> issues))
+            if (!hasPlan)
             {
                 for (int i = 0; i < issues.Count; i++)
                 {
@@ -277,17 +327,89 @@ namespace TerrainMeshCapture.Editor
 
             EditorGUILayout.LabelField("Grid", $"{plan.Columns} x {plan.Rows}");
             EditorGUILayout.LabelField("Chunks", plan.ChunkCount.ToString());
-            EditorGUILayout.LabelField("Block Size", $"{area.Profile.SquareBlockSize:0} square");
-            EditorGUILayout.LabelField("Area Size", $"{area.Profile.AreaSize.x:0} x {area.Profile.AreaSize.y:0}");
-            EditorGUILayout.LabelField("Texture", $"{area.Profile.TextureResolution} x {area.Profile.TextureResolution}");
+            if (area.Profile.BakeScope == TerrainCaptureBakeScope.SplitByBlockSize)
+            {
+                EditorGUILayout.LabelField("Block Size", $"{area.Profile.SquareBlockSize:0} square");
+            }
+
+            EditorGUILayout.LabelField("Area Size", $"{plan.AreaRect.width:0} x {plan.AreaRect.height:0}");
+            Vector2Int textureSize = area.Profile.ResolveTextureSize(GetEstimateTextureRect(plan));
+            EditorGUILayout.LabelField("Texture", $"{textureSize.x} x {textureSize.y}");
         }
 
-        private void DrawBakeButton(TerrainMeshCaptureArea area)
+        private static Rect GetEstimateTextureRect(TerrainMeshCaptureAssetWriter.TerrainMeshCaptureBakePlan plan)
+        {
+            if (plan.Columns <= 1 && plan.Rows <= 1)
+            {
+                return plan.AreaRect;
+            }
+
+            float width = plan.AreaRect.width / Mathf.Max(1, plan.Columns);
+            float height = plan.AreaRect.height / Mathf.Max(1, plan.Rows);
+            return new Rect(0f, 0f, width, height);
+        }
+
+        private void DrawAutoConfiguration(
+            TerrainMeshCaptureArea area,
+            bool hasPlan,
+            TerrainMeshCaptureAssetWriter.TerrainMeshCaptureBakePlan plan)
+        {
+            if (area.Profile == null)
+            {
+                return;
+            }
+
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Auto Configuration", EditorStyles.boldLabel);
+            using (new EditorGUI.DisabledScope(!hasPlan))
+            {
+                if (GUILayout.Button("Analyze Terrain Complexity", GUILayout.Height(28)))
+                {
+                    hasComplexityAnalysis = TerrainMeshCaptureComplexityAnalyzer.TryAnalyze(
+                        plan,
+                        area.Profile,
+                        out complexityAnalysis,
+                        out complexityAnalysisError);
+                }
+            }
+
+            if (!hasPlan)
+            {
+                EditorGUILayout.HelpBox("Fix bake plan issues before analyzing complexity.", MessageType.Info);
+                return;
+            }
+
+            if (!hasComplexityAnalysis)
+            {
+                if (!string.IsNullOrEmpty(complexityAnalysisError))
+                {
+                    EditorGUILayout.HelpBox(complexityAnalysisError, MessageType.Warning);
+                }
+
+                return;
+            }
+
+            EditorGUILayout.LabelField("Complexity", $"{complexityAnalysis.Complexity:P0}");
+            EditorGUILayout.LabelField("Height Range", $"{complexityAnalysis.HeightRange:0.###}");
+            EditorGUILayout.LabelField("Average Slope", $"{complexityAnalysis.AverageSlope:0.###}");
+            EditorGUILayout.LabelField("Roughness", $"{complexityAnalysis.Roughness:0.###}");
+            EditorGUILayout.LabelField("Recommended Samples", $"{complexityAnalysis.RecommendedSamplesX} x {complexityAnalysis.RecommendedSamplesZ}");
+            EditorGUILayout.LabelField("Recommended Error", $"{complexityAnalysis.RecommendedMaxHeightError:0.###}");
+            EditorGUILayout.LabelField("Recommended Triangles", complexityAnalysis.RecommendedMaxTriangles.ToString());
+            EditorGUILayout.LabelField("Recommended Texture Long Side", complexityAnalysis.RecommendedTextureResolution.ToString());
+
+            if (GUILayout.Button("Apply Recommended Settings", GUILayout.Height(28)))
+            {
+                TerrainMeshCaptureComplexityAnalyzer.ApplyToProfile(area.Profile, complexityAnalysis);
+                hasComplexityAnalysis = false;
+                Repaint();
+                SceneView.RepaintAll();
+            }
+        }
+
+        private void DrawBakeButton(TerrainMeshCaptureArea area, bool canBake)
         {
             EditorGUILayout.Space(8);
-            bool canBake = area.Profile != null
-                && TerrainMeshCaptureAssetWriter.TryBuildBakePlan(area, area.Profile, out _, out _);
-
             using (new EditorGUI.DisabledScope(!canBake))
             {
                 if (GUILayout.Button("Bake Terrain Mesh Assets", GUILayout.Height(34)))
@@ -297,12 +419,9 @@ namespace TerrainMeshCapture.Editor
             }
         }
 
-        private void DrawPreviewButtons(TerrainMeshCaptureArea area)
+        private void DrawPreviewButtons(TerrainMeshCaptureArea area, bool canPreview)
         {
             EditorGUILayout.Space(8);
-            bool canPreview = area.Profile != null
-                && TerrainMeshCaptureAssetWriter.TryBuildBakePlan(area, area.Profile, out _, out _);
-
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (new EditorGUI.DisabledScope(!canPreview))

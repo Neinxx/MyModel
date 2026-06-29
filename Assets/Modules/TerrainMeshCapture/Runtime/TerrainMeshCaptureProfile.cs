@@ -28,14 +28,23 @@ namespace TerrainMeshCapture
         [SerializeField] private bool generateSkirts;
         [Min(0f)]
         [SerializeField] private float skirtDepth = 1f;
-        [Range(0.05f, 1f)]
-        [SerializeField] private float simplifyTargetRatio = 0.45f;
         [Min(0f)]
-        [SerializeField] private float simplifyMaxError = 0.15f;
+        [SerializeField] private float adaptiveMaxHeightError = 0.25f;
+        [Min(1)]
+        [SerializeField] private int adaptiveMinCellSamples = 1;
+        [Min(32)]
+        [SerializeField] private int adaptiveMaxTriangles = 8192;
+        [Range(0f, 1f)]
+        [SerializeField] private float adaptiveCurvatureThreshold = 0.35f;
+        [Min(0f)]
+        [SerializeField] private float adaptiveCurvaturePenalty = 12f;
+        [Range(0, 256)]
+        [SerializeField] private int adaptiveFlipPasses = 64;
         [SerializeField] private bool generateNormals = true;
         [SerializeField] private bool generateTangents;
         [SerializeField] private bool generateUv2 = true;
         [SerializeField] private TerrainTextureBakeMode textureBakeMode = TerrainTextureBakeMode.Albedo;
+        [SerializeField] private TerrainTextureSizeMode textureSizeMode = TerrainTextureSizeMode.MatchAreaAspect;
         [Min(4)]
         [SerializeField] private int textureResolution = 1024;
         [SerializeField] private bool textureMipMaps;
@@ -54,8 +63,8 @@ namespace TerrainMeshCapture
         public Vector2 AreaSize => areaSize;
         public Vector2 BlockSize => blockSize;
         public float SquareBlockSize => Mathf.Max(1f, Mathf.Round(blockSize.x));
-        public int BlockColumns => GetBlockCount(areaSize.x, SquareBlockSize);
-        public int BlockRows => GetBlockCount(areaSize.y, SquareBlockSize);
+        public int BlockColumns => bakeScope == TerrainCaptureBakeScope.SingleArea ? 1 : GetBlockCount(areaSize.x, SquareBlockSize);
+        public int BlockRows => bakeScope == TerrainCaptureBakeScope.SingleArea ? 1 : GetBlockCount(areaSize.y, SquareBlockSize);
         public int SamplesX => samplesX;
         public int SamplesZ => samplesZ;
         public float HeightOffset => heightOffset;
@@ -64,12 +73,17 @@ namespace TerrainMeshCapture
         public TerrainMeshGenerationMode MeshGenerationMode => meshGenerationMode;
         public bool GenerateSkirts => generateSkirts;
         public float SkirtDepth => skirtDepth;
-        public float SimplifyTargetRatio => simplifyTargetRatio;
-        public float SimplifyMaxError => simplifyMaxError;
+        public float AdaptiveMaxHeightError => adaptiveMaxHeightError;
+        public int AdaptiveMinCellSamples => adaptiveMinCellSamples;
+        public int AdaptiveMaxTriangles => adaptiveMaxTriangles;
+        public float AdaptiveCurvatureThreshold => adaptiveCurvatureThreshold;
+        public float AdaptiveCurvaturePenalty => adaptiveCurvaturePenalty;
+        public int AdaptiveFlipPasses => adaptiveFlipPasses;
         public bool GenerateNormals => generateNormals;
         public bool GenerateTangents => generateTangents;
         public bool GenerateUv2 => generateUv2;
         public TerrainTextureBakeMode TextureBakeMode => textureBakeMode;
+        public TerrainTextureSizeMode TextureSizeMode => textureSizeMode;
         public int TextureResolution => textureResolution;
         public bool TextureMipMaps => textureMipMaps;
         public Color FallbackAlbedo => fallbackAlbedo;
@@ -95,19 +109,31 @@ namespace TerrainMeshCapture
 
             float squareBlockSize = Mathf.Max(1f, Mathf.Round(blockSize.x));
             blockSize = new Vector2(squareBlockSize, squareBlockSize);
-            areaSize = SnapAreaSizeToBlockGrid(areaSize, squareBlockSize);
+            areaSize = bakeScope == TerrainCaptureBakeScope.SplitByBlockSize
+                ? SnapAreaSizeToBlockGrid(areaSize, squareBlockSize)
+                : new Vector2(
+                    Mathf.Max(1f, Mathf.Round(areaSize.x)),
+                    Mathf.Max(1f, Mathf.Round(areaSize.y)));
             samplesX = Mathf.Clamp(samplesX, 2, 4097);
             samplesZ = Mathf.Clamp(samplesZ, 2, 4097);
-            if (meshGenerationMode == TerrainMeshGenerationMode.SimplifiedGrid)
-            {
-                meshGenerationMode = TerrainMeshGenerationMode.UniformGrid;
-            }
+            int adaptiveUniformTriangleLimit = Mathf.Max(2, (samplesX - 1) * (samplesZ - 1) * 2);
+            int adaptiveBoundaryTriangleBudget = Mathf.Min(adaptiveUniformTriangleLimit, Mathf.Max(32, (samplesX + samplesZ) * 2));
+            int adaptiveMaxCellSamples = Mathf.Max(1, Mathf.Min(samplesX - 1, samplesZ - 1));
 
             heightOffset = Mathf.Round(heightOffset);
             skirtDepth = Mathf.Max(0f, Mathf.Round(skirtDepth));
-            simplifyTargetRatio = Mathf.Clamp(simplifyTargetRatio, 0.05f, 1f);
-            simplifyMaxError = Mathf.Max(0f, simplifyMaxError);
+            adaptiveMaxHeightError = Mathf.Max(0f, adaptiveMaxHeightError);
+            adaptiveMinCellSamples = Mathf.Clamp(adaptiveMinCellSamples, 1, adaptiveMaxCellSamples);
+            adaptiveMaxTriangles = Mathf.Clamp(adaptiveMaxTriangles, adaptiveBoundaryTriangleBudget, Mathf.Min(2000000, adaptiveUniformTriangleLimit));
+            adaptiveCurvatureThreshold = Mathf.Clamp01(adaptiveCurvatureThreshold);
+            adaptiveCurvaturePenalty = Mathf.Max(0f, adaptiveCurvaturePenalty);
+            adaptiveFlipPasses = Mathf.Clamp(adaptiveFlipPasses, 0, 256);
             textureResolution = Mathf.Clamp(textureResolution, 4, 8192);
+        }
+
+        public Vector2Int ResolveTextureSize(Rect terrainLocalRect)
+        {
+            return TerrainTextureSizeUtility.Resolve(textureSizeMode, textureResolution, terrainLocalRect);
         }
 
         public static Vector2 SnapAreaSizeToBlockGrid(Vector2 size, float blockSize)

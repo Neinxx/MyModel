@@ -8,6 +8,7 @@ namespace TerrainMeshCapture.Editor
     internal static class TerrainMeshCapturePreviewUtility
     {
         private const string PreviewObjectName = "__TerrainMeshCapturePreview";
+        private static readonly Dictionary<int, LastBakeRecord> LastBakeRecords = new();
 
         public static bool ShowPreview(TerrainMeshCaptureArea area, out string error)
         {
@@ -25,19 +26,23 @@ namespace TerrainMeshCapture.Editor
             }
 
             ClearPreview(area);
+            bool hasLastBake = TryGetLastBake(area.Profile, out LastBakeRecord lastBake);
+            Rect previewRect = hasLastBake ? lastBake.AreaRect : plan.AreaRect;
             var preview = new GameObject(PreviewObjectName)
             {
                 hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild
             };
 
-            Vector3 areaPivot = new Vector3(plan.AreaRect.center.x, 0f, plan.AreaRect.center.y);
+            Vector3 areaPivot = new Vector3(previewRect.center.x, 0f, previewRect.center.y);
             preview.transform.SetPositionAndRotation(
                 plan.Terrain.transform.TransformPoint(areaPivot),
                 plan.Terrain.transform.rotation);
             preview.transform.localScale = plan.Terrain.transform.lossyScale;
             preview.transform.SetParent(area.transform, true);
 
-            bool loadedAny = TryInstantiateBakedPrefab(area.Profile, preview.transform)
+            bool loadedAny = TryInstantiateLastBakedPrefab(area.Profile, lastBake, preview.transform)
+                || TryBuildPreviewFromLastBakedAssets(lastBake, preview.transform)
+                || TryInstantiateBakedPrefab(area.Profile, preview.transform)
                 || TryBuildPreviewFromBakedAssets(area.Profile, plan.AreaRect, preview.transform);
             if (!loadedAny)
             {
@@ -49,6 +54,27 @@ namespace TerrainMeshCapture.Editor
             Selection.activeGameObject = preview;
             SceneView.RepaintAll();
             return true;
+        }
+
+        public static void RecordLastBake(
+            TerrainMeshCaptureProfile profile,
+            Rect areaRect,
+            List<TerrainMeshCaptureAssetWriter.ChunkBakeItem> chunks,
+            List<string> meshPaths,
+            List<string> materialPaths,
+            List<string> prefabPaths)
+        {
+            if (profile == null)
+            {
+                return;
+            }
+
+            LastBakeRecords[profile.GetInstanceID()] = new LastBakeRecord(
+                areaRect,
+                chunks,
+                meshPaths,
+                materialPaths,
+                prefabPaths);
         }
 
         public static void ClearPreview(TerrainMeshCaptureArea area)
@@ -73,8 +99,32 @@ namespace TerrainMeshCapture.Editor
             return area != null && area.transform.Find(PreviewObjectName) != null;
         }
 
+        private static bool TryGetLastBake(TerrainMeshCaptureProfile profile, out LastBakeRecord record)
+        {
+            record = default;
+            return profile != null
+                && LastBakeRecords.TryGetValue(profile.GetInstanceID(), out record)
+                && record.HasMeshes;
+        }
+
+        private static bool TryInstantiateLastBakedPrefab(TerrainMeshCaptureProfile profile, LastBakeRecord record, Transform parent)
+        {
+            if (profile == null || !profile.CreatePrefab || !record.HasPrefab)
+            {
+                return false;
+            }
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(record.PrefabPaths[record.PrefabPaths.Count - 1]);
+            return prefab != null && InstantiatePrefab(prefab, parent);
+        }
+
         private static bool TryInstantiateBakedPrefab(TerrainMeshCaptureProfile profile, Transform parent)
         {
+            if (profile == null || !profile.CreatePrefab)
+            {
+                return false;
+            }
+
             GameObject prefab = LoadLatestAsset<GameObject>(
                 profile.PrefabOutputFolder,
                 $"{Sanitize(profile.AssetName)}_Prefab",
@@ -84,6 +134,11 @@ namespace TerrainMeshCapture.Editor
                 return false;
             }
 
+            return InstantiatePrefab(prefab, parent);
+        }
+
+        private static bool InstantiatePrefab(GameObject prefab, Transform parent)
+        {
             Object instanceObject = PrefabUtility.InstantiatePrefab(prefab, parent);
             if (instanceObject is not GameObject instance)
             {
@@ -97,16 +152,49 @@ namespace TerrainMeshCapture.Editor
             return true;
         }
 
+        private static bool TryBuildPreviewFromLastBakedAssets(LastBakeRecord record, Transform parent)
+        {
+            if (!record.HasMeshes)
+            {
+                return false;
+            }
+
+            return TryBuildPreviewFromBakedAssetPaths(record.Chunks, record.MeshPaths, record.MaterialPaths, record.AreaRect, parent);
+        }
+
         private static bool TryBuildPreviewFromBakedAssets(TerrainMeshCaptureProfile profile, Rect areaRect, Transform parent)
         {
             List<TerrainMeshCaptureAssetWriter.ChunkBakeItem> chunks = TerrainMeshCaptureAssetWriter.BuildChunks(areaRect, profile);
+            var meshPaths = new List<string>(chunks.Count);
+            var materialPaths = new List<string>(chunks.Count);
+            for (int i = 0; i < chunks.Count; i++)
+            {
+                TerrainMeshCaptureAssetWriter.ChunkBakeItem chunk = chunks[i];
+                Mesh mesh = LoadLatestAsset<Mesh>(profile.MeshOutputFolder, $"{chunk.Name}_Mesh", "asset");
+                meshPaths.Add(mesh != null ? AssetDatabase.GetAssetPath(mesh) : string.Empty);
+
+                Material material = LoadLatestAsset<Material>(profile.MaterialOutputFolder, $"{chunk.Name}_Mat", "mat");
+                materialPaths.Add(material != null ? AssetDatabase.GetAssetPath(material) : string.Empty);
+            }
+
+            return TryBuildPreviewFromBakedAssetPaths(chunks, meshPaths, materialPaths, areaRect, parent);
+        }
+
+        private static bool TryBuildPreviewFromBakedAssetPaths(
+            List<TerrainMeshCaptureAssetWriter.ChunkBakeItem> chunks,
+            List<string> meshPaths,
+            List<string> materialPaths,
+            Rect areaRect,
+            Transform parent)
+        {
             Vector3 areaPivot = new Vector3(areaRect.center.x, 0f, areaRect.center.y);
             bool loadedAny = false;
 
             for (int i = 0; i < chunks.Count; i++)
             {
                 TerrainMeshCaptureAssetWriter.ChunkBakeItem chunk = chunks[i];
-                Mesh mesh = LoadLatestAsset<Mesh>(profile.MeshOutputFolder, $"{chunk.Name}_Mesh", "asset");
+                string meshPath = i < meshPaths.Count ? meshPaths[i] : string.Empty;
+                Mesh mesh = string.IsNullOrEmpty(meshPath) ? null : AssetDatabase.LoadAssetAtPath<Mesh>(meshPath);
                 if (mesh == null)
                 {
                     continue;
@@ -124,7 +212,8 @@ namespace TerrainMeshCapture.Editor
                 MeshRenderer meshRenderer = child.AddComponent<MeshRenderer>();
                 meshFilter.sharedMesh = mesh;
 
-                Material material = LoadLatestAsset<Material>(profile.MaterialOutputFolder, $"{chunk.Name}_Mat", "mat");
+                string materialPath = i < materialPaths.Count ? materialPaths[i] : string.Empty;
+                Material material = string.IsNullOrEmpty(materialPath) ? null : AssetDatabase.LoadAssetAtPath<Material>(materialPath);
                 if (material != null)
                 {
                     meshRenderer.sharedMaterial = material;
@@ -204,6 +293,31 @@ namespace TerrainMeshCapture.Editor
             {
                 transforms[i].gameObject.hideFlags = HideFlags.DontSaveInEditor | HideFlags.DontSaveInBuild;
             }
+        }
+
+        private readonly struct LastBakeRecord
+        {
+            public LastBakeRecord(
+                Rect areaRect,
+                List<TerrainMeshCaptureAssetWriter.ChunkBakeItem> chunks,
+                List<string> meshPaths,
+                List<string> materialPaths,
+                List<string> prefabPaths)
+            {
+                AreaRect = areaRect;
+                Chunks = new List<TerrainMeshCaptureAssetWriter.ChunkBakeItem>(chunks);
+                MeshPaths = new List<string>(meshPaths);
+                MaterialPaths = new List<string>(materialPaths);
+                PrefabPaths = new List<string>(prefabPaths);
+            }
+
+            public Rect AreaRect { get; }
+            public List<TerrainMeshCaptureAssetWriter.ChunkBakeItem> Chunks { get; }
+            public List<string> MeshPaths { get; }
+            public List<string> MaterialPaths { get; }
+            public List<string> PrefabPaths { get; }
+            public bool HasMeshes => Chunks != null && MeshPaths != null && MeshPaths.Count > 0;
+            public bool HasPrefab => PrefabPaths != null && PrefabPaths.Count > 0;
         }
     }
 }
