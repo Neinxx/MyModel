@@ -40,8 +40,8 @@ namespace TerrainMeshCapture.Editor
             preview.transform.localScale = plan.Terrain.transform.lossyScale;
             preview.transform.SetParent(area.transform, true);
 
-            bool loadedAny = TryInstantiateLastBakedPrefab(area.Profile, lastBake, preview.transform)
-                || TryBuildPreviewFromLastBakedAssets(lastBake, preview.transform)
+            bool loadedAny = TryBuildPreviewFromLastBakedAssets(lastBake, preview.transform)
+                || TryInstantiateLastBakedPrefab(area.Profile, lastBake, preview.transform)
                 || TryInstantiateBakedPrefab(area.Profile, preview.transform)
                 || TryBuildPreviewFromBakedAssets(area.Profile, plan.AreaRect, preview.transform);
             if (!loadedAny)

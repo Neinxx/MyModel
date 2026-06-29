@@ -20,19 +20,19 @@ MonoBehaviour:
   writeMode: 0
   shader: {fileID: 0}
   bakeScope: 1
-  areaSize: {x: 22, y: 11}
-  blockSize: {x: 11, y: 11}
-  samplesX: 33
-  samplesZ: 33
+  areaSize: {x: 164, y: 82}
+  blockSize: {x: 82, y: 82}
+  samplesX: 65
+  samplesZ: 65
   heightOffset: 0
   boundsMode: 1
   heightSamplingMode: 0
   meshGenerationMode: 0
   generateSkirts: 1
   skirtDepth: 1
-  adaptiveMaxHeightError: 0.06568681
+  adaptiveMaxHeightError: 0.15933877
   adaptiveMinCellSamples: 1
-  adaptiveMaxTriangles: 787
+  adaptiveMaxTriangles: 3633
   adaptiveCurvatureThreshold: 0.35
   adaptiveCurvaturePenalty: 12
   adaptiveFlipPasses: 48

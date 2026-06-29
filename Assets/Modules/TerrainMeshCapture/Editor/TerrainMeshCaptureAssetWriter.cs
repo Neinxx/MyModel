@@ -686,6 +686,19 @@ namespace TerrainMeshCapture.Editor
                 material.EnableKeyword("_NORMALMAP");
             }
 
+            Texture2D splatWeights = LoadTexture(texturePaths.SplatWeightsPath);
+            if (splatWeights != null)
+            {
+                if (material.HasProperty("_Control"))
+                {
+                    material.SetTexture("_Control", splatWeights);
+                }
+
+                if (material.HasProperty("_SplatWeights"))
+                {
+                    material.SetTexture("_SplatWeights", splatWeights);
+                }
+            }
         }
 
         private static Texture2D LoadTexture(string path)
@@ -704,6 +717,11 @@ namespace TerrainMeshCapture.Editor
             if ((outputs & TerrainTextureBakeOutputs.NormalMap) != 0)
             {
                 modes.Add(TerrainTextureBakeMode.NormalMap);
+            }
+
+            if ((outputs & TerrainTextureBakeOutputs.SplatWeights) != 0)
+            {
+                modes.Add(TerrainTextureBakeMode.SplatWeights);
             }
 
             return modes.ToArray();
