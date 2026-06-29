@@ -30,9 +30,9 @@ MonoBehaviour:
   meshGenerationMode: 0
   generateSkirts: 1
   skirtDepth: 1
-  adaptiveMaxHeightError: 0.15933877
+  adaptiveMaxHeightError: 0.15718134
   adaptiveMinCellSamples: 1
-  adaptiveMaxTriangles: 3633
+  adaptiveMaxTriangles: 3701
   adaptiveCurvatureThreshold: 0.35
   adaptiveCurvaturePenalty: 12
   adaptiveFlipPasses: 48
