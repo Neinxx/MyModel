@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace TerrainMeshCapture
@@ -44,6 +45,7 @@ namespace TerrainMeshCapture
         [SerializeField] private bool generateTangents;
         [SerializeField] private bool generateUv2 = true;
         [SerializeField] private TerrainTextureBakeMode textureBakeMode = TerrainTextureBakeMode.Albedo;
+        [SerializeField] private TerrainTextureBakeOutputs textureBakeOutputs = TerrainTextureBakeOutputs.All;
         [SerializeField] private TerrainTextureSizeMode textureSizeMode = TerrainTextureSizeMode.MatchAreaAspect;
         [Min(4)]
         [SerializeField] private int textureResolution = 1024;
@@ -83,6 +85,8 @@ namespace TerrainMeshCapture
         public bool GenerateTangents => generateTangents;
         public bool GenerateUv2 => generateUv2;
         public TerrainTextureBakeMode TextureBakeMode => textureBakeMode;
+        public TerrainTextureBakeOutputs TextureBakeOutputs => textureBakeOutputs;
+        public bool HasTextureOutputs => textureBakeOutputs != TerrainTextureBakeOutputs.None;
         public TerrainTextureSizeMode TextureSizeMode => textureSizeMode;
         public int TextureResolution => textureResolution;
         public bool TextureMipMaps => textureMipMaps;
@@ -128,6 +132,18 @@ namespace TerrainMeshCapture
             adaptiveCurvatureThreshold = Mathf.Clamp01(adaptiveCurvatureThreshold);
             adaptiveCurvaturePenalty = Mathf.Max(0f, adaptiveCurvaturePenalty);
             adaptiveFlipPasses = Mathf.Clamp(adaptiveFlipPasses, 0, 256);
+            textureBakeOutputs &= TerrainTextureBakeOutputs.All;
+            if (textureBakeOutputs == TerrainTextureBakeOutputs.None && textureBakeMode != TerrainTextureBakeMode.None)
+            {
+                textureBakeOutputs = TerrainMeshCaptureSettings.ToTextureBakeOutput(textureBakeMode);
+            }
+
+            if ((textureBakeOutputs & TerrainTextureBakeOutputs.NormalMap) != 0)
+            {
+                generateTangents = true;
+            }
+
+            textureBakeMode = TerrainMeshCaptureSettings.GetPrimaryTextureBakeMode(textureBakeOutputs);
             textureResolution = Mathf.Clamp(textureResolution, 4, 8192);
         }
 
@@ -158,7 +174,23 @@ namespace TerrainMeshCapture
             }
 
             folder = folder.Replace("\\", "/").TrimEnd('/');
-            return folder.StartsWith("Assets") ? folder : fallback;
+            return IsAssetsFolderPath(folder)
+                ? folder
+                : fallback;
+        }
+
+        private static bool IsAssetsFolderPath(string folder)
+        {
+            return folder == "Assets"
+                || folder.StartsWith("Assets/", StringComparison.Ordinal) && !HasParentDirectorySegment(folder);
+        }
+
+        private static bool HasParentDirectorySegment(string folder)
+        {
+            return folder == ".."
+                || folder.StartsWith("../", StringComparison.Ordinal)
+                || folder.EndsWith("/..", StringComparison.Ordinal)
+                || folder.Contains("/../");
         }
     }
 }

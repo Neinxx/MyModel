@@ -43,7 +43,7 @@ namespace TerrainMeshCapture.Editor
 
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(serializedObject.FindProperty("meshOutputFolder"));
-            if ((TerrainTextureBakeMode)serializedObject.FindProperty("textureBakeMode").intValue != TerrainTextureBakeMode.None)
+            if ((TerrainTextureBakeOutputs)serializedObject.FindProperty("textureBakeOutputs").intValue != TerrainTextureBakeOutputs.None)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("textureOutputFolder"));
             }
@@ -148,7 +148,19 @@ namespace TerrainMeshCapture.Editor
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(serializedObject.FindProperty("heightSamplingMode"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("generateNormals"), new GUIContent("Normals"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("generateTangents"), new GUIContent("Tangents"));
+            SerializedProperty textureBakeOutputs = serializedObject.FindProperty("textureBakeOutputs");
+            SerializedProperty generateTangents = serializedObject.FindProperty("generateTangents");
+            bool normalMapOutput = ((TerrainTextureBakeOutputs)textureBakeOutputs.intValue & TerrainTextureBakeOutputs.NormalMap) != 0;
+            if (normalMapOutput)
+            {
+                generateTangents.boolValue = true;
+            }
+
+            using (new EditorGUI.DisabledScope(normalMapOutput))
+            {
+                EditorGUILayout.PropertyField(generateTangents, new GUIContent("Tangents"));
+            }
+
             EditorGUILayout.PropertyField(serializedObject.FindProperty("generateUv2"), new GUIContent("UV2"));
             EditorGUILayout.PropertyField(serializedObject.FindProperty("generateSkirts"));
             if (serializedObject.FindProperty("generateSkirts").boolValue)
@@ -169,9 +181,18 @@ namespace TerrainMeshCapture.Editor
         {
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Texture", EditorStyles.boldLabel);
-            SerializedProperty textureBakeMode = serializedObject.FindProperty("textureBakeMode");
-            EditorGUILayout.PropertyField(textureBakeMode);
-            if ((TerrainTextureBakeMode)textureBakeMode.intValue == TerrainTextureBakeMode.None)
+            SerializedProperty textureBakeOutputs = serializedObject.FindProperty("textureBakeOutputs");
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(textureBakeOutputs, new GUIContent("Bake Outputs"));
+            if (EditorGUI.EndChangeCheck())
+            {
+                TerrainTextureBakeOutputs outputs = (TerrainTextureBakeOutputs)textureBakeOutputs.intValue & TerrainTextureBakeOutputs.All;
+                textureBakeOutputs.intValue = (int)outputs;
+                serializedObject.FindProperty("textureBakeMode").intValue = (int)TerrainMeshCaptureSettings.GetPrimaryTextureBakeMode(outputs);
+            }
+
+            TerrainTextureBakeOutputs selectedOutputs = (TerrainTextureBakeOutputs)textureBakeOutputs.intValue;
+            if (selectedOutputs == TerrainTextureBakeOutputs.None)
             {
                 return;
             }
@@ -191,7 +212,7 @@ namespace TerrainMeshCapture.Editor
 
             EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(serializedObject.FindProperty("textureMipMaps"));
-            if ((TerrainTextureBakeMode)textureBakeMode.intValue == TerrainTextureBakeMode.Albedo)
+            if ((selectedOutputs & TerrainTextureBakeOutputs.Albedo) != 0)
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty("fallbackAlbedo"));
             }

@@ -7,6 +7,9 @@ namespace TerrainMeshCapture
     internal sealed class TerrainMeshAdaptiveHeightTinGenerator : ITerrainMeshGenerator
     {
         private const float AreaEpsilon = 0.000001f;
+        private const float PositionEpsilon = 0.0001f;
+        private const float NormalPenaltyScale = 0.05f;
+        private const float UvPenaltyScale = 0.25f;
 
         public TerrainMeshGenerationMode Mode => TerrainMeshGenerationMode.AdaptiveHeightTin;
 
@@ -30,7 +33,6 @@ namespace TerrainMeshCapture
             var triangles = BuildUniformTriangles(samplesX, samplesZ);
             MarkLockedVertices(vertices, samplesX, samplesZ, settings.AdaptiveEdgeConstraints);
             ComputeCurvature(vertices, triangles);
-            MarkFeatureVertices(vertices, settings.AdaptiveCurvatureThreshold);
             BuildQuadrics(vertices, triangles);
             Simplify(vertices, triangles, settings);
             return BuildMeshData(vertices, triangles, settings);
@@ -65,8 +67,7 @@ namespace TerrainMeshCapture
             int lastZ = samplesZ - 1;
             for (int i = 0; i < vertices.Length; i++)
             {
-                bool border = vertices[i].X == 0 || vertices[i].X == lastX || vertices[i].Z == 0 || vertices[i].Z == lastZ;
-                vertices[i].Locked = border;
+                vertices[i].Locked = vertices[i].X == 0 || vertices[i].X == lastX || vertices[i].Z == 0 || vertices[i].Z == lastZ;
             }
 
             if (edgeConstraints == null)
@@ -119,7 +120,7 @@ namespace TerrainMeshCapture
                 Vector3 a = vertices[triangle.A].Point.Position;
                 Vector3 b = vertices[triangle.B].Point.Position;
                 Vector3 c = vertices[triangle.C].Point.Position;
-                float area = Mathf.Abs(Vector3.Cross(b - a, c - a).magnitude) * 0.5f;
+                float area = Vector3.Cross(b - a, c - a).magnitude * 0.5f;
                 if (area <= AreaEpsilon)
                 {
                     continue;
@@ -168,18 +169,6 @@ namespace TerrainMeshCapture
             laplace[b] += cotangent * (vertices[b].Point.Position - vertices[a].Point.Position);
         }
 
-        private static void MarkFeatureVertices(SimplifyVertex[] vertices, float threshold)
-        {
-            threshold = Mathf.Clamp01(threshold);
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                if (vertices[i].Curvature >= threshold)
-                {
-                    vertices[i].Locked = true;
-                }
-            }
-        }
-
         private static void BuildQuadrics(SimplifyVertex[] vertices, List<SimplifyTriangle> triangles)
         {
             for (int i = 0; i < triangles.Count; i++)
@@ -216,10 +205,12 @@ namespace TerrainMeshCapture
         {
             int activeTriangles = CountActiveTriangles(triangles);
             int targetTriangles = Mathf.Clamp(settings.AdaptiveMaxTriangles, 2, activeTriangles);
+            float maxGeometricError = Mathf.Max(0f, settings.AdaptiveMaxHeightError);
             int guard = Mathf.Max(1, vertices.Length);
+
             while (activeTriangles > targetTriangles && guard-- > 0)
             {
-                var candidates = BuildCollapseCandidates(vertices, triangles, settings.AdaptiveCurvaturePenalty);
+                var candidates = BuildCollapseCandidates(vertices, triangles, settings);
                 if (candidates.Count == 0)
                 {
                     return;
@@ -235,12 +226,18 @@ namespace TerrainMeshCapture
                     }
 
                     CollapseCandidate candidate = candidates[i];
-                    if (!CanCollapse(vertices, triangles, candidate.Keep, candidate.Remove))
+                    if (maxGeometricError > 0f && candidate.GeometricError > maxGeometricError)
                     {
                         continue;
                     }
 
-                    int removedTriangles = Collapse(vertices, triangles, candidate.Keep, candidate.Remove);
+                    if (!IsCandidateCurrent(vertices, candidate)
+                        || !CanCollapse(vertices, triangles, candidate))
+                    {
+                        continue;
+                    }
+
+                    int removedTriangles = Collapse(vertices, triangles, candidate);
                     activeTriangles -= removedTriangles;
                     collapsedEdges++;
                 }
@@ -255,7 +252,7 @@ namespace TerrainMeshCapture
         private static List<CollapseCandidate> BuildCollapseCandidates(
             SimplifyVertex[] vertices,
             List<SimplifyTriangle> triangles,
-            float curvaturePenalty)
+            TerrainMeshCaptureSettings settings)
         {
             var edges = new HashSet<EdgeKey>();
             for (int i = 0; i < triangles.Count; i++)
@@ -271,54 +268,172 @@ namespace TerrainMeshCapture
                 edges.Add(new EdgeKey(triangle.C, triangle.A));
             }
 
+            float curvatureThreshold = Mathf.Clamp01(settings.AdaptiveCurvatureThreshold);
+            float curvaturePenalty = Mathf.Max(0f, settings.AdaptiveCurvaturePenalty);
             var candidates = new List<CollapseCandidate>(edges.Count);
             foreach (EdgeKey edge in edges)
             {
-                AddCandidate(vertices, candidates, edge.A, edge.B, curvaturePenalty);
-                AddCandidate(vertices, candidates, edge.B, edge.A, curvaturePenalty);
+                if (TryBuildCandidate(vertices, edge.A, edge.B, curvatureThreshold, curvaturePenalty, out CollapseCandidate candidate))
+                {
+                    candidates.Add(candidate);
+                }
             }
 
             return candidates;
         }
 
-        private static void AddCandidate(
+        private static bool TryBuildCandidate(
             SimplifyVertex[] vertices,
-            List<CollapseCandidate> candidates,
-            int keep,
-            int remove,
-            float curvaturePenalty)
+            int a,
+            int b,
+            float curvatureThreshold,
+            float curvaturePenalty,
+            out CollapseCandidate candidate)
         {
-            if (!vertices[keep].Active || !vertices[remove].Active || vertices[remove].Locked)
-            {
-                return;
-            }
-
-            if (vertices[keep].Locked && vertices[remove].Locked)
-            {
-                return;
-            }
-
-            Quadric quadric = vertices[keep].Quadric;
-            quadric.Add(vertices[remove].Quadric);
-            Vector3 target = vertices[keep].Point.Position;
-            float cost = quadric.Evaluate(target);
-            float curvature = Mathf.Max(vertices[keep].Curvature, vertices[remove].Curvature);
-            cost *= 1f + Mathf.Max(0f, curvaturePenalty) * curvature;
-            cost += CalculateSquaredDistanceXZ(vertices[keep].Point.Position, vertices[remove].Point.Position) * 0.0001f;
-            candidates.Add(new CollapseCandidate(keep, remove, cost));
-        }
-
-        private static bool CanCollapse(SimplifyVertex[] vertices, List<SimplifyTriangle> triangles, int keep, int remove)
-        {
-            if (!vertices[keep].Active || !vertices[remove].Active || vertices[remove].Locked)
+            candidate = default;
+            if (!vertices[a].Active || !vertices[b].Active)
             {
                 return false;
             }
 
+            if (vertices[a].Locked && vertices[b].Locked)
+            {
+                return false;
+            }
+
+            int keep = vertices[a].Locked ? a : b;
+            int remove = vertices[a].Locked ? b : a;
+            if (!vertices[a].Locked && vertices[b].Locked)
+            {
+                keep = b;
+                remove = a;
+            }
+
+            Quadric quadric = vertices[keep].Quadric;
+            quadric.Add(vertices[remove].Quadric);
+
+            TerrainMeshSamplePoint target = vertices[keep].Locked
+                ? vertices[keep].Point
+                : BuildTargetPoint(vertices[keep].Point, vertices[remove].Point, quadric);
+
+            float geometricError = quadric.EvaluateRms(target.Position);
+            float curvature = Mathf.Max(vertices[keep].Curvature, vertices[remove].Curvature);
+            float featureStrength = curvature <= curvatureThreshold
+                ? 0f
+                : Mathf.InverseLerp(curvatureThreshold, 1f, curvature);
+            float normalPenalty = (1f - Mathf.Clamp01(Vector3.Dot(vertices[keep].Point.Normal, vertices[remove].Point.Normal))) * NormalPenaltyScale;
+            float uvPenalty = (vertices[keep].Point.Uv - vertices[remove].Point.Uv).sqrMagnitude * UvPenaltyScale;
+            float lengthPenalty = (vertices[keep].Point.Position - vertices[remove].Point.Position).sqrMagnitude * 0.000001f;
+            float cost = geometricError
+                + normalPenalty
+                + uvPenalty
+                + lengthPenalty
+                + featureStrength * curvaturePenalty;
+
+            candidate = new CollapseCandidate(
+                keep,
+                remove,
+                vertices[keep].Generation,
+                vertices[remove].Generation,
+                target,
+                quadric,
+                cost,
+                geometricError);
+            return true;
+        }
+
+        private static TerrainMeshSamplePoint BuildTargetPoint(
+            TerrainMeshSamplePoint keep,
+            TerrainMeshSamplePoint remove,
+            Quadric quadric)
+        {
+            Vector3 keepPosition = keep.Position;
+            Vector3 removePosition = remove.Position;
+            Vector3 midpoint = (keepPosition + removePosition) * 0.5f;
+            Vector3 target = midpoint;
+            float bestError = quadric.Evaluate(midpoint);
+
+            TryChooseBetterTarget(quadric, keepPosition, ref target, ref bestError);
+            TryChooseBetterTarget(quadric, removePosition, ref target, ref bestError);
+
+            if (quadric.TrySolve(out Vector3 solved) && IsInsideEdgeBounds(solved, keepPosition, removePosition))
+            {
+                TryChooseBetterTarget(quadric, solved, ref target, ref bestError);
+            }
+
+            float t = GetEdgeInterpolation(target, keepPosition, removePosition);
+            Vector3 normal = Vector3.Slerp(keep.Normal, remove.Normal, t);
+            if (normal.sqrMagnitude <= AreaEpsilon)
+            {
+                normal = Vector3.up;
+            }
+
+            return new TerrainMeshSamplePoint(
+                target,
+                normal.normalized,
+                Vector2.Lerp(keep.Uv, remove.Uv, t),
+                Vector2.Lerp(keep.Uv2, remove.Uv2, t));
+        }
+
+        private static void TryChooseBetterTarget(Quadric quadric, Vector3 value, ref Vector3 target, ref float bestError)
+        {
+            float error = quadric.Evaluate(value);
+            if (error >= bestError)
+            {
+                return;
+            }
+
+            bestError = error;
+            target = value;
+        }
+
+        private static bool IsInsideEdgeBounds(Vector3 value, Vector3 a, Vector3 b)
+        {
+            float minX = Mathf.Min(a.x, b.x) - PositionEpsilon;
+            float maxX = Mathf.Max(a.x, b.x) + PositionEpsilon;
+            float minY = Mathf.Min(a.y, b.y) - PositionEpsilon;
+            float maxY = Mathf.Max(a.y, b.y) + PositionEpsilon;
+            float minZ = Mathf.Min(a.z, b.z) - PositionEpsilon;
+            float maxZ = Mathf.Max(a.z, b.z) + PositionEpsilon;
+            return value.x >= minX && value.x <= maxX
+                && value.y >= minY && value.y <= maxY
+                && value.z >= minZ && value.z <= maxZ;
+        }
+
+        private static float GetEdgeInterpolation(Vector3 target, Vector3 a, Vector3 b)
+        {
+            Vector3 edge = b - a;
+            float lengthSq = edge.sqrMagnitude;
+            if (lengthSq <= AreaEpsilon)
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp01(Vector3.Dot(target - a, edge) / lengthSq);
+        }
+
+        private static bool IsCandidateCurrent(SimplifyVertex[] vertices, CollapseCandidate candidate)
+        {
+            return vertices[candidate.Keep].Active
+                && vertices[candidate.Remove].Active
+                && vertices[candidate.Keep].Generation == candidate.KeepGeneration
+                && vertices[candidate.Remove].Generation == candidate.RemoveGeneration;
+        }
+
+        private static bool CanCollapse(SimplifyVertex[] vertices, List<SimplifyTriangle> triangles, CollapseCandidate candidate)
+        {
+            int keep = candidate.Keep;
+            int remove = candidate.Remove;
+            if (vertices[remove].Locked || !AreAdjacent(triangles, keep, remove))
+            {
+                return false;
+            }
+
+            var triangleKeys = new HashSet<TriangleKey>();
             for (int i = 0; i < triangles.Count; i++)
             {
                 SimplifyTriangle triangle = triangles[i];
-                if (!triangle.Active || !triangle.Contains(remove))
+                if (!triangle.Active)
                 {
                     continue;
                 }
@@ -331,12 +446,13 @@ namespace TerrainMeshCapture
                     continue;
                 }
 
-                float oldArea = SignedAreaXZ(
-                    vertices[triangle.A].Point.Position,
-                    vertices[triangle.B].Point.Position,
-                    vertices[triangle.C].Point.Position);
-                float newArea = SignedAreaXZ(vertices[a].Point.Position, vertices[b].Point.Position, vertices[c].Point.Position);
-                if (Mathf.Abs(newArea) <= AreaEpsilon || oldArea * newArea < 0f)
+                bool affected = triangle.Contains(keep) || triangle.Contains(remove);
+                if (affected && !PreservesTriangleShape(vertices, triangle, candidate))
+                {
+                    return false;
+                }
+
+                if (!triangleKeys.Add(new TriangleKey(a, b, c)))
                 {
                     return false;
                 }
@@ -345,11 +461,62 @@ namespace TerrainMeshCapture
             return true;
         }
 
-        private static int Collapse(SimplifyVertex[] vertices, List<SimplifyTriangle> triangles, int keep, int remove)
+        private static bool AreAdjacent(List<SimplifyTriangle> triangles, int a, int b)
         {
-            vertices[keep].Quadric.Add(vertices[remove].Quadric);
+            for (int i = 0; i < triangles.Count; i++)
+            {
+                SimplifyTriangle triangle = triangles[i];
+                if (triangle.Active && triangle.Contains(a) && triangle.Contains(b))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool PreservesTriangleShape(
+            SimplifyVertex[] vertices,
+            SimplifyTriangle oldTriangle,
+            CollapseCandidate candidate)
+        {
+            Vector3 oldA = vertices[oldTriangle.A].Point.Position;
+            Vector3 oldB = vertices[oldTriangle.B].Point.Position;
+            Vector3 oldC = vertices[oldTriangle.C].Point.Position;
+            Vector3 newA = GetCollapsedPosition(vertices, oldTriangle.A, candidate);
+            Vector3 newB = GetCollapsedPosition(vertices, oldTriangle.B, candidate);
+            Vector3 newC = GetCollapsedPosition(vertices, oldTriangle.C, candidate);
+
+            float oldArea = SignedAreaXZ(oldA, oldB, oldC);
+            float newArea = SignedAreaXZ(newA, newB, newC);
+            if (Mathf.Abs(newArea) <= AreaEpsilon || oldArea * newArea <= 0f)
+            {
+                return false;
+            }
+
+            Vector3 oldNormal = Vector3.Cross(oldB - oldA, oldC - oldA);
+            Vector3 newNormal = Vector3.Cross(newB - newA, newC - newA);
+            return oldNormal.sqrMagnitude <= AreaEpsilon
+                || newNormal.sqrMagnitude > AreaEpsilon && Vector3.Dot(oldNormal, newNormal) > 0f;
+        }
+
+        private static Vector3 GetCollapsedPosition(SimplifyVertex[] vertices, int index, CollapseCandidate candidate)
+        {
+            return index == candidate.Keep || index == candidate.Remove
+                ? candidate.Target.Position
+                : vertices[index].Point.Position;
+        }
+
+        private static int Collapse(SimplifyVertex[] vertices, List<SimplifyTriangle> triangles, CollapseCandidate candidate)
+        {
+            int keep = candidate.Keep;
+            int remove = candidate.Remove;
+            vertices[keep].Point = candidate.Target;
+            vertices[keep].Quadric = candidate.Quadric;
             vertices[keep].Curvature = Mathf.Max(vertices[keep].Curvature, vertices[remove].Curvature);
+            vertices[keep].Generation++;
             vertices[remove].Active = false;
+            vertices[remove].Generation++;
             int removedTriangles = 0;
 
             for (int i = 0; i < triangles.Count; i++)
@@ -381,7 +548,10 @@ namespace TerrainMeshCapture
             int activeTriangles = CountActiveTriangles(triangles);
             var meshData = new TerrainMeshBuildData(vertices.Length, activeTriangles * 3, settings);
             var remap = new int[vertices.Length];
-            Array.Fill(remap, -1);
+            for (int i = 0; i < remap.Length; i++)
+            {
+                remap[i] = -1;
+            }
 
             for (int i = 0; i < triangles.Count; i++)
             {
@@ -485,13 +655,6 @@ namespace TerrainMeshCapture
             return z * samplesX + x;
         }
 
-        private static float CalculateSquaredDistanceXZ(Vector3 a, Vector3 b)
-        {
-            float dx = a.x - b.x;
-            float dz = a.z - b.z;
-            return dx * dx + dz * dz;
-        }
-
         private static float SignedAreaXZ(Vector3 a, Vector3 b, Vector3 c)
         {
             return (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
@@ -507,6 +670,7 @@ namespace TerrainMeshCapture
                 Active = true;
                 Locked = false;
                 Curvature = 0f;
+                Generation = 0;
                 Quadric = default;
             }
 
@@ -516,6 +680,7 @@ namespace TerrainMeshCapture
             public bool Active;
             public bool Locked;
             public float Curvature;
+            public int Generation;
             public Quadric Quadric;
         }
 
@@ -561,16 +726,34 @@ namespace TerrainMeshCapture
 
         private readonly struct CollapseCandidate
         {
-            public CollapseCandidate(int keep, int remove, float cost)
+            public CollapseCandidate(
+                int keep,
+                int remove,
+                int keepGeneration,
+                int removeGeneration,
+                TerrainMeshSamplePoint target,
+                Quadric quadric,
+                float cost,
+                float geometricError)
             {
                 Keep = keep;
                 Remove = remove;
+                KeepGeneration = keepGeneration;
+                RemoveGeneration = removeGeneration;
+                Target = target;
+                Quadric = quadric;
                 Cost = cost;
+                GeometricError = geometricError;
             }
 
             public int Keep { get; }
             public int Remove { get; }
+            public int KeepGeneration { get; }
+            public int RemoveGeneration { get; }
+            public TerrainMeshSamplePoint Target { get; }
+            public Quadric Quadric { get; }
             public float Cost { get; }
+            public float GeometricError { get; }
         }
 
         private readonly struct EdgeKey : IEquatable<EdgeKey>
@@ -611,6 +794,62 @@ namespace TerrainMeshCapture
             }
         }
 
+        private readonly struct TriangleKey : IEquatable<TriangleKey>
+        {
+            public TriangleKey(int a, int b, int c)
+            {
+                if (a > b)
+                {
+                    int swap = a;
+                    a = b;
+                    b = swap;
+                }
+
+                if (b > c)
+                {
+                    int swap = b;
+                    b = c;
+                    c = swap;
+                }
+
+                if (a > b)
+                {
+                    int swap = a;
+                    a = b;
+                    b = swap;
+                }
+
+                A = a;
+                B = b;
+                C = c;
+            }
+
+            private int A { get; }
+            private int B { get; }
+            private int C { get; }
+
+            public bool Equals(TriangleKey other)
+            {
+                return A == other.A && B == other.B && C == other.C;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is TriangleKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int hash = A;
+                    hash = (hash * 397) ^ B;
+                    hash = (hash * 397) ^ C;
+                    return hash;
+                }
+            }
+        }
+
         private struct Quadric
         {
             private float aa;
@@ -623,6 +862,7 @@ namespace TerrainMeshCapture
             private float cc;
             private float cd;
             private float dd;
+            private int weight;
 
             public static Quadric FromPlane(float a, float b, float c, float d)
             {
@@ -637,7 +877,8 @@ namespace TerrainMeshCapture
                     bd = b * d,
                     cc = c * c,
                     cd = c * d,
-                    dd = d * d
+                    dd = d * d,
+                    weight = 1
                 };
             }
 
@@ -653,6 +894,7 @@ namespace TerrainMeshCapture
                 cc += other.cc;
                 cd += other.cd;
                 dd += other.dd;
+                weight += other.weight;
             }
 
             public float Evaluate(Vector3 position)
@@ -660,7 +902,9 @@ namespace TerrainMeshCapture
                 float x = position.x;
                 float y = position.y;
                 float z = position.z;
-                return aa * x * x
+                return Mathf.Max(
+                    0f,
+                    aa * x * x
                     + 2f * ab * x * y
                     + 2f * ac * x * z
                     + 2f * ad * x
@@ -669,7 +913,66 @@ namespace TerrainMeshCapture
                     + 2f * bd * y
                     + cc * z * z
                     + 2f * cd * z
-                    + dd;
+                    + dd);
+            }
+
+            public float EvaluateRms(Vector3 position)
+            {
+                return Mathf.Sqrt(Evaluate(position) / Mathf.Max(1, weight));
+            }
+
+            public bool TrySolve(out Vector3 position)
+            {
+                float determinant = Determinant3(
+                    aa, ab, ac,
+                    ab, bb, bc,
+                    ac, bc, cc);
+                if (Mathf.Abs(determinant) <= AreaEpsilon)
+                {
+                    position = default;
+                    return false;
+                }
+
+                float x = Determinant3(
+                    -ad, ab, ac,
+                    -bd, bb, bc,
+                    -cd, bc, cc) / determinant;
+                float y = Determinant3(
+                    aa, -ad, ac,
+                    ab, -bd, bc,
+                    ac, -cd, cc) / determinant;
+                float z = Determinant3(
+                    aa, ab, -ad,
+                    ab, bb, -bd,
+                    ac, bc, -cd) / determinant;
+                position = new Vector3(x, y, z);
+                return IsFinite(position);
+            }
+
+            private static float Determinant3(
+                float a00,
+                float a01,
+                float a02,
+                float a10,
+                float a11,
+                float a12,
+                float a20,
+                float a21,
+                float a22)
+            {
+                return a00 * (a11 * a22 - a12 * a21)
+                    - a01 * (a10 * a22 - a12 * a20)
+                    + a02 * (a10 * a21 - a11 * a20);
+            }
+
+            private static bool IsFinite(Vector3 value)
+            {
+                return !float.IsNaN(value.x)
+                    && !float.IsNaN(value.y)
+                    && !float.IsNaN(value.z)
+                    && !float.IsInfinity(value.x)
+                    && !float.IsInfinity(value.y)
+                    && !float.IsInfinity(value.z);
             }
         }
     }

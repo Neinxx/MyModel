@@ -123,6 +123,8 @@ namespace TerrainMeshCapture.Editor
             SerializedObject serializedProfile = new SerializedObject(profile);
             serializedProfile.FindProperty("samplesX").intValue = analysis.RecommendedSamplesX;
             serializedProfile.FindProperty("samplesZ").intValue = analysis.RecommendedSamplesZ;
+            serializedProfile.FindProperty("adaptiveMaxHeightError").floatValue = analysis.RecommendedMaxHeightError;
+            serializedProfile.FindProperty("adaptiveMaxTriangles").intValue = analysis.RecommendedMaxTriangles;
             serializedProfile.FindProperty("textureSizeMode").intValue = (int)TerrainTextureSizeMode.MatchAreaAspect;
             serializedProfile.FindProperty("textureResolution").intValue = analysis.RecommendedTextureResolution;
             serializedProfile.FindProperty("generateSkirts").boolValue = true;

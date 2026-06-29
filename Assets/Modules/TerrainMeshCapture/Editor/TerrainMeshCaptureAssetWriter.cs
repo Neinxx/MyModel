@@ -46,13 +46,13 @@ namespace TerrainMeshCapture.Editor
             }
 
             string meshFolder = EnsureOutputFolder(profile.MeshOutputFolder);
-            string textureFolder = profile.TextureBakeMode == TerrainTextureBakeMode.None ? string.Empty : EnsureOutputFolder(profile.TextureOutputFolder);
+            string textureFolder = profile.HasTextureOutputs ? EnsureOutputFolder(profile.TextureOutputFolder) : string.Empty;
             string materialFolder = profile.CreateMaterials ? EnsureOutputFolder(profile.MaterialOutputFolder) : string.Empty;
             string prefabFolder = profile.CreatePrefab ? EnsureOutputFolder(profile.PrefabOutputFolder) : string.Empty;
             List<ChunkBakeItem> chunks = BuildChunks(plan.AreaRect, profile);
             TerrainMeshAdaptiveEdgeConstraints[] edgePlans = BuildChunkEdgePlans(plan.Terrain, profile, chunks, plan.Columns, plan.Rows);
 
-            var texturePaths = new List<string>(chunks.Count);
+            var texturePaths = new List<ChunkTexturePaths>(chunks.Count);
             var materialPaths = new List<string>(chunks.Count);
             var meshPaths = new List<string>(chunks.Count);
             var prefabPaths = new List<string>(1);
@@ -88,7 +88,7 @@ namespace TerrainMeshCapture.Editor
                     {
                         for (int i = 0; i < chunks.Count; i++)
                         {
-                            string materialPath = CreateMaterial(profile, materialFolder, chunks[i], texturePaths, i);
+                            string materialPath = CreateMaterial(profile, materialFolder, chunks[i], texturePaths[i]);
                             materialPaths.Add(materialPath);
                         }
                     }
@@ -162,7 +162,7 @@ namespace TerrainMeshCapture.Editor
                 issues.Add("Mesh output folder must be inside Assets.");
             }
 
-            if (profile.TextureBakeMode != TerrainTextureBakeMode.None && !IsProjectFolder(profile.TextureOutputFolder))
+            if (profile.HasTextureOutputs && !IsProjectFolder(profile.TextureOutputFolder))
             {
                 issues.Add("Texture output folder must be inside Assets.");
             }
@@ -196,7 +196,7 @@ namespace TerrainMeshCapture.Editor
             }
 
             Vector2Int estimatedTextureSize = profile.ResolveTextureSize(GetEstimateTextureRect(areaRect, columns, rows));
-            if (Mathf.Max(estimatedTextureSize.x, estimatedTextureSize.y) >= 4096 && chunkCount > 256)
+            if (profile.HasTextureOutputs && Mathf.Max(estimatedTextureSize.x, estimatedTextureSize.y) >= 4096 && chunkCount > 256)
             {
                 issues.Add("Texture resolution and chunk count are both high. Reduce resolution or increase block size.");
             }
@@ -213,7 +213,7 @@ namespace TerrainMeshCapture.Editor
             ChunkBakeItem item,
             TerrainMeshAdaptiveEdgeConstraints edgeConstraints,
             List<string> meshPaths,
-            List<string> texturePaths)
+            List<ChunkTexturePaths> texturePaths)
         {
             var chunkSettings = TerrainMeshCaptureAreaUtility.BuildSettings(profile);
             chunkSettings.SetAdaptiveEdgeConstraints(edgeConstraints);
@@ -227,22 +227,31 @@ namespace TerrainMeshCapture.Editor
             SaveMesh(result.Mesh, meshPath);
             meshPaths.Add(meshPath);
 
-            if (profile.TextureBakeMode == TerrainTextureBakeMode.None)
+            if (!profile.HasTextureOutputs)
             {
-                texturePaths.Add(string.Empty);
+                texturePaths.Add(default);
                 return;
             }
 
-            if (!TerrainMeshCaptureBaker.TryBakeTexture(terrain, result.TerrainLocalRect, chunkSettings, out Texture2D texture, out string textureError))
+            ChunkTexturePaths chunkTexturePaths = default;
+            TerrainTextureBakeMode[] bakeModes = GetTextureBakeModes(profile.TextureBakeOutputs);
+            for (int i = 0; i < bakeModes.Length; i++)
             {
-                throw new InvalidOperationException($"Chunk {item.Name} texture failed: {textureError}");
+                TerrainTextureBakeMode bakeMode = bakeModes[i];
+                chunkSettings.SetTextureBakeMode(bakeMode);
+                if (!TerrainMeshCaptureBaker.TryBakeTexture(terrain, result.TerrainLocalRect, chunkSettings, out Texture2D texture, out string textureError))
+                {
+                    throw new InvalidOperationException($"Chunk {item.Name} {bakeMode} texture failed: {textureError}");
+                }
+
+                string texturePath = BuildAssetPath(textureFolder, $"{item.Name}_{bakeMode}", "png", profile.WriteMode);
+                byte[] png = texture.EncodeToPNG();
+                UnityEngine.Object.DestroyImmediate(texture);
+                File.WriteAllBytes(texturePath, png);
+                chunkTexturePaths.Set(bakeMode, texturePath);
             }
 
-            string texturePath = BuildAssetPath(textureFolder, $"{item.Name}_{profile.TextureBakeMode}", "png", profile.WriteMode);
-            byte[] png = texture.EncodeToPNG();
-            UnityEngine.Object.DestroyImmediate(texture);
-            File.WriteAllBytes(texturePath, png);
-            texturePaths.Add(texturePath);
+            texturePaths.Add(chunkTexturePaths);
         }
 
         internal static List<ChunkBakeItem> BuildChunks(Rect areaRect, TerrainMeshCaptureProfile profile)
@@ -575,29 +584,15 @@ namespace TerrainMeshCapture.Editor
             return result;
         }
 
-        private static void ConfigureImportedTextures(List<string> texturePaths, bool mipMaps)
+        private static void ConfigureImportedTextures(List<ChunkTexturePaths> texturePaths, bool mipMaps)
         {
             AssetDatabase.StartAssetEditing();
             try
             {
                 for (int i = 0; i < texturePaths.Count; i++)
                 {
-                    string path = texturePaths[i];
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        continue;
-                    }
-
-                    TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-                    if (importer == null)
-                    {
-                        continue;
-                    }
-
-                    importer.textureType = TextureImporterType.Default;
-                    importer.wrapMode = TextureWrapMode.Clamp;
-                    importer.mipmapEnabled = mipMaps;
-                    importer.SaveAndReimport();
+                    ConfigureImportedTexture(texturePaths[i].AlbedoPath, TerrainTextureBakeMode.Albedo, mipMaps);
+                    ConfigureImportedTexture(texturePaths[i].NormalMapPath, TerrainTextureBakeMode.NormalMap, mipMaps);
                 }
             }
             finally
@@ -606,12 +601,38 @@ namespace TerrainMeshCapture.Editor
             }
         }
 
+        private static void ConfigureImportedTexture(string path, TerrainTextureBakeMode bakeMode, bool mipMaps)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null)
+            {
+                return;
+            }
+
+            importer.textureType = bakeMode == TerrainTextureBakeMode.NormalMap
+                ? TextureImporterType.NormalMap
+                : TextureImporterType.Default;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.mipmapEnabled = mipMaps;
+            importer.sRGBTexture = bakeMode == TerrainTextureBakeMode.Albedo;
+            if (bakeMode == TerrainTextureBakeMode.NormalMap)
+            {
+                importer.convertToNormalmap = false;
+            }
+
+            importer.SaveAndReimport();
+        }
+
         private static string CreateMaterial(
             TerrainMeshCaptureProfile profile,
             string materialFolder,
             ChunkBakeItem item,
-            List<string> texturePaths,
-            int index)
+            ChunkTexturePaths texturePaths)
         {
             Shader shader = profile.Shader != null
                 ? profile.Shader
@@ -626,26 +647,66 @@ namespace TerrainMeshCapture.Editor
                 name = $"{item.Name}_Mat"
             };
 
-            if (index < texturePaths.Count && !string.IsNullOrEmpty(texturePaths[index]))
-            {
-                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePaths[index]);
-                if (texture != null)
-                {
-                    if (material.HasProperty("_BaseMap"))
-                    {
-                        material.SetTexture("_BaseMap", texture);
-                    }
-
-                    if (material.HasProperty("_MainTex"))
-                    {
-                        material.SetTexture("_MainTex", texture);
-                    }
-                }
-            }
+            BindMaterialTextures(material, texturePaths);
 
             string path = BuildAssetPath(materialFolder, $"{item.Name}_Mat", "mat", profile.WriteMode);
             SaveMaterial(material, path);
             return path;
+        }
+
+        private static void BindMaterialTextures(Material material, ChunkTexturePaths texturePaths)
+        {
+            Texture2D albedo = LoadTexture(texturePaths.AlbedoPath);
+            if (albedo != null)
+            {
+                if (material.HasProperty("_BaseMap"))
+                {
+                    material.SetTexture("_BaseMap", albedo);
+                }
+
+                if (material.HasProperty("_MainTex"))
+                {
+                    material.SetTexture("_MainTex", albedo);
+                }
+            }
+
+            Texture2D normal = LoadTexture(texturePaths.NormalMapPath);
+            if (normal != null)
+            {
+                if (material.HasProperty("_BumpMap"))
+                {
+                    material.SetTexture("_BumpMap", normal);
+                }
+
+                if (material.HasProperty("_NormalMap"))
+                {
+                    material.SetTexture("_NormalMap", normal);
+                }
+
+                material.EnableKeyword("_NORMALMAP");
+            }
+
+        }
+
+        private static Texture2D LoadTexture(string path)
+        {
+            return string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        private static TerrainTextureBakeMode[] GetTextureBakeModes(TerrainTextureBakeOutputs outputs)
+        {
+            var modes = new List<TerrainTextureBakeMode>(3);
+            if ((outputs & TerrainTextureBakeOutputs.Albedo) != 0)
+            {
+                modes.Add(TerrainTextureBakeMode.Albedo);
+            }
+
+            if ((outputs & TerrainTextureBakeOutputs.NormalMap) != 0)
+            {
+                modes.Add(TerrainTextureBakeMode.NormalMap);
+            }
+
+            return modes.ToArray();
         }
 
         private static string CreatePrefab(
@@ -705,7 +766,7 @@ namespace TerrainMeshCapture.Editor
         private static string EnsureOutputFolder(string folder)
         {
             folder = string.IsNullOrWhiteSpace(folder) ? DefaultOutputFolder : folder.Replace("\\", "/").TrimEnd('/');
-            if (!folder.StartsWith("Assets", StringComparison.Ordinal))
+            if (!IsProjectFolder(folder))
             {
                 folder = DefaultOutputFolder;
             }
@@ -757,8 +818,22 @@ namespace TerrainMeshCapture.Editor
 
         private static bool IsProjectFolder(string folder)
         {
-            return !string.IsNullOrWhiteSpace(folder)
-                && folder.Replace("\\", "/").StartsWith("Assets", StringComparison.Ordinal);
+            if (string.IsNullOrWhiteSpace(folder))
+            {
+                return false;
+            }
+
+            folder = folder.Replace("\\", "/").TrimEnd('/');
+            return folder == "Assets"
+                || folder.StartsWith("Assets/", StringComparison.Ordinal) && !HasParentDirectorySegment(folder);
+        }
+
+        private static bool HasParentDirectorySegment(string folder)
+        {
+            return folder == ".."
+                || folder.StartsWith("../", StringComparison.Ordinal)
+                || folder.EndsWith("/..", StringComparison.Ordinal)
+                || folder.Contains("/../");
         }
 
         private static void LogIssues(UnityEngine.Object context, List<string> issues)
@@ -796,6 +871,29 @@ namespace TerrainMeshCapture.Editor
             public string Name { get; }
         }
 
+        internal struct ChunkTexturePaths
+        {
+            public string AlbedoPath { get; private set; }
+            public string NormalMapPath { get; private set; }
+            public string SplatWeightsPath { get; private set; }
+
+            public void Set(TerrainTextureBakeMode mode, string path)
+            {
+                switch (mode)
+                {
+                    case TerrainTextureBakeMode.Albedo:
+                        AlbedoPath = path;
+                        break;
+                    case TerrainTextureBakeMode.NormalMap:
+                        NormalMapPath = path;
+                        break;
+                    case TerrainTextureBakeMode.SplatWeights:
+                        SplatWeightsPath = path;
+                        break;
+                }
+            }
+        }
+
         public readonly struct TerrainMeshCaptureBakePlan
         {
             public TerrainMeshCaptureBakePlan(Terrain terrain, Rect areaRect, int columns, int rows, int chunkCount)
@@ -818,6 +916,8 @@ namespace TerrainMeshCapture.Editor
         {
             private readonly List<TextureImporter> importers = new List<TextureImporter>();
             private readonly List<bool> originalReadable = new List<bool>();
+            private readonly List<bool> originalCrunched = new List<bool>();
+            private readonly List<TextureImporterCompression> originalCompression = new List<TextureImporterCompression>();
 
             public TerrainLayerReadableScope(Terrain terrain)
             {
@@ -829,26 +929,51 @@ namespace TerrainMeshCapture.Editor
 
                 for (int i = 0; i < layers.Length; i++)
                 {
-                    Texture2D texture = layers[i] != null ? layers[i].diffuseTexture : null;
-                    if (texture == null)
-                    {
-                        continue;
-                    }
+                    AddReadableTexture(layers[i] != null ? layers[i].diffuseTexture : null);
+                    AddReadableTexture(layers[i] != null ? layers[i].normalMapTexture : null);
+                }
+            }
 
-                    string path = AssetDatabase.GetAssetPath(texture);
-                    TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-                    if (importer == null)
-                    {
-                        continue;
-                    }
+            private void AddReadableTexture(Texture2D texture)
+            {
+                if (texture == null)
+                {
+                    return;
+                }
 
-                    importers.Add(importer);
-                    originalReadable.Add(importer.isReadable);
-                    if (!importer.isReadable)
-                    {
-                        importer.isReadable = true;
-                        importer.SaveAndReimport();
-                    }
+                string path = AssetDatabase.GetAssetPath(texture);
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer == null || importers.Contains(importer))
+                {
+                    return;
+                }
+
+                importers.Add(importer);
+                originalReadable.Add(importer.isReadable);
+                originalCrunched.Add(importer.crunchedCompression);
+                originalCompression.Add(importer.textureCompression);
+                bool changed = false;
+                if (!importer.isReadable)
+                {
+                    importer.isReadable = true;
+                    changed = true;
+                }
+
+                if (importer.crunchedCompression)
+                {
+                    importer.crunchedCompression = false;
+                    changed = true;
+                }
+
+                if (importer.textureCompression != TextureImporterCompression.Uncompressed)
+                {
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    importer.SaveAndReimport();
                 }
             }
 
@@ -857,13 +982,21 @@ namespace TerrainMeshCapture.Editor
                 for (int i = 0; i < importers.Count; i++)
                 {
                     TextureImporter importer = importers[i];
-                    if (importer == null || importer.isReadable == originalReadable[i])
+                    if (importer == null)
                     {
                         continue;
                     }
 
+                    bool changed = importer.isReadable != originalReadable[i]
+                        || importer.crunchedCompression != originalCrunched[i]
+                        || importer.textureCompression != originalCompression[i];
                     importer.isReadable = originalReadable[i];
-                    importer.SaveAndReimport();
+                    importer.crunchedCompression = originalCrunched[i];
+                    importer.textureCompression = originalCompression[i];
+                    if (changed)
+                    {
+                        importer.SaveAndReimport();
+                    }
                 }
             }
         }

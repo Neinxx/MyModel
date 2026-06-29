@@ -333,8 +333,12 @@ namespace TerrainMeshCapture.Editor
             }
 
             EditorGUILayout.LabelField("Area Size", $"{plan.AreaRect.width:0} x {plan.AreaRect.height:0}");
-            Vector2Int textureSize = area.Profile.ResolveTextureSize(GetEstimateTextureRect(plan));
-            EditorGUILayout.LabelField("Texture", $"{textureSize.x} x {textureSize.y}");
+            if (area.Profile.HasTextureOutputs)
+            {
+                Vector2Int textureSize = area.Profile.ResolveTextureSize(GetEstimateTextureRect(plan));
+                EditorGUILayout.LabelField("Texture Outputs", area.Profile.TextureBakeOutputs.ToString());
+                EditorGUILayout.LabelField("Texture Size", $"{textureSize.x} x {textureSize.y}");
+            }
         }
 
         private static Rect GetEstimateTextureRect(TerrainMeshCaptureAssetWriter.TerrainMeshCaptureBakePlan plan)

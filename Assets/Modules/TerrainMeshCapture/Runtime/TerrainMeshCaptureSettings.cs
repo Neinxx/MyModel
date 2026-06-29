@@ -13,7 +13,20 @@ namespace TerrainMeshCapture
     {
         None = 0,
         Albedo = 1,
-        SplatWeights = 2
+        SplatWeights = 2,
+        [InspectorName("Normal Map")]
+        NormalMap = 3
+    }
+
+    [Flags]
+    public enum TerrainTextureBakeOutputs
+    {
+        None = 0,
+        Albedo = 1,
+        [InspectorName("Normal Map")]
+        NormalMap = 2,
+        SplatWeights = 4,
+        All = Albedo | NormalMap | SplatWeights
     }
 
     public enum TerrainTextureSizeMode
@@ -81,6 +94,7 @@ namespace TerrainMeshCapture
         [SerializeField] private bool generateTangents;
         [SerializeField] private bool generateUv2;
         [SerializeField] private TerrainTextureBakeMode textureBakeMode = TerrainTextureBakeMode.Albedo;
+        [SerializeField] private TerrainTextureBakeOutputs textureBakeOutputs = TerrainTextureBakeOutputs.All;
         [SerializeField] private TerrainTextureSizeMode textureSizeMode = TerrainTextureSizeMode.MatchAreaAspect;
         [Min(4)]
         [SerializeField] private int textureResolution = 1024;
@@ -107,6 +121,8 @@ namespace TerrainMeshCapture
         public bool GenerateTangents => generateTangents;
         public bool GenerateUv2 => generateUv2;
         public TerrainTextureBakeMode TextureBakeMode => textureBakeMode;
+        public TerrainTextureBakeOutputs TextureBakeOutputs => textureBakeOutputs;
+        public bool HasTextureOutputs => textureBakeOutputs != TerrainTextureBakeOutputs.None;
         public TerrainTextureSizeMode TextureSizeMode => textureSizeMode;
         public int TextureResolution => textureResolution;
         public Color FallbackAlbedo => fallbackAlbedo;
@@ -140,6 +156,7 @@ namespace TerrainMeshCapture
             generateTangents = profile.GenerateTangents;
             generateUv2 = profile.GenerateUv2;
             textureBakeMode = profile.TextureBakeMode;
+            textureBakeOutputs = profile.TextureBakeOutputs;
             textureSizeMode = profile.TextureSizeMode;
             textureResolution = profile.TextureResolution;
             fallbackAlbedo = profile.FallbackAlbedo;
@@ -168,12 +185,62 @@ namespace TerrainMeshCapture
             adaptiveCurvatureThreshold = Mathf.Clamp01(adaptiveCurvatureThreshold);
             adaptiveCurvaturePenalty = Mathf.Max(0f, adaptiveCurvaturePenalty);
             adaptiveFlipPasses = Mathf.Clamp(adaptiveFlipPasses, 0, 256);
+            textureBakeOutputs &= TerrainTextureBakeOutputs.All;
+            if (textureBakeOutputs == TerrainTextureBakeOutputs.None && textureBakeMode != TerrainTextureBakeMode.None)
+            {
+                textureBakeOutputs = ToTextureBakeOutput(textureBakeMode);
+            }
+
+            if ((textureBakeOutputs & TerrainTextureBakeOutputs.NormalMap) != 0)
+            {
+                generateTangents = true;
+            }
+
+            textureBakeMode = GetPrimaryTextureBakeMode(textureBakeOutputs);
             textureResolution = Mathf.Clamp(textureResolution, 4, 8192);
+        }
+
+        public void SetTextureBakeMode(TerrainTextureBakeMode mode)
+        {
+            textureBakeMode = mode;
+            textureBakeOutputs = ToTextureBakeOutput(mode);
         }
 
         public Vector2Int ResolveTextureSize(Rect terrainLocalRect)
         {
             return TerrainTextureSizeUtility.Resolve(textureSizeMode, textureResolution, terrainLocalRect);
+        }
+
+        public static TerrainTextureBakeOutputs ToTextureBakeOutput(TerrainTextureBakeMode mode)
+        {
+            switch (mode)
+            {
+                case TerrainTextureBakeMode.Albedo:
+                    return TerrainTextureBakeOutputs.Albedo;
+                case TerrainTextureBakeMode.SplatWeights:
+                    return TerrainTextureBakeOutputs.SplatWeights;
+                case TerrainTextureBakeMode.NormalMap:
+                    return TerrainTextureBakeOutputs.NormalMap;
+                default:
+                    return TerrainTextureBakeOutputs.None;
+            }
+        }
+
+        public static TerrainTextureBakeMode GetPrimaryTextureBakeMode(TerrainTextureBakeOutputs outputs)
+        {
+            if ((outputs & TerrainTextureBakeOutputs.Albedo) != 0)
+            {
+                return TerrainTextureBakeMode.Albedo;
+            }
+
+            if ((outputs & TerrainTextureBakeOutputs.NormalMap) != 0)
+            {
+                return TerrainTextureBakeMode.NormalMap;
+            }
+
+            return (outputs & TerrainTextureBakeOutputs.SplatWeights) != 0
+                ? TerrainTextureBakeMode.SplatWeights
+                : TerrainTextureBakeMode.None;
         }
     }
 
