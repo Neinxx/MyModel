@@ -28,11 +28,11 @@ MonoBehaviour:
   boundsMode: 1
   heightSamplingMode: 0
   meshGenerationMode: 0
-  generateSkirts: 0
+  generateSkirts: 1
   skirtDepth: 1
-  adaptiveMaxHeightError: 0.032864273
+  adaptiveMaxHeightError: 0.06568681
   adaptiveMinCellSamples: 1
-  adaptiveMaxTriangles: 1196
+  adaptiveMaxTriangles: 787
   adaptiveCurvatureThreshold: 0.35
   adaptiveCurvaturePenalty: 12
   adaptiveFlipPasses: 48
@@ -40,6 +40,7 @@ MonoBehaviour:
   generateTangents: 1
   generateUv2: 0
   textureBakeMode: 1
+  textureBakeOutputs: 3
   textureSizeMode: 1
   textureResolution: 512
   textureMipMaps: 1
